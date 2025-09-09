@@ -65,100 +65,136 @@ MAIN-PARA.
     *> Load existing accounts (if any) into memory
     PERFORM LOAD-ACCOUNTS
 
-    *> Prompt
-    MOVE "Welcome to InCollege!" TO MSG
-    PERFORM ECHO-DISPLAY
-    MOVE "1. Log In" TO MSG
-    PERFORM ECHO-DISPLAY
-    MOVE "2. Create New Account" TO MSG
-    PERFORM ECHO-DISPLAY
-    MOVE "Enter your choice:" TO MSG
-    PERFORM ECHO-DISPLAY
-
-    READ USER-IN
-       AT END
-           MOVE 0 TO CHOICE
-    END-READ
-    IF FUNCTION TEST-NUMVAL(USER-IN-REC) = 0
-        MOVE FUNCTION NUMVAL(USER-IN-REC) TO CHOICE
-    ELSE
-        MOVE 0 TO CHOICE
-    END-IF
-
-    EVALUATE CHOICE
-         WHEN 1
-           PERFORM LOGIN-UNLIMITED
-
-         WHEN 2
-           *> Create New Account
-           *> Enforce global limit of 5 accounts.
-           IF ACCOUNT-COUNT = 5
-               MOVE "All permitted accounts have been created, please come back later" TO MSG
-               PERFORM ECHO-DISPLAY
-           ELSE
-               *> Read desired username (validate raw input BEFORE storing to USERNAME)
-               MOVE "Please enter your username:" TO MSG
-               PERFORM ECHO-DISPLAY
-               READ USER-IN
-
-               *> Username empty check
-               IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
-                   MOVE "Username cannot be empty." TO MSG
-                   PERFORM ECHO-DISPLAY
-               ELSE
-                   *> Length check: Max 15 character
-                   IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) > 15
-                       MOVE "Username must be 1-15 characters long." TO MSG
-                       PERFORM ECHO-DISPLAY
-                   ELSE
-                       MOVE FUNCTION TRIM(USER-IN-REC) TO USERNAME
-                       *> Case-insensitive uniqueness check against in-memory table
-                       PERFORM EXISTS-USERNAME
-                       IF FOUND-FLAG = "Y"
-                           MOVE "Username already exists." TO MSG
-                           PERFORM ECHO-DISPLAY
-                       ELSE
-                           *> Prompt for password and enforce 8–12 via truncation detector
-                           MOVE "Please enter your password:" TO MSG
-                           PERFORM ECHO-DISPLAY
-                           READ USER-IN
-                           MOVE FUNCTION TRIM(USER-IN-REC) TO PASSWORD
-                           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) >
-                              FUNCTION LENGTH(FUNCTION TRIM(PASSWORD))
-                              MOVE "Password must be 8-12 characters long." TO MSG
-                              PERFORM ECHO-DISPLAY
-                           ELSE
-                               PERFORM VALIDATE-PASSWORD
-                               *> Accept only if all flags satisfied
-                               IF HAS-UPPER = "Y" AND HAS-DIGIT = "Y" AND HAS-SPECIAL = "Y"
-                                  AND PW-LEN >= 8 AND PW-LEN <= 12
-                                   *> Append to table
-                                   ADD 1 TO ACCOUNT-COUNT
-                                   SET U-IX TO ACCOUNT-COUNT
-                                   MOVE USERNAME TO T-USERNAME (U-IX)
-                                   MOVE PASSWORD TO T-PASSWORD (U-IX)
-                                   *> Save all to persistence
-                                   PERFORM SAVE-ACCOUNTS
-                                   MOVE "Account created." TO MSG
-                                   PERFORM ECHO-DISPLAY
-                                ELSE
-                                   *> Show ONLY the first failing rule (priority: length → upper → digit → special)
-                                   PERFORM REPORT-PASSWORD-ERRORS
-                                END-IF
-                           END-IF
-                        END-IF
-                     END-IF
-               END-IF
-           END-IF
-
-         WHEN OTHER
-           MOVE "Invalid choice." TO MSG
-           PERFORM ECHO-DISPLAY
-     END-EVALUATE.
+    PERFORM MAIN-LOOP
 
     CLOSE USER-IN
     CLOSE USER-OUT
     STOP RUN.
+
+
+MAIN-LOOP.
+    MOVE "N" TO EOF-FLAG
+    PERFORM UNTIL EOF-FLAG = "Y"
+        MOVE "Welcome to InCollege!" TO MSG
+        PERFORM ECHO-DISPLAY
+        MOVE "1. Log In" TO MSG
+        PERFORM ECHO-DISPLAY
+        MOVE "2. Create New Account" TO MSG
+        PERFORM ECHO-DISPLAY
+        MOVE "Enter your choice:" TO MSG
+        PERFORM ECHO-DISPLAY
+
+        READ USER-IN
+            AT END MOVE "Y" TO EOF-FLAG
+        END-READ
+        IF EOF-FLAG = "Y"
+            EXIT PERFORM
+        END-IF
+
+        IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+            CONTINUE
+        ELSE
+            IF FUNCTION TEST-NUMVAL(USER-IN-REC) = 0
+                MOVE FUNCTION NUMVAL(USER-IN-REC) TO CHOICE
+            ELSE
+                MOVE 999 TO CHOICE
+            END-IF
+
+            EVALUATE CHOICE
+                WHEN 1
+                    PERFORM LOGIN-UNLIMITED
+                    IF EOF-FLAG = "Y"
+                        EXIT PERFORM
+                    END-IF
+                WHEN 2
+                    PERFORM CREATE-ACCOUNT
+                    IF EOF-FLAG = "Y"
+                        EXIT PERFORM
+                    END-IF
+                WHEN OTHER
+                    MOVE "Invalid choice." TO MSG
+                    PERFORM ECHO-DISPLAY
+                    EXIT PERFORM
+            END-EVALUATE
+        END-IF
+    END-PERFORM
+    EXIT.
+
+
+
+CREATE-ACCOUNT.
+       *> Create New Account
+       *> Enforce global limit of 5 accounts.
+       IF ACCOUNT-COUNT = 5
+           MOVE "All permitted accounts have been created, please come back later" TO MSG
+           PERFORM ECHO-DISPLAY
+       ELSE
+           *> Read desired username (validate raw input BEFORE storing to USERNAME)
+           MOVE "Please enter your username:" TO MSG
+           PERFORM ECHO-DISPLAY
+           READ USER-IN
+               AT END MOVE "Y" TO EOF-FLAG
+           END-READ
+           IF EOF-FLAG = "Y"
+               EXIT PARAGRAPH
+           END-IF
+
+           *> Username empty check
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               MOVE "Username cannot be empty." TO MSG
+               PERFORM ECHO-DISPLAY
+           ELSE
+               *> Length check: Max 15 character
+               IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) > 15
+                   MOVE "Username must be 1-15 characters long." TO MSG
+                   PERFORM ECHO-DISPLAY
+               ELSE
+                   MOVE FUNCTION TRIM(USER-IN-REC) TO USERNAME
+                   *> Case-insensitive uniqueness check against in-memory table
+                   PERFORM EXISTS-USERNAME
+                   IF FOUND-FLAG = "Y"
+                       MOVE "Username already exists." TO MSG
+                       PERFORM ECHO-DISPLAY
+                   ELSE
+                       *> Prompt for password and enforce 8–12 via truncation detector
+                       MOVE "Please enter your password:" TO MSG
+                       PERFORM ECHO-DISPLAY
+                       READ USER-IN
+                           AT END MOVE "Y" TO EOF-FLAG
+                       END-READ
+                       IF EOF-FLAG = "Y"
+                           EXIT PARAGRAPH
+                       END-IF
+
+                       MOVE FUNCTION TRIM(USER-IN-REC) TO PASSWORD
+                       IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) >
+                          FUNCTION LENGTH(FUNCTION TRIM(PASSWORD))
+                           MOVE "Password must be 8-12 characters long." TO MSG
+                           PERFORM ECHO-DISPLAY
+                       ELSE
+                           PERFORM VALIDATE-PASSWORD
+                           *> Accept only if all flags satisfied
+                           IF HAS-UPPER = "Y" AND HAS-DIGIT = "Y" AND HAS-SPECIAL = "Y"
+                              AND PW-LEN >= 8 AND PW-LEN <= 12
+                               *> Append to table
+                               ADD 1 TO ACCOUNT-COUNT
+                               SET U-IX TO ACCOUNT-COUNT
+                               MOVE USERNAME TO T-USERNAME (U-IX)
+                               MOVE PASSWORD TO T-PASSWORD (U-IX)
+                               *> Save all to persistence
+                               PERFORM SAVE-ACCOUNTS
+                               MOVE "Account created." TO MSG
+                               PERFORM ECHO-DISPLAY
+                            ELSE
+                               *> Show ONLY the first failing rule (priority: length → upper → digit → special)
+                                PERFORM REPORT-PASSWORD-ERRORS
+                            END-IF
+                       END-IF
+                   END-IF
+               END-IF
+           END-IF
+       END-IF
+       EXIT.
 
 
 *> HELPER FUNCTIONS
@@ -298,14 +334,18 @@ LOGIN-UNLIMITED.
            MOVE "Please enter your username:" TO MSG
            PERFORM ECHO-DISPLAY
            READ USER-IN
-               AT END EXIT PERFORM
+               AT END
+                   MOVE "Y" TO EOF-FLAG
+                   EXIT PERFORM
            END-READ
            MOVE FUNCTION TRIM(USER-IN-REC) TO USERNAME
 
            MOVE "Please enter your password:" TO MSG
            PERFORM ECHO-DISPLAY
            READ USER-IN
-               AT END EXIT PERFORM
+               AT END
+                   MOVE "Y" TO EOF-FLAG
+                   EXIT PERFORM
            END-READ
            MOVE FUNCTION TRIM(USER-IN-REC) TO PASSWORD
 
@@ -330,6 +370,7 @@ LOGIN-UNLIMITED.
            END-IF
        END-PERFORM
        EXIT.
+
 
 *> Tien's Implementations on September 9th, 2025
 NAVIGATION-MENU.
@@ -362,6 +403,7 @@ NAVIGATION-MENU.
        END-PERFORM
        EXIT.
 
+
 DISPLAY-MENU.
        *> Print a blank line for spacing
        MOVE " " TO MSG
@@ -386,6 +428,7 @@ DISPLAY-MENU.
        PERFORM ECHO-DISPLAY
        EXIT.
 
+
 NAV-MENU-CHOICE.
 
        EVALUATE NAV-CHOICE
@@ -405,13 +448,11 @@ NAV-MENU-CHOICE.
        EXIT.
 
 
-
-
 SKILLS-MENU.
     *> Reset skill selection each time this menu is shown
     MOVE 0 TO SKILLS-SELECTION
 
-    *> Skills loop: repeat until user chooses Go Back (9) or EOF
+    *> Skills loop: repeat until user chooses Go Back (6) or EOF
     PERFORM UNTIL SKILLS-SELECTION = 6 OR EOF-FLAG = "Y"
         *> Print skills menu
         MOVE "Choose a skill to learn:" TO MSG

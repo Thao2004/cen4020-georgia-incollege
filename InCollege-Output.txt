@@ -4,8 +4,19 @@ Welcome to InCollege!
 Enter your choice:
 Please enter your username:
 Please enter your password:
+Account created.
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+Incorrect username/password, please try again
+Please enter your username:
+Please enter your password:
 You have successfully logged in
-Welcome, jennifer!
+Welcome, jenniferr!
+
 =============================
      InCollege Main Menu
 =============================
@@ -15,6 +26,7 @@ Welcome, jennifer!
 =============================
 Enter your choice:
 Job search/internship is under construction.
+
 =============================
      InCollege Main Menu
 =============================
@@ -24,6 +36,7 @@ Job search/internship is under construction.
 =============================
 Enter your choice:
 Find someone you know is under construction.
+
 =============================
      InCollege Main Menu
 =============================
