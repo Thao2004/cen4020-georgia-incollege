@@ -363,6 +363,10 @@ NAVIGATION-MENU.
        EXIT.
 
 DISPLAY-MENU.
+       *> Print a blank line for spacing
+       MOVE " " TO MSG
+       PERFORM ECHO-DISPLAY
+
        MOVE "=============================" TO MSG
        PERFORM ECHO-DISPLAY
        MOVE "     InCollege Main Menu" TO MSG
