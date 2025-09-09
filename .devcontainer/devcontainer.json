@@ -1,0 +1,19 @@
+{
+  "name": "GNU COBOL Dev",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "workspaceFolder": "/workspace",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+  "remoteUser": "root",
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/bash",
+    "files.autoSave": "afterDelay",
+    "files.trimTrailingWhitespace": true
+  },
+  "extensions": [
+    "bitlang.cobol",
+    "ms-vscode.makefile-tools"
+  ],
+  "postCreateCommand": "mkdir -p bin src && echo 'Devcontainer ready.'"
+}
