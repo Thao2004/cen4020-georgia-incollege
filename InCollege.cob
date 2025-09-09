@@ -95,6 +95,9 @@ MAIN-PARA.
            IF FOUND-FLAG = "Y" AND PASSWORD = T-PASSWORD (U-IX)
                MOVE "You have successfully logged in" TO MSG
                PERFORM ECHO-DISPLAY
+           ELSE
+               MOVE "Incorrect username/password, please try again" TO MSG
+               PERFORM ECHO-DISPLAY
            END-IF
 
          WHEN "2"
