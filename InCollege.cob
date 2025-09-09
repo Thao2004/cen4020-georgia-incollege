@@ -88,6 +88,15 @@ MAIN-PARA.
            READ USER-IN
            MOVE FUNCTION TRIM(USER-IN-REC) TO PASSWORD
 
+           *> Find username (case-insensitive). If found, U-IX points at the match.
+           PERFORM EXISTS-USERNAME
+
+           *> Success message only; no failure handling or retries yet.
+           IF FOUND-FLAG = "Y" AND PASSWORD = T-PASSWORD (U-IX)
+               MOVE "You have successfully logged in" TO MSG
+               PERFORM ECHO-DISPLAY
+           END-IF
+
          WHEN "2"
            *> Create New Account
            *> Enforce global limit of 5 accounts.
@@ -286,3 +295,4 @@ REPORT-PASSWORD-ERRORS.
            END-IF 
        END-IF
        EXIT.
+
