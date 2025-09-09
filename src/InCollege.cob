@@ -29,7 +29,8 @@ FD ACCOUNTS.
 
 WORKING-STORAGE SECTION.
 01 MSG             PIC X(80).      *> Reusable message buffer for display/logging
-01 CHOICE          PIC 99 VALUE 0.       *> Menu choice read as text (e.g., "1", "2")
+01 CHOICE          PIC 9 VALUE 0.  *> Menu choice for login and create account only
+01 NAV-CHOICE      PIC 9 VALUE 0.  *> Navigation choice
 01 USERNAME        PIC X(15).      *> Limit username to 15 (storage size)
 01 PASSWORD        PIC X(12).      *> Password stored max 12 chars
 01 INPUT-USER      PIC X(80).      *> Sratch for username length gating
@@ -85,7 +86,7 @@ MAIN-PARA.
     END-IF
 
     EVALUATE CHOICE
-        WHEN 1
+         WHEN 1
            PERFORM LOGIN-UNLIMITED
 
          WHEN 2
@@ -314,6 +315,9 @@ LOGIN-UNLIMITED.
                IF PASSWORD = T-PASSWORD (U-IX)
                    MOVE "You have successfully logged in" TO MSG
                    PERFORM ECHO-DISPLAY
+                   MOVE "Welcome, " TO MSG
+                   STRING "Welcome, " FUNCTION TRIM(USERNAME) "!" DELIMITED BY SIZE INTO MSG
+                   PERFORM ECHO-DISPLAY
                    PERFORM NAVIGATION-MENU
                    EXIT PERFORM
                ELSE
@@ -330,22 +334,30 @@ LOGIN-UNLIMITED.
 *> Tien's Implementations on September 9th, 2025
 NAVIGATION-MENU.
        MOVE "N" TO EOF-FLAG
-       MOVE 0 TO CHOICE
-       PERFORM UNTIL EOF-FLAG = "Y" OR CHOICE = 9
+       MOVE 0 TO NAV-CHOICE
+
+       PERFORM UNTIL EOF-FLAG = "Y"
            PERFORM DISPLAY-MENU
 
            READ USER-IN INTO USER-IN-REC
                AT END MOVE "Y" TO EOF-FLAG
            END-READ
 
-           IF EOF-FLAG NOT = "Y"
-               IF FUNCTION TEST-NUMVAL(USER-IN-REC) = 0
-                   MOVE FUNCTION NUMVAL(USER-IN-REC) TO CHOICE
-               ELSE
-                   MOVE 0 TO CHOICE
-               END-IF
+           IF EOF-FLAG = "Y"
+               EXIT PERFORM
+           END-IF
 
+           *> Tolerate blank lines by skipping them quietly
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               CONTINUE
+           ELSE
+               IF FUNCTION TEST-NUMVAL(USER-IN-REC) = 0
+                   MOVE FUNCTION NUMVAL(USER-IN-REC) TO NAV-CHOICE
+               ELSE
+                   MOVE 999 TO NAV-CHOICE
+               END-IF
                PERFORM NAV-MENU-CHOICE
+
            END-IF
        END-PERFORM
        EXIT.
@@ -358,13 +370,11 @@ DISPLAY-MENU.
        MOVE "=============================" TO MSG
        PERFORM ECHO-DISPLAY
 
-       MOVE "  1) Job Search" TO MSG
+       MOVE "  1) Search For a Job" TO MSG
        PERFORM ECHO-DISPLAY
        MOVE "  2) Find Someone You Know" TO MSG
        PERFORM ECHO-DISPLAY
        MOVE "  3) Learn a New Skill" TO MSG
-       PERFORM ECHO-DISPLAY
-       MOVE "  9) Exit" TO MSG
        PERFORM ECHO-DISPLAY
        MOVE "=============================" TO MSG
        PERFORM ECHO-DISPLAY
@@ -374,7 +384,7 @@ DISPLAY-MENU.
 
 NAV-MENU-CHOICE.
 
-       EVALUATE CHOICE
+       EVALUATE NAV-CHOICE
            WHEN 1
                MOVE "Job search/internship is under construction." TO MSG
                PERFORM ECHO-DISPLAY
@@ -383,10 +393,8 @@ NAV-MENU-CHOICE.
                PERFORM ECHO-DISPLAY
            WHEN 3
                PERFORM SKILLS-MENU
-           WHEN 9
-               MOVE "Exiting program..." TO MSG
-               PERFORM ECHO-DISPLAY
            WHEN OTHER
+               *> 0, 999, or any other number is invalid
                MOVE "Invalid choice, please try again." TO MSG
                PERFORM ECHO-DISPLAY
        END-EVALUATE
@@ -400,7 +408,7 @@ SKILLS-MENU.
     MOVE 0 TO SKILLS-SELECTION
 
     *> Skills loop: repeat until user chooses Go Back (9) or EOF
-    PERFORM UNTIL SKILLS-SELECTION = 9 OR EOF-FLAG = "Y"
+    PERFORM UNTIL SKILLS-SELECTION = 6 OR EOF-FLAG = "Y"
         *> Print skills menu
         MOVE "Choose a skill to learn:" TO MSG
         PERFORM ECHO-DISPLAY
@@ -414,48 +422,45 @@ SKILLS-MENU.
         PERFORM ECHO-DISPLAY
         MOVE "  5) Leadership" TO MSG
         PERFORM ECHO-DISPLAY
-        MOVE "  9) Go Back" TO MSG
+        MOVE "  6) Go Back" TO MSG
+        PERFORM ECHO-DISPLAY
+        MOVE "Enter your choice:" TO MSG
         PERFORM ECHO-DISPLAY
 
         *> Read next choice for skills
-        MOVE 0 TO SKILLS-SELECTION
         READ USER-IN INTO USER-IN-REC
             AT END MOVE "Y" TO EOF-FLAG
         END-READ
 
-        IF EOF-FLAG NOT = "Y"
-            IF FUNCTION TEST-NUMVAL(USER-IN-REC) = 0
-                MOVE FUNCTION NUMVAL(USER-IN-REC) TO SKILLS-SELECTION
-            ELSE
-                MOVE 0 TO SKILLS-SELECTION  *> Invalid input becomes 0
-            END-IF
+        IF EOF-FLAG = "Y"
+            EXIT PERFORM
         END-IF
 
-        *> Handle skill choice
-        EVALUATE SKILLS-SELECTION
-            WHEN 1
-                MOVE "You chose: Python (Under Construction)" TO MSG
-                PERFORM ECHO-DISPLAY
-            WHEN 2
-                MOVE "You chose: Excel (Under Construction)" TO MSG
-                PERFORM ECHO-DISPLAY
-            WHEN 3
-                MOVE "You chose: Public Speaking (Under Construction)" TO MSG
-                PERFORM ECHO-DISPLAY
-            WHEN 4
-                MOVE "You chose: Time Management (Under Construction)" TO MSG
-                PERFORM ECHO-DISPLAY
-            WHEN 5
-                MOVE "You chose: Leadership (Under Construction)" TO MSG
-                PERFORM ECHO-DISPLAY
-            WHEN 9
-                MOVE "Returning to main menu..." TO MSG
-                PERFORM ECHO-DISPLAY
-                EXIT PERFORM
-            WHEN OTHER
-                MOVE "Invalid choice, please try again." TO MSG
-                PERFORM ECHO-DISPLAY
-        END-EVALUATE
+        *> Skip blank lines quietly
+        IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+            CONTINUE
+        ELSE
+            IF FUNCTION TEST-NUMVAL(USER-IN-REC) = 0
+               MOVE FUNCTION NUMVAL(USER-IN-REC) TO SKILLS-SELECTION
+            ELSE
+               MOVE 999 TO SKILLS-SELECTION
+            END-IF
+
+           *> Handle skill choice
+           EVALUATE SKILLS-SELECTION
+               WHEN 1 THRU 5
+                   MOVE "This skill is under construction." TO MSG
+                   PERFORM ECHO-DISPLAY
+               WHEN 6
+                   MOVE "Returning to main menu..." TO MSG
+                   PERFORM ECHO-DISPLAY
+                   EXIT PERFORM
+               WHEN OTHER
+                   *> 0 or any other invalid number
+                   MOVE "Invalid choice, please try again." TO MSG
+                   PERFORM ECHO-DISPLAY
+           END-EVALUATE
+        END-IF
     END-PERFORM
     EXIT.
 
