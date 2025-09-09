@@ -29,11 +29,13 @@ FD ACCOUNTS.
 
 WORKING-STORAGE SECTION.
 01 MSG             PIC X(80).      *> Reusable message buffer for display/logging
-01 CHOICE          PIC X(2).       *> Menu choice read as text (e.g., "1", "2")
+01 CHOICE          PIC 99 VALUE 0.       *> Menu choice read as text (e.g., "1", "2")
 01 USERNAME        PIC X(15).      *> Limit username to 15 (storage size)
 01 PASSWORD        PIC X(12).      *> Password stored max 12 chars
 01 INPUT-USER      PIC X(80).      *> Sratch for username length gating
 01 USER-LEN        PIC 99 VALUE 0. *> Length of INPUT-USER
+01 SKILLS-SELECTION PIC 99 VALUE 0.     *> skills menu choice (numeric)
+01  EOF-FLAG          PIC X VALUE "N".    *> "Y" at end of input
 
 *> In-memory table (max 5 accounts)
 01 ACCOUNT-COUNT  PIC 9 VALUE 0.
@@ -53,16 +55,15 @@ WORKING-STORAGE SECTION.
 01 TMP-USER       PIC X(15).           *> Scratch for file load
 01 TMP-PASS       PIC X(12).           *> Scratch for file load
 
-
 PROCEDURE DIVISION.
-MAIN-PARA. 
+MAIN-PARA.
     *> Open input/output streams
     OPEN INPUT USER-IN
     OPEN OUTPUT USER-OUT
 
     *> Load existing accounts (if any) into memory
     PERFORM LOAD-ACCOUNTS
-       
+
     *> Prompt
     MOVE "Welcome to InCollege!" TO MSG
     PERFORM ECHO-DISPLAY
@@ -74,13 +75,20 @@ MAIN-PARA.
     PERFORM ECHO-DISPLAY
 
     READ USER-IN
-    MOVE FUNCTION TRIM(USER-IN-REC) TO CHOICE
-    
+       AT END
+           MOVE 0 TO CHOICE
+    END-READ
+    IF FUNCTION TEST-NUMVAL(USER-IN-REC) = 0
+        MOVE FUNCTION NUMVAL(USER-IN-REC) TO CHOICE
+    ELSE
+        MOVE 0 TO CHOICE
+    END-IF
+
     EVALUATE CHOICE
-        WHEN "1"
+        WHEN 1
            PERFORM LOGIN-UNLIMITED
 
-         WHEN "2"
+         WHEN 2
            *> Create New Account
            *> Enforce global limit of 5 accounts.
            IF ACCOUNT-COUNT = 5
@@ -92,16 +100,16 @@ MAIN-PARA.
                PERFORM ECHO-DISPLAY
                READ USER-IN
 
-               *> Username empty check 
+               *> Username empty check
                IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
                    MOVE "Username cannot be empty." TO MSG
                    PERFORM ECHO-DISPLAY
                ELSE
-                   *> Length check: Max 15 character 
+                   *> Length check: Max 15 character
                    IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) > 15
                        MOVE "Username must be 1-15 characters long." TO MSG
                        PERFORM ECHO-DISPLAY
-                   ELSE 
+                   ELSE
                        MOVE FUNCTION TRIM(USER-IN-REC) TO USERNAME
                        *> Case-insensitive uniqueness check against in-memory table
                        PERFORM EXISTS-USERNAME
@@ -118,7 +126,7 @@ MAIN-PARA.
                               FUNCTION LENGTH(FUNCTION TRIM(PASSWORD))
                               MOVE "Password must be 8-12 characters long." TO MSG
                               PERFORM ECHO-DISPLAY
-                           ELSE 
+                           ELSE
                                PERFORM VALIDATE-PASSWORD
                                *> Accept only if all flags satisfied
                                IF HAS-UPPER = "Y" AND HAS-DIGIT = "Y" AND HAS-SPECIAL = "Y"
@@ -141,12 +149,12 @@ MAIN-PARA.
                      END-IF
                END-IF
            END-IF
-         
+
          WHEN OTHER
            MOVE "Invalid choice." TO MSG
            PERFORM ECHO-DISPLAY
      END-EVALUATE.
-    
+
     CLOSE USER-IN
     CLOSE USER-OUT
     STOP RUN.
@@ -254,7 +262,7 @@ VALIDATE-PASSWORD.
        EXIT.
 
 
-*> Function to show the error messages related to password setup 
+*> Function to show the error messages related to password setup
 REPORT-PASSWORD-ERRORS.
        *> Does not meet length requirement
        IF PW-LEN < 8 OR PW-LEN > 12
@@ -277,7 +285,7 @@ REPORT-PASSWORD-ERRORS.
                        PERFORM ECHO-DISPLAY
                    END-IF
                END-IF
-           END-IF 
+           END-IF
        END-IF
        EXIT.
 
@@ -306,6 +314,7 @@ LOGIN-UNLIMITED.
                IF PASSWORD = T-PASSWORD (U-IX)
                    MOVE "You have successfully logged in" TO MSG
                    PERFORM ECHO-DISPLAY
+                   PERFORM NAVIGATION-MENU
                    EXIT PERFORM
                ELSE
                    MOVE "Incorrect username/password, please try again" TO MSG
@@ -317,4 +326,137 @@ LOGIN-UNLIMITED.
            END-IF
        END-PERFORM
        EXIT.
+
+*> Tien's Implementations on September 9th, 2025
+NAVIGATION-MENU.
+       MOVE "N" TO EOF-FLAG
+       MOVE 0 TO CHOICE
+       PERFORM UNTIL EOF-FLAG = "Y" OR CHOICE = 9
+           PERFORM DISPLAY-MENU
+
+           READ USER-IN INTO USER-IN-REC
+               AT END MOVE "Y" TO EOF-FLAG
+           END-READ
+
+           IF EOF-FLAG NOT = "Y"
+               IF FUNCTION TEST-NUMVAL(USER-IN-REC) = 0
+                   MOVE FUNCTION NUMVAL(USER-IN-REC) TO CHOICE
+               ELSE
+                   MOVE 0 TO CHOICE
+               END-IF
+
+               PERFORM NAV-MENU-CHOICE
+           END-IF
+       END-PERFORM
+       EXIT.
+
+DISPLAY-MENU.
+       MOVE "=============================" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "     InCollege Main Menu" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "=============================" TO MSG
+       PERFORM ECHO-DISPLAY
+
+       MOVE "  1) Job Search" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "  2) Find Someone You Know" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "  3) Learn a New Skill" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "  9) Exit" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "=============================" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "Enter your choice: " TO MSG
+       PERFORM ECHO-DISPLAY
+       EXIT.
+
+NAV-MENU-CHOICE.
+
+       EVALUATE CHOICE
+           WHEN 1
+               MOVE "Job search/internship is under construction." TO MSG
+               PERFORM ECHO-DISPLAY
+           WHEN 2
+               MOVE "Find someone you know is under construction." TO MSG
+               PERFORM ECHO-DISPLAY
+           WHEN 3
+               PERFORM SKILLS-MENU
+           WHEN 9
+               MOVE "Exiting program..." TO MSG
+               PERFORM ECHO-DISPLAY
+           WHEN OTHER
+               MOVE "Invalid choice, please try again." TO MSG
+               PERFORM ECHO-DISPLAY
+       END-EVALUATE
+       EXIT.
+
+
+
+
+SKILLS-MENU.
+    *> Reset skill selection each time this menu is shown
+    MOVE 0 TO SKILLS-SELECTION
+
+    *> Skills loop: repeat until user chooses Go Back (9) or EOF
+    PERFORM UNTIL SKILLS-SELECTION = 9 OR EOF-FLAG = "Y"
+        *> Print skills menu
+        MOVE "Choose a skill to learn:" TO MSG
+        PERFORM ECHO-DISPLAY
+        MOVE "  1) Python" TO MSG
+        PERFORM ECHO-DISPLAY
+        MOVE "  2) Excel" TO MSG
+        PERFORM ECHO-DISPLAY
+        MOVE "  3) Public Speaking" TO MSG
+        PERFORM ECHO-DISPLAY
+        MOVE "  4) Time Management" TO MSG
+        PERFORM ECHO-DISPLAY
+        MOVE "  5) Leadership" TO MSG
+        PERFORM ECHO-DISPLAY
+        MOVE "  9) Go Back" TO MSG
+        PERFORM ECHO-DISPLAY
+
+        *> Read next choice for skills
+        MOVE 0 TO SKILLS-SELECTION
+        READ USER-IN INTO USER-IN-REC
+            AT END MOVE "Y" TO EOF-FLAG
+        END-READ
+
+        IF EOF-FLAG NOT = "Y"
+            IF FUNCTION TEST-NUMVAL(USER-IN-REC) = 0
+                MOVE FUNCTION NUMVAL(USER-IN-REC) TO SKILLS-SELECTION
+            ELSE
+                MOVE 0 TO SKILLS-SELECTION  *> Invalid input becomes 0
+            END-IF
+        END-IF
+
+        *> Handle skill choice
+        EVALUATE SKILLS-SELECTION
+            WHEN 1
+                MOVE "You chose: Python (Under Construction)" TO MSG
+                PERFORM ECHO-DISPLAY
+            WHEN 2
+                MOVE "You chose: Excel (Under Construction)" TO MSG
+                PERFORM ECHO-DISPLAY
+            WHEN 3
+                MOVE "You chose: Public Speaking (Under Construction)" TO MSG
+                PERFORM ECHO-DISPLAY
+            WHEN 4
+                MOVE "You chose: Time Management (Under Construction)" TO MSG
+                PERFORM ECHO-DISPLAY
+            WHEN 5
+                MOVE "You chose: Leadership (Under Construction)" TO MSG
+                PERFORM ECHO-DISPLAY
+            WHEN 9
+                MOVE "Returning to main menu..." TO MSG
+                PERFORM ECHO-DISPLAY
+                EXIT PERFORM
+            WHEN OTHER
+                MOVE "Invalid choice, please try again." TO MSG
+                PERFORM ECHO-DISPLAY
+        END-EVALUATE
+    END-PERFORM
+    EXIT.
+
 
