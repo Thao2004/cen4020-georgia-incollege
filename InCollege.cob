@@ -1,8 +1,86 @@
 *> This is free-form
 IDENTIFICATION DIVISION.
-PROGRAM-ID. HELLO.
+PROGRAM-ID. INCOLLEGE.
+
+
 ENVIRONMENT DIVISION.
+INPUT-OUTPUT SECTION.
+FILE-CONTROL.
+    SELECT USER-IN ASSIGN TO 'InCollege-Input.txt'
+       ORGANIZATION IS LINE SEQUENTIAL.
+
+    SELECT USER-OUT ASSIGN TO 'InCollege-Output.txt'
+       ORGANIZATION IS LINE SEQUENTIAL.
+
+
 DATA DIVISION.
+FILE SECTION.
+FD USER-IN.
+01 USER-IN-REC     PIC X(40)
+FD USER-OUT.
+01 USER-OUT-REC    PIC X(40)
+
+WORKING-STORAGE SECTION.
+01 END-FLAG        PIC X VALUE "N".
+88 EOF             VALUE "Y".
+88 NOT-EOF         VALUE "N".
+01 MSG             PIC X(40)
+01 CHOICE          PIC X(2).
+01 USERNAME        PIC X(15).
+01 PASSWORD        PIC X(15).
+
+
 PROCEDURE DIVISION.
-    DISPLAY "Welcome to InCollege!".
+MAIN-PARA. 
+    OPEN INPUT USER-IN
+    OPEN OUTPUT USER-OUT
+
+    MOVE "Welcome to InCollege!" TO MSG
+    PERFORM ECHO-DISPLAY
+    MOVE "1. Log In" TO MSG
+    PERFORM ECHO-DISPLAY
+    MOVE "2. Create New Account" TO MSG
+    PERFORM ECHO-DISPLAY
+    MOVE "Enter your choice:" TO MSG
+    PERFORM ECHO-DISPLAY
+
+    READ USER-IN
+    MOVE FUNCTION TRIM(USER-IN-REC) TO CHOICE
+    
+    EVALUATE CHOICE
+        WHEN "1"
+           MOVE "Please enter your username:" TO MSG
+           PERFORM ECHO-DISPLAY
+           READ USER-IN
+           MOVE FUNCTION TRIM(USER-IN-REC) TO USERNAME
+
+           MOVE "Please enter your password:" TO MSG
+           PERFORM ECHO-DISPLAY
+           READ USER-IN
+           MOVE FUNCTION TRIM(USER-IN-REC) TO PASSWORD
+
+         WHEN "2"
+           MOVE "Please enter your username:" TO MSG
+           PERFORM ECHO-DISPLAY
+           READ USER-IN
+           MOVE FUNCTION TRIM(USER-IN-REC) TO USERNAME
+
+           MOVE "Please enter your password:" TO MSG
+           PERFORM ECHO-DISPLAY
+           READ USER-IN
+           MOVE FUNCTION TRIM(USER-IN-REC) TO PASSWORD
+         
+         WHEN OTHER
+           MOVE "Invalid choice." TO MSG
+           PERFORM ECHO-DISPLAY
+     END-EVALUATE.
+    
+    CLOSE USER-IN
+    CLOSE USER-OUT
     STOP RUN.
+
+
+ECHO-DISPLAY.
+       DISPLAY MSG
+       MOVE MSG TO USER-OUT-REC
+       WRITE USER-OUT-REC.
