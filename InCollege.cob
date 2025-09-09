@@ -78,27 +78,7 @@ MAIN-PARA.
     
     EVALUATE CHOICE
         WHEN "1"
-           MOVE "Please enter your username:" TO MSG
-           PERFORM ECHO-DISPLAY
-           READ USER-IN
-           MOVE FUNCTION TRIM(USER-IN-REC) TO USERNAME
-
-           MOVE "Please enter your password:" TO MSG
-           PERFORM ECHO-DISPLAY
-           READ USER-IN
-           MOVE FUNCTION TRIM(USER-IN-REC) TO PASSWORD
-
-           *> Find username (case-insensitive). If found, U-IX points at the match.
-           PERFORM EXISTS-USERNAME
-
-           *> Success message only; no failure handling or retries yet.
-           IF FOUND-FLAG = "Y" AND PASSWORD = T-PASSWORD (U-IX)
-               MOVE "You have successfully logged in" TO MSG
-               PERFORM ECHO-DISPLAY
-           ELSE
-               MOVE "Incorrect username/password, please try again" TO MSG
-               PERFORM ECHO-DISPLAY
-           END-IF
+           PERFORM LOGIN-UNLIMITED
 
          WHEN "2"
            *> Create New Account
@@ -226,6 +206,7 @@ LOAD-ACCOUNTS.
        CLOSE ACCOUNTS
        EXIT.
 
+
 *> Save entire table back to accounts.dat (full rewrite)
 SAVE-ACCOUNTS.
        OPEN OUTPUT ACCOUNTS
@@ -246,6 +227,7 @@ SAVE-ACCOUNTS.
        END-IF
        CLOSE ACCOUNTS
        EXIT.
+
 
 *> Function to validate password
 *> Criteria: Minimum of 8 characters, a maximum of 12 characters, at least one capital letter,
@@ -297,5 +279,42 @@ REPORT-PASSWORD-ERRORS.
                END-IF
            END-IF 
        END-IF
+       EXIT.
+
+
+*> Login with unlimited attempts.
+*> Success prints the exact required message and exits the loop.
+LOGIN-UNLIMITED.
+       PERFORM UNTIL 1 = 0
+           MOVE "Please enter your username:" TO MSG
+           PERFORM ECHO-DISPLAY
+           READ USER-IN
+               AT END EXIT PERFORM
+           END-READ
+           MOVE FUNCTION TRIM(USER-IN-REC) TO USERNAME
+
+           MOVE "Please enter your password:" TO MSG
+           PERFORM ECHO-DISPLAY
+           READ USER-IN
+               AT END EXIT PERFORM
+           END-READ
+           MOVE FUNCTION TRIM(USER-IN-REC) TO PASSWORD
+
+           PERFORM EXISTS-USERNAME
+
+           IF FOUND-FLAG = "Y"
+               IF PASSWORD = T-PASSWORD (U-IX)
+                   MOVE "You have successfully logged in" TO MSG
+                   PERFORM ECHO-DISPLAY
+                   EXIT PERFORM
+               ELSE
+                   MOVE "Incorrect username/password, please try again" TO MSG
+                   PERFORM ECHO-DISPLAY
+               END-IF
+           ELSE
+               MOVE "Incorrect username/password, please try again" TO MSG
+               PERFORM ECHO-DISPLAY
+           END-IF
+       END-PERFORM
        EXIT.
 
