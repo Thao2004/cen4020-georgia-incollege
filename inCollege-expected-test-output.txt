@@ -1,0 +1,231 @@
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+Account created.
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+Account created.
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Username must be 1-15 characters long.
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+Password must include at least one uppercase letter.
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+Password must include at least one uppercase letter.
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+Password must include at least one uppercase letter.
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+Account created.
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+Account created.
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+Account created.
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in
+Welcome, username5!
+
+=============================
+     InCollege Main Menu
+=============================
+  1) Search For a Job
+  2) Find Someone You Know
+  3) Learn a New Skill
+=============================
+Enter your choice:
+Invalid choice, please try again.
+
+=============================
+     InCollege Main Menu
+=============================
+  1) Search For a Job
+  2) Find Someone You Know
+  3) Learn a New Skill
+=============================
+Enter your choice:
+Job search/internship is under construction.
+
+=============================
+     InCollege Main Menu
+=============================
+  1) Search For a Job
+  2) Find Someone You Know
+  3) Learn a New Skill
+=============================
+Enter your choice:
+Find someone you know is under construction.
+
+=============================
+     InCollege Main Menu
+=============================
+  1) Search For a Job
+  2) Find Someone You Know
+  3) Learn a New Skill
+=============================
+Enter your choice:
+Choose a skill to learn:
+  1) Python
+  2) Excel
+  3) Public Speaking
+  4) Time Management
+  5) Leadership
+  6) Go Back
+Enter your choice:
+Invalid choice, please try again.
+Choose a skill to learn:
+  1) Python
+  2) Excel
+  3) Public Speaking
+  4) Time Management
+  5) Leadership
+  6) Go Back
+Enter your choice:
+This skill is under construction.
+Choose a skill to learn:
+  1) Python
+  2) Excel
+  3) Public Speaking
+  4) Time Management
+  5) Leadership
+  6) Go Back
+Enter your choice:
+This skill is under construction.
+Choose a skill to learn:
+  1) Python
+  2) Excel
+  3) Public Speaking
+  4) Time Management
+  5) Leadership
+  6) Go Back
+Enter your choice:
+This skill is under construction.
+Choose a skill to learn:
+  1) Python
+  2) Excel
+  3) Public Speaking
+  4) Time Management
+  5) Leadership
+  6) Go Back
+Enter your choice:
+This skill is under construction.
+Choose a skill to learn:
+  1) Python
+  2) Excel
+  3) Public Speaking
+  4) Time Management
+  5) Leadership
+  6) Go Back
+Enter your choice:
+This skill is under construction.
+Choose a skill to learn:
+  1) Python
+  2) Excel
+  3) Public Speaking
+  4) Time Management
+  5) Leadership
+  6) Go Back
+Enter your choice:
+Returning to main menu...
+
+=============================
+     InCollege Main Menu
+=============================
+  1) Search For a Job
+  2) Find Someone You Know
+  3) Learn a New Skill
+=============================
+Enter your choice:
+Job search/internship is under construction.
+
+=============================
+     InCollege Main Menu
+=============================
+  1) Search For a Job
+  2) Find Someone You Know
+  3) Learn a New Skill
+=============================
+Enter your choice:
+Find someone you know is under construction.
+
+=============================
+     InCollege Main Menu
+=============================
+  1) Search For a Job
+  2) Find Someone You Know
+  3) Learn a New Skill
+=============================
+Enter your choice:
+Invalid choice, please try again.
+
+=============================
+     InCollege Main Menu
+=============================
+  1) Search For a Job
+  2) Find Someone You Know
+  3) Learn a New Skill
+=============================
+Enter your choice:
+Invalid choice, please try again.
+
+=============================
+     InCollege Main Menu
+=============================
+  1) Search For a Job
+  2) Find Someone You Know
+  3) Learn a New Skill
+=============================
+Enter your choice:
+Job search/internship is under construction.
+
+=============================
+     InCollege Main Menu
+=============================
+  1) Search For a Job
+  2) Find Someone You Know
+  3) Learn a New Skill
+=============================
+Enter your choice:
