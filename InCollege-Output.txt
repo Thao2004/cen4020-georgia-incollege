@@ -11,21 +11,8 @@ Welcome to InCollege!
 Enter your choice:
 Please enter your username:
 Please enter your password:
-Incorrect username/password, please try again
-Please enter your username:
-Please enter your password:
 You have successfully logged in
-Welcome, jenniferr!
-
-=============================
-     InCollege Main Menu
-=============================
-  1) Search For a Job
-  2) Find Someone You Know
-  3) Learn a New Skill
-=============================
-Enter your choice:
-Job search/internship is under construction.
+Welcome, username1!
 
 =============================
      InCollege Main Menu
@@ -44,30 +31,4 @@ Find someone you know is under construction.
   2) Find Someone You Know
   3) Learn a New Skill
 =============================
-Enter your choice:
-Choose a skill to learn:
-  1) Python
-  2) Excel
-  3) Public Speaking
-  4) Time Management
-  5) Leadership
-  6) Go Back
-Enter your choice:
-This skill is under construction.
-Choose a skill to learn:
-  1) Python
-  2) Excel
-  3) Public Speaking
-  4) Time Management
-  5) Leadership
-  6) Go Back
-Enter your choice:
-This skill is under construction.
-Choose a skill to learn:
-  1) Python
-  2) Excel
-  3) Public Speaking
-  4) Time Management
-  5) Leadership
-  6) Go Back
 Enter your choice:
