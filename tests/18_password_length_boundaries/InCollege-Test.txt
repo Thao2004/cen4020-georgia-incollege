@@ -1,0 +1,1 @@
+2 len8ok A1!bcdefg 2 len12ok Ab1!cdefGhij 2 len7bad A1!bcde 2 len13bad Ab1!cdefGhijk

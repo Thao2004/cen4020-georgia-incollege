@@ -26,9 +26,12 @@ build(){
 run_prog(){
   local wd="$1"; local input="$2"
   mkdir -p "$wd"                     # ensure directory exists
+  # keep a raw inputs buffer for this case (multiple runs per case are appended)
+  printf "%s\n" "$input" >> "$wd/.inputs_raw"
+
   printf "%s" "$input" > "$wd/InCollege-Input.txt"
   ( cd "$wd" && ../../bin/InCollege >/dev/null 2>&1 || true )
-  cat "$wd/InCollege-Output.txt" >> "$wd/test.log"
+  [[ -f "$wd/InCollege-Output.txt" ]] && cat "$wd/InCollege-Output.txt" >> "$wd/test.log"
 }
 
 # assert that a pattern exists in the combined test log
@@ -42,6 +45,8 @@ expect_contains(){
     fi
   done
   if [[ $ok -eq 1 ]]; then say_pass "$name"; else say_fail "$name (see $wd/test.log)"; fi
+  # Always emit per-case submission files after the check
+  finalize_case "$wd"
 }
 
 # helper: new isolated test dir
@@ -54,6 +59,20 @@ mkcase(){
   printf "%s\n" "${DIM}Running: $name -> $wd${RESET}" >&2
   # only print the path to STDOUT (this is what WD captures)
   printf "%s" "$wd"
+}
+
+# finalize one case: create InCollege-Test.txt (flattened inputs) and InCollege-Output.txt (outputs)
+finalize_case(){
+  local wd="$1"
+  # Build single-line input: replace newlines with spaces, squeeze spaces, trim ends
+  if [[ -f "$wd/.inputs_raw" ]]; then
+    # tr -> replace newlines with spaces; awk -> collapse spaces; sed -> trim
+    tr '\n' ' ' < "$wd/.inputs_raw" | awk '{$1=$1; print}' > "$wd/InCollege-Test.txt"
+  else
+    : > "$wd/InCollege-Test.txt"
+  fi
+  # Copy the accumulated outputs
+  cp -f "$wd/test.log" "$wd/InCollege-Output.txt"
 }
 
 # clean & build
