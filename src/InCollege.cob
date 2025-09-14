@@ -36,7 +36,7 @@ WORKING-STORAGE SECTION.
 01 INPUT-USER      PIC X(80).      *> Sratch for username length gating
 01 USER-LEN        PIC 99 VALUE 0. *> Length of INPUT-USER
 01 SKILLS-SELECTION PIC 99 VALUE 0.     *> skills menu choice (numeric)
-01  EOF-FLAG          PIC X VALUE "N".    *> "Y" at end of input
+01 EOF-FLAG          PIC X VALUE "N".    *> "Y" at end of input
 
 *> In-memory table (max 5 accounts)
 01 ACCOUNT-COUNT  PIC 9 VALUE 0.
@@ -55,21 +55,27 @@ WORKING-STORAGE SECTION.
 01 FOUND-FLAG     PIC X VALUE "N".     *> "Y" if username is already taken
 01 TMP-USER       PIC X(15).           *> Scratch for file load
 01 TMP-PASS       PIC X(12).           *> Scratch for file load
+01 PROFILE-FIRSTNAME   PIC X(20).
+01 PROFILE-LASTNAME    PIC X(20).
+01 PROFILE-UNIVERSITY  PIC X(40).
+01 PROFILE-MAJOR       PIC X(30).
+01 PROFILE-YEAR        PIC 9(4).
+
 
 PROCEDURE DIVISION.
 MAIN-PARA.
-    *> Open input/output streams
-    OPEN INPUT USER-IN
-    OPEN OUTPUT USER-OUT
+        *> Open input/output streams
+        OPEN INPUT USER-IN
+        OPEN OUTPUT USER-OUT
 
-    *> Load existing accounts (if any) into memory
-    PERFORM LOAD-ACCOUNTS
+        *> Load existing accounts (if any) into memory
+        PERFORM LOAD-ACCOUNTS
 
-    PERFORM MAIN-LOOP
+        PERFORM MAIN-LOOP
 
-    CLOSE USER-IN
-    CLOSE USER-OUT
-    STOP RUN.
+        CLOSE USER-IN
+        CLOSE USER-OUT
+        STOP RUN.
 
 
 MAIN-LOOP.
@@ -432,7 +438,6 @@ DISPLAY-MENU.
 
 
 NAV-MENU-CHOICE.
-
        EVALUATE NAV-CHOICE
            WHEN 1
                PERFORM CREATE-PROFILE
@@ -451,60 +456,168 @@ NAV-MENU-CHOICE.
        EXIT.
 
 CREATE-PROFILE.
-       MOVE "--- Create/Edit Profile ---" TO MSG
-       PERFORM ECHO-DISPLAY
+    MOVE "--- Create/Edit Profile ---" TO MSG
+    PERFORM ECHO-DISPLAY
 
-       MOVE "Enter First Name:" TO MSG
-       PERFORM ECHO-DISPLAY
-       MOVE "Enter Last Name:" TO MSG
-       PERFORM ECHO-DISPLAY
-       MOVE "Enter University/College Attended:" TO MSG
-       PERFORM ECHO-DISPLAY
-       MOVE "Enter Major:" TO MSG
-       PERFORM ECHO-DISPLAY
-       MOVE "Enter Graduation Year (YYYY):" TO MSG
-       PERFORM ECHO-DISPLAY
-       MOVE "Enter About Me (optional, max 200 chars, enter blank line to skip):" TO MSG
-       PERFORM ECHO-DISPLAY
+    PERFORM GET-FIRST
+    PERFORM GET-LAST
+    PERFORM GET-UNIV
+    PERFORM GET-MAJOR
+    PERFORM GET-YEAR
 
-       MOVE "Add Experience (optional, max 3 entries. Enter 'DONE' to finish):" TO MSG
-       PERFORM ECHO-DISPLAY
-       MOVE "Experience #1 - Title:" TO MSG
-       PERFORM ECHO-DISPLAY
-       MOVE "Experience #1 - Company/Organization:" TO MSG
-       PERFORM ECHO-DISPLAY
-       MOVE "Experience #1 - Dates (e.g., Summer 2024):" TO MSG
-       PERFORM ECHO-DISPLAY
-       MOVE "Experience #1 - Description (optional, max 100 chars, blank to skip):" TO MSG
-       PERFORM ECHO-DISPLAY
-       MOVE "Add Experience (optional, max 3 entries. Enter 'DONE' to finish):" TO MSG
-       PERFORM ECHO-DISPLAY
-       MOVE "DONE" TO MSG
-       PERFORM ECHO-DISPLAY
+    IF EOF-FLAG = "Y"
+        EXIT PARAGRAPH
+    END-IF
 
-       MOVE "Add Education (optional, max 3 entries. Enter 'DONE' to finish):" TO MSG
-       PERFORM ECHO-DISPLAY
-       MOVE "Education #1 - Degree:" TO MSG
-       PERFORM ECHO-DISPLAY
-       MOVE "Education #1 - University/College:" TO MSG
-       PERFORM ECHO-DISPLAY
-       MOVE "Education #1 - Years Attended (e.g., 2023-2025):" TO MSG
-       PERFORM ECHO-DISPLAY
-       MOVE "Add Education (optional, max 3 entries. Enter 'DONE' to finish):" TO MSG
-       PERFORM ECHO-DISPLAY
-       MOVE "DONE" TO MSG
-       PERFORM ECHO-DISPLAY
+    *> optional sections ...
+    MOVE "Enter About Me (optional, max 200 chars, enter blank line to skip):" TO MSG
+    PERFORM ECHO-DISPLAY
+    ...
+    MOVE "Profile saved successfully!" TO MSG
+    PERFORM ECHO-DISPLAY
+    EXIT PARAGRAPH.
 
-       MOVE "Profile saved successfully!" TO MSG
-       PERFORM ECHO-DISPLAY
-       EXIT.
+
+*> First name
+GET-FIRST.
+       IF EOF-FLAG = "Y"
+           MOVE "Enter First Name:" TO MSG
+           PERFORM ECHO-DISPLAY
+           EXIT PARAGRAPH
+       END-IF
+
+       PERFORM UNTIL 1 = 0
+           MOVE "Enter First Name:" TO MSG
+           PERFORM ECHO-DISPLAY
+
+           READ USER-IN
+               AT END
+                   MOVE "Y" TO EOF-FLAG
+                   EXIT PARAGRAPH
+           END-READ
+
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               MOVE "First Name is required." TO MSG
+               PERFORM ECHO-DISPLAY
+           ELSE
+               MOVE FUNCTION TRIM(USER-IN-REC) TO PROFILE-FIRSTNAME
+               EXIT PERFORM
+           END-IF
+       END-PERFORM
+       EXIT PARAGRAPH.
+
+
+*> Last name
+GET-LAST.
+       IF EOF-FLAG = "Y"
+           MOVE "Enter Last Name:" TO MSG
+           PERFORM ECHO-DISPLAY
+           EXIT PARAGRAPH
+       END-IF
+       PERFORM UNTIL 1 = 0
+           MOVE "Enter Last Name:" TO MSG
+           PERFORM ECHO-DISPLAY
+           READ USER-IN
+               AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
+           END-READ
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               MOVE "Last Name is required." TO MSG
+               PERFORM ECHO-DISPLAY
+           ELSE
+               MOVE FUNCTION TRIM(USER-IN-REC) TO PROFILE-LASTNAME
+               EXIT PERFORM
+           END-IF
+       END-PERFORM
+       EXIT PARAGRAPH.
+
+
+*> University/College
+GET-UNIV.
+       IF EOF-FLAG = "Y"
+           MOVE "Enter University/College Attended:" TO MSG
+           PERFORM ECHO-DISPLAY
+           EXIT PARAGRAPH
+       END-IF
+       PERFORM UNTIL 1 = 0
+           MOVE "Enter University/College Attended:" TO MSG
+           PERFORM ECHO-DISPLAY
+           READ USER-IN
+               AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
+           END-READ
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               MOVE "University/College is required." TO MSG
+               PERFORM ECHO-DISPLAY
+           ELSE
+               MOVE FUNCTION TRIM(USER-IN-REC) TO PROFILE-UNIVERSITY
+               EXIT PERFORM
+           END-IF
+       END-PERFORM
+       EXIT PARAGRAPH.
+
+
+*> Major
+GET-MAJOR.
+       IF EOF-FLAG = "Y"
+           MOVE "Enter Major:" TO MSG
+           PERFORM ECHO-DISPLAY
+           EXIT PARAGRAPH
+       END-IF
+       PERFORM UNTIL 1 = 0
+           MOVE "Enter Major:" TO MSG
+           PERFORM ECHO-DISPLAY
+           READ USER-IN
+               AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
+           END-READ
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               MOVE "Major is required." TO MSG
+               PERFORM ECHO-DISPLAY
+           ELSE
+               MOVE FUNCTION TRIM(USER-IN-REC) TO PROFILE-MAJOR
+               EXIT PERFORM
+           END-IF
+       END-PERFORM
+       EXIT PARAGRAPH.
+
+
+*> Graduation year
+GET-YEAR.
+       IF EOF-FLAG = "Y"
+           MOVE "Enter Graduation Year (YYYY):" TO MSG
+           PERFORM ECHO-DISPLAY
+           EXIT PARAGRAPH
+       END-IF
+       PERFORM UNTIL 1 = 0
+           MOVE "Enter Graduation Year (YYYY):" TO MSG
+           PERFORM ECHO-DISPLAY
+           READ USER-IN
+               AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
+           END-READ
+
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               MOVE "Graduation Year is required." TO MSG
+               PERFORM ECHO-DISPLAY
+               CONTINUE
+           END-IF
+
+           IF FUNCTION TEST-NUMVAL(USER-IN-REC) = 0
+               MOVE FUNCTION NUMVAL(USER-IN-REC) TO PROFILE-YEAR
+               IF PROFILE-YEAR >= 1900 AND PROFILE-YEAR <= 2100
+                   EXIT PERFORM
+               END-IF
+           END-IF
+
+           MOVE "Please enter a valid 4-digit year (e.g., 2025)." TO MSG
+           PERFORM ECHO-DISPLAY
+       END-PERFORM
+       EXIT PARAGRAPH.
 
 
 
 VIEW-PROFILE.
        MOVE "--- Your Profile ---" TO MSG
        PERFORM ECHO-DISPLAY
-       EXIT.
+       EXIT PARAGRAPH.
+
 
 
 SKILLS-MENU.
