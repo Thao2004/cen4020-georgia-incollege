@@ -21,7 +21,7 @@ FILE-CONTROL.
 DATA DIVISION.
 FILE SECTION.
 FD USER-IN.
-01 USER-IN-REC     PIC X(80).
+01 USER-IN-REC     PIC X(512).
 FD USER-OUT.
 01 USER-OUT-REC    PIC X(80).
 FD ACCOUNTS.
@@ -60,6 +60,7 @@ WORKING-STORAGE SECTION.
 01 PROFILE-UNIVERSITY  PIC X(40).
 01 PROFILE-MAJOR       PIC X(30).
 01 PROFILE-YEAR        PIC 9(4).
+01 PROFILE-ABOUT       PIC X(200).
 
 
 PROCEDURE DIVISION.
@@ -380,7 +381,6 @@ LOGIN-UNLIMITED.
 
 *> Tien's Implementations on September 9th, 2025
 NAVIGATION-MENU.
-       MOVE "N" TO EOF-FLAG
        MOVE 0 TO NAV-CHOICE
 
        PERFORM UNTIL EOF-FLAG = "Y"
@@ -389,10 +389,11 @@ NAVIGATION-MENU.
            READ USER-IN INTO USER-IN-REC
                AT END MOVE "Y" TO EOF-FLAG
            END-READ
-
            IF EOF-FLAG = "Y"
                EXIT PERFORM
            END-IF
+
+
 
            *> Tolerate blank lines by skipping them quietly
            IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
@@ -404,7 +405,7 @@ NAVIGATION-MENU.
                    MOVE 999 TO NAV-CHOICE
                END-IF
                PERFORM NAV-MENU-CHOICE
-
+               IF EOF-FLAG = "Y" EXIT PERFORM
            END-IF
        END-PERFORM
        EXIT.
@@ -456,26 +457,47 @@ NAV-MENU-CHOICE.
        EXIT.
 
 CREATE-PROFILE.
-    MOVE "--- Create/Edit Profile ---" TO MSG
-    PERFORM ECHO-DISPLAY
+       MOVE "--- Create/Edit Profile ---" TO MSG
+       PERFORM ECHO-DISPLAY
 
-    PERFORM GET-FIRST
-    PERFORM GET-LAST
-    PERFORM GET-UNIV
-    PERFORM GET-MAJOR
-    PERFORM GET-YEAR
+       PERFORM GET-FIRST          *> Get first name
+       PERFORM GET-LAST           *> Get last name
+       PERFORM GET-UNIV           *> Get university/college
+       PERFORM GET-MAJOR          *> Get major
+       PERFORM GET-YEAR           *> Get graduation year
+       PERFORM GET-ABOUT          *> Get about me (optional)
 
-    IF EOF-FLAG = "Y"
-        EXIT PARAGRAPH
-    END-IF
+       MOVE "Add Experience (optional, max 3 entries. Enter 'DONE' to finish):" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "Experience #1 - Title:" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "Experience #1 - Company/Organization:" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "Experience #1 - Dates (e.g., Summer 2024):" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "Experience #1 - Description (optional, max 100 chars, blank to skip):" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "Add Experience (optional, max 3 entries. Enter 'DONE' to finish):" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "DONE" TO MSG
+       PERFORM ECHO-DISPLAY
 
-    *> optional sections ...
-    MOVE "Enter About Me (optional, max 200 chars, enter blank line to skip):" TO MSG
-    PERFORM ECHO-DISPLAY
-    ...
-    MOVE "Profile saved successfully!" TO MSG
-    PERFORM ECHO-DISPLAY
-    EXIT PARAGRAPH.
+       MOVE "Add Education (optional, max 3 entries. Enter 'DONE' to finish):" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "Education #1 - Degree:" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "Education #1 - University/College:" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "Education #1 - Years Attended (e.g., 2023-2025):" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "Add Education (optional, max 3 entries. Enter 'DONE' to finish):" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "DONE" TO MSG
+       PERFORM ECHO-DISPLAY
+
+       MOVE "Profile saved successfully!" TO MSG
+       PERFORM ECHO-DISPLAY
+       EXIT.
 
 
 *> First name
@@ -611,6 +633,39 @@ GET-YEAR.
        END-PERFORM
        EXIT PARAGRAPH.
 
+
+*> About me section
+GET-ABOUT.
+       IF EOF-FLAG = "Y"
+           MOVE "Enter About Me (optional, max 200 chars, enter blank line to skip):" TO MSG
+           PERFORM ECHO-DISPLAY
+           EXIT PARAGRAPH
+       END-IF
+
+       PERFORM UNTIL 1 = 0
+           MOVE "Enter About Me (optional, max 200 chars, enter blank line to skip):" TO MSG
+           PERFORM ECHO-DISPLAY
+
+           READ USER-IN
+               AT END
+                   MOVE "Y" TO EOF-FLAG
+                   EXIT PARAGRAPH
+           END-READ
+
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               MOVE SPACES TO PROFILE-ABOUT
+               EXIT PARAGRAPH
+           END-IF
+
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) > 200
+               MOVE "About Me must be at most 200 characters." TO MSG
+               PERFORM ECHO-DISPLAY
+           ELSE
+               MOVE FUNCTION TRIM(USER-IN-REC) TO PROFILE-ABOUT
+               EXIT PERFORM
+           END-IF
+       END-PERFORM
+       EXIT PARAGRAPH.
 
 
 VIEW-PROFILE.
