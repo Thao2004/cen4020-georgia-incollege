@@ -12,8 +12,9 @@ Welcome, Anna!
 =============================
   1. Create/Edit My Profile
   2. View My Profile
-  3. Search for User
-  4. Learn a New Skill
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
 =============================
 Enter your choice:
 --- Create/Edit Profile ---
@@ -45,7 +46,37 @@ Profile saved successfully!
 =============================
   1. Create/Edit My Profile
   2. View My Profile
-  3. Search for User
-  4. Learn a New Skill
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+=============================
+Enter your choice:
+Choose a skill to learn:
+  1) Python
+  2) Excel
+  3) Public Speaking
+  4) Time Management
+  5) Leadership
+  6) Go Back
+Enter your choice:
+This skill is under construction.
+Choose a skill to learn:
+  1) Python
+  2) Excel
+  3) Public Speaking
+  4) Time Management
+  5) Leadership
+  6) Go Back
+Enter your choice:
+Returning to main menu...
+
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
 =============================
 Enter your choice:

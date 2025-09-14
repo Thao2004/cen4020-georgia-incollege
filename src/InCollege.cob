@@ -427,9 +427,11 @@ DISPLAY-MENU.
        PERFORM ECHO-DISPLAY
        MOVE "  2. View My Profile" TO MSG
        PERFORM ECHO-DISPLAY
-       MOVE "  3. Search for User" TO MSG
+       MOVE "  3. Search for a job" TO MSG
        PERFORM ECHO-DISPLAY
-       MOVE "  4. Learn a New Skill" TO MSG
+       MOVE "  4. Find someone you know" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "  5. Learn a New Skill" TO MSG
        PERFORM ECHO-DISPLAY
        MOVE "=============================" TO MSG
        PERFORM ECHO-DISPLAY
@@ -445,9 +447,12 @@ NAV-MENU-CHOICE.
            WHEN 2
                PERFORM VIEW-PROFILE
            WHEN 3
-               MOVE "Search for user is under construction." TO MSG
+               MOVE "Search for a job is under construction." TO MSG
                PERFORM ECHO-DISPLAY
            WHEN 4
+               MOVE "Find someone you know is under construction." TO MSG
+               PERFORM ECHO-DISPLAY
+           WHEN 5
                PERFORM SKILLS-MENU
            WHEN OTHER
                *> 0, 999, or any other number is invalid
