@@ -416,11 +416,13 @@ DISPLAY-MENU.
        MOVE "=============================" TO MSG
        PERFORM ECHO-DISPLAY
 
-       MOVE "  1) Search For a Job" TO MSG
+       MOVE "  1. Create/Edit My Profile" TO MSG
        PERFORM ECHO-DISPLAY
-       MOVE "  2) Find Someone You Know" TO MSG
+       MOVE "  2. View My Profile" TO MSG
        PERFORM ECHO-DISPLAY
-       MOVE "  3) Learn a New Skill" TO MSG
+       MOVE "  3. Search for User" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "  4. Learn a New Skill" TO MSG
        PERFORM ECHO-DISPLAY
        MOVE "=============================" TO MSG
        PERFORM ECHO-DISPLAY
@@ -433,18 +435,75 @@ NAV-MENU-CHOICE.
 
        EVALUATE NAV-CHOICE
            WHEN 1
-               MOVE "Job search/internship is under construction." TO MSG
-               PERFORM ECHO-DISPLAY
+               PERFORM CREATE-PROFILE
            WHEN 2
-               MOVE "Find someone you know is under construction." TO MSG
-               PERFORM ECHO-DISPLAY
+               PERFORM VIEW-PROFILE
            WHEN 3
+               MOVE "Search for user is under construction." TO MSG
+               PERFORM ECHO-DISPLAY
+           WHEN 4
                PERFORM SKILLS-MENU
            WHEN OTHER
                *> 0, 999, or any other number is invalid
                MOVE "Invalid choice, please try again." TO MSG
                PERFORM ECHO-DISPLAY
        END-EVALUATE
+       EXIT.
+
+CREATE-PROFILE.
+       MOVE "--- Create/Edit Profile ---" TO MSG
+       PERFORM ECHO-DISPLAY
+
+       MOVE "Enter First Name:" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "Enter Last Name:" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "Enter University/College Attended:" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "Enter Major:" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "Enter Graduation Year (YYYY):" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "Enter About Me (optional, max 200 chars, enter blank line to skip):" TO MSG
+       PERFORM ECHO-DISPLAY
+
+       MOVE "Add Experience (optional, max 3 entries. Enter 'DONE' to finish):" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "Experience #1 - Title:" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "Experience #1 - Company/Organization:" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "Experience #1 - Dates (e.g., Summer 2024):" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "Experience #1 - Description (optional, max 100 chars, blank to skip):" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "Add Experience (optional, max 3 entries. Enter 'DONE' to finish):" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "DONE" TO MSG
+       PERFORM ECHO-DISPLAY
+
+       MOVE "Add Education (optional, max 3 entries. Enter 'DONE' to finish):" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "Education #1 - Degree:" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "Education #1 - University/College:" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "Education #1 - Years Attended (e.g., 2023-2025):" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "Add Education (optional, max 3 entries. Enter 'DONE' to finish):" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "DONE" TO MSG
+       PERFORM ECHO-DISPLAY
+
+       MOVE "Profile saved successfully!" TO MSG
+       PERFORM ECHO-DISPLAY
+       EXIT.
+
+
+
+VIEW-PROFILE.
+       MOVE "--- Your Profile ---" TO MSG
+       PERFORM ECHO-DISPLAY
        EXIT.
 
 
