@@ -682,6 +682,30 @@ GET-EXPERIENCE.
            END-IF
        END-PERFORM
 
+       *> Dates (required; re-prompt until non-blank)
+       MOVE SPACES TO EXP-DATES
+       PERFORM UNTIL FUNCTION LENGTH(FUNCTION TRIM(EXP-DATES)) > 0
+           MOVE SPACES TO MSG
+           STRING "Experience #" DELIMITED BY SIZE
+                  EXP-ID-TXT     DELIMITED BY SIZE
+                  " - Dates (e.g., Summer 2024):" DELIMITED BY SIZE
+             INTO MSG
+           END-STRING
+           PERFORM ECHO-DISPLAY
+
+           READ USER-IN
+               AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
+           END-READ
+
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               MOVE "Dates are required." TO MSG
+               PERFORM ECHO-DISPLAY
+           ELSE
+               MOVE FUNCTION TRIM(USER-IN-REC) TO EXP-DATES
+           END-IF
+       END-PERFORM
+
+
        EXIT PARAGRAPH.
 
 
