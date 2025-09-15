@@ -114,7 +114,7 @@ MAIN-LOOP.
                 WHEN OTHER
                     MOVE "Invalid choice." TO MSG
                     PERFORM ECHO-DISPLAY
-                    EXIT PERFORM
+                    CONTINUE
             END-EVALUATE
         END-IF
     END-PERFORM
