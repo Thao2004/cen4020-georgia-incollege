@@ -21,7 +21,7 @@ FILE-CONTROL.
 DATA DIVISION.
 FILE SECTION.
 FD USER-IN.
-01 USER-IN-REC     PIC X(80).
+01 USER-IN-REC     PIC X(512).
 FD USER-OUT.
 01 USER-OUT-REC    PIC X(80).
 FD ACCOUNTS.
@@ -36,7 +36,7 @@ WORKING-STORAGE SECTION.
 01 INPUT-USER      PIC X(80).      *> Sratch for username length gating
 01 USER-LEN        PIC 99 VALUE 0. *> Length of INPUT-USER
 01 SKILLS-SELECTION PIC 99 VALUE 0.     *> skills menu choice (numeric)
-01  EOF-FLAG          PIC X VALUE "N".    *> "Y" at end of input
+01 EOF-FLAG          PIC X VALUE "N".    *> "Y" at end of input
 
 *> In-memory table (max 5 accounts)
 01 ACCOUNT-COUNT  PIC 9 VALUE 0.
@@ -55,21 +55,36 @@ WORKING-STORAGE SECTION.
 01 FOUND-FLAG     PIC X VALUE "N".     *> "Y" if username is already taken
 01 TMP-USER       PIC X(15).           *> Scratch for file load
 01 TMP-PASS       PIC X(12).           *> Scratch for file load
+01 PROFILE-FIRSTNAME   PIC X(20).      *> Store profile first name
+01 PROFILE-LASTNAME    PIC X(20).      *> Store profile last name
+01 PROFILE-UNIVERSITY  PIC X(40).      *> Store profile university
+01 PROFILE-MAJOR       PIC X(30).      *> Store profile major
+01 PROFILE-YEAR        PIC 9(4).       *> Store profile graduation year
+01 PROFILE-ABOUT       PIC X(200).     *> Store profile about me section
+01 EXP-COUNT           PIC 9 VALUE 0.
+01 EXP-TITLE           PIC X(80).
+01 EXP-COMPANY         PIC X(80).
+01 EXP-DATES           PIC X(80).
+01 EXP-DESC            PIC X(100).
+01 DESC-LEN            PIC 999.
+01 EXP-ID              PIC 9     VALUE 0.
+01 EXP-ID-TXT          PIC X     VALUE SPACE.
+
 
 PROCEDURE DIVISION.
 MAIN-PARA.
-    *> Open input/output streams
-    OPEN INPUT USER-IN
-    OPEN OUTPUT USER-OUT
+        *> Open input/output streams
+        OPEN INPUT USER-IN
+        OPEN OUTPUT USER-OUT
 
-    *> Load existing accounts (if any) into memory
-    PERFORM LOAD-ACCOUNTS
+        *> Load existing accounts (if any) into memory
+        PERFORM LOAD-ACCOUNTS
 
-    PERFORM MAIN-LOOP
+        PERFORM MAIN-LOOP
 
-    CLOSE USER-IN
-    CLOSE USER-OUT
-    STOP RUN.
+        CLOSE USER-IN
+        CLOSE USER-OUT
+        STOP RUN.
 
 
 MAIN-LOOP.
@@ -374,7 +389,6 @@ LOGIN-UNLIMITED.
 
 *> Tien's Implementations on September 9th, 2025
 NAVIGATION-MENU.
-       MOVE "N" TO EOF-FLAG
        MOVE 0 TO NAV-CHOICE
 
        PERFORM UNTIL EOF-FLAG = "Y"
@@ -383,7 +397,6 @@ NAVIGATION-MENU.
            READ USER-IN INTO USER-IN-REC
                AT END MOVE "Y" TO EOF-FLAG
            END-READ
-
            IF EOF-FLAG = "Y"
                EXIT PERFORM
            END-IF
@@ -398,7 +411,7 @@ NAVIGATION-MENU.
                    MOVE 999 TO NAV-CHOICE
                END-IF
                PERFORM NAV-MENU-CHOICE
-
+               IF EOF-FLAG = "Y" EXIT PERFORM
            END-IF
        END-PERFORM
        EXIT.
@@ -416,11 +429,15 @@ DISPLAY-MENU.
        MOVE "=============================" TO MSG
        PERFORM ECHO-DISPLAY
 
-       MOVE "  1) Search For a Job" TO MSG
+       MOVE "  1. Create/Edit My Profile" TO MSG
        PERFORM ECHO-DISPLAY
-       MOVE "  2) Find Someone You Know" TO MSG
+       MOVE "  2. View My Profile" TO MSG
        PERFORM ECHO-DISPLAY
-       MOVE "  3) Learn a New Skill" TO MSG
+       MOVE "  3. Search for a job" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "  4. Find someone you know" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "  5. Learn a New Skill" TO MSG
        PERFORM ECHO-DISPLAY
        MOVE "=============================" TO MSG
        PERFORM ECHO-DISPLAY
@@ -430,15 +447,18 @@ DISPLAY-MENU.
 
 
 NAV-MENU-CHOICE.
-
        EVALUATE NAV-CHOICE
            WHEN 1
-               MOVE "Job search/internship is under construction." TO MSG
-               PERFORM ECHO-DISPLAY
+               PERFORM CREATE-PROFILE
            WHEN 2
+               PERFORM VIEW-PROFILE
+           WHEN 3
+               MOVE "Search for a job is under construction." TO MSG
+               PERFORM ECHO-DISPLAY
+           WHEN 4
                MOVE "Find someone you know is under construction." TO MSG
                PERFORM ECHO-DISPLAY
-           WHEN 3
+           WHEN 5
                PERFORM SKILLS-MENU
            WHEN OTHER
                *> 0, 999, or any other number is invalid
@@ -446,6 +466,298 @@ NAV-MENU-CHOICE.
                PERFORM ECHO-DISPLAY
        END-EVALUATE
        EXIT.
+
+CREATE-PROFILE.
+       MOVE "--- Create/Edit Profile ---" TO MSG
+       PERFORM ECHO-DISPLAY
+
+       PERFORM GET-FIRST          *> Get first name
+       PERFORM GET-LAST           *> Get last name
+       PERFORM GET-UNIV           *> Get university/college
+       PERFORM GET-MAJOR          *> Get major
+       PERFORM GET-YEAR           *> Get graduation year
+       PERFORM GET-ABOUT          *> Get about me (optional)
+       PERFORM GET-EXPERIENCE     *> Get experience (optional)
+       PERFORM GET-EDUCATION      *> Get education (optional)
+
+       MOVE "Profile saved successfully!" TO MSG
+       PERFORM ECHO-DISPLAY
+       EXIT.
+
+
+*> First name
+GET-FIRST.
+       PERFORM UNTIL 1 = 0
+           MOVE "Enter First Name:" TO MSG
+           PERFORM ECHO-DISPLAY
+
+           READ USER-IN
+               AT END
+                   MOVE "Y" TO EOF-FLAG
+                   EXIT PARAGRAPH
+           END-READ
+
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               MOVE "First Name is required." TO MSG
+               PERFORM ECHO-DISPLAY
+           ELSE
+               MOVE FUNCTION TRIM(USER-IN-REC) TO PROFILE-FIRSTNAME
+               EXIT PERFORM
+           END-IF
+       END-PERFORM
+       EXIT PARAGRAPH.
+
+
+*> Last name
+GET-LAST.
+       PERFORM UNTIL 1 = 0
+           MOVE "Enter Last Name:" TO MSG
+           PERFORM ECHO-DISPLAY
+           READ USER-IN
+               AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
+           END-READ
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               MOVE "Last Name is required." TO MSG
+               PERFORM ECHO-DISPLAY
+           ELSE
+               MOVE FUNCTION TRIM(USER-IN-REC) TO PROFILE-LASTNAME
+               EXIT PERFORM
+           END-IF
+       END-PERFORM
+       EXIT PARAGRAPH.
+
+
+*> University/College
+GET-UNIV.
+       PERFORM UNTIL 1 = 0
+           MOVE "Enter University/College Attended:" TO MSG
+           PERFORM ECHO-DISPLAY
+           READ USER-IN
+               AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
+           END-READ
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               MOVE "University/College is required." TO MSG
+               PERFORM ECHO-DISPLAY
+           ELSE
+               MOVE FUNCTION TRIM(USER-IN-REC) TO PROFILE-UNIVERSITY
+               EXIT PERFORM
+           END-IF
+       END-PERFORM
+       EXIT PARAGRAPH.
+
+
+*> Major
+GET-MAJOR.
+       PERFORM UNTIL 1 = 0
+           MOVE "Enter Major:" TO MSG
+           PERFORM ECHO-DISPLAY
+           READ USER-IN
+               AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
+           END-READ
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               MOVE "Major is required." TO MSG
+               PERFORM ECHO-DISPLAY
+           ELSE
+               MOVE FUNCTION TRIM(USER-IN-REC) TO PROFILE-MAJOR
+               EXIT PERFORM
+           END-IF
+       END-PERFORM
+       EXIT PARAGRAPH.
+
+
+*> Graduation year
+GET-YEAR.
+       PERFORM UNTIL 1 = 0
+           MOVE "Enter Graduation Year (YYYY):" TO MSG
+           PERFORM ECHO-DISPLAY
+           READ USER-IN
+               AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
+           END-READ
+
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               MOVE "Graduation Year is required." TO MSG
+               PERFORM ECHO-DISPLAY
+               CONTINUE
+           END-IF
+
+           IF FUNCTION TEST-NUMVAL(USER-IN-REC) = 0
+               MOVE FUNCTION NUMVAL(USER-IN-REC) TO PROFILE-YEAR
+               IF PROFILE-YEAR >= 1900 AND PROFILE-YEAR <= 2100
+                   EXIT PERFORM
+               END-IF
+           END-IF
+
+           MOVE "Please enter a valid 4-digit year (e.g., 2025)." TO MSG
+           PERFORM ECHO-DISPLAY
+       END-PERFORM
+       EXIT PARAGRAPH.
+
+
+*> About me section
+GET-ABOUT.
+       PERFORM UNTIL 1 = 0
+           MOVE "Enter About Me (optional, max 200 chars, enter blank line to skip):" TO MSG
+           PERFORM ECHO-DISPLAY
+
+           READ USER-IN
+               AT END
+                   MOVE "Y" TO EOF-FLAG
+                   EXIT PARAGRAPH
+           END-READ
+
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               MOVE SPACES TO PROFILE-ABOUT
+               EXIT PARAGRAPH
+           END-IF
+
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) > 200
+               MOVE "About Me must be at most 200 characters." TO MSG
+               PERFORM ECHO-DISPLAY
+           ELSE
+               MOVE FUNCTION TRIM(USER-IN-REC) TO PROFILE-ABOUT
+               EXIT PERFORM
+           END-IF
+       END-PERFORM
+       EXIT PARAGRAPH.
+
+
+*> Experience section
+*> Add up to 3 experiences. After each entry, user may type DONE to stop.
+*> Experience section
+GET-EXPERIENCE.
+       MOVE EXP-COUNT TO EXP-ID
+       ADD 1 TO EXP-ID
+       MOVE EXP-ID TO EXP-ID-TXT
+
+       *> Show banner once
+       MOVE "Add Experience (optional, max 3 entries. Enter 'DONE' to finish):" TO MSG
+       PERFORM ECHO-DISPLAY
+
+
+       *> Title (required; re-prompt until non-blank)
+       MOVE SPACES TO EXP-TITLE
+       PERFORM UNTIL FUNCTION LENGTH(FUNCTION TRIM(EXP-TITLE)) > 0
+           MOVE SPACES TO MSG
+           STRING "Experience #" DELIMITED BY SIZE
+                  EXP-ID-TXT     DELIMITED BY SIZE
+                  " - Title:"    DELIMITED BY SIZE
+             INTO MSG
+           END-STRING
+           PERFORM ECHO-DISPLAY
+
+           READ USER-IN
+               AT END MOVE "Y" TO EOF-FLAG EXIT PERFORM
+           END-READ
+
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               MOVE "Title is required." TO MSG
+               PERFORM ECHO-DISPLAY
+           ELSE
+               MOVE FUNCTION TRIM(USER-IN-REC) TO EXP-TITLE
+           END-IF
+       END-PERFORM
+
+       *> Company/Organization (required; re-prompt until non-blank)
+       MOVE SPACES TO EXP-COMPANY
+       PERFORM UNTIL FUNCTION LENGTH(FUNCTION TRIM(EXP-COMPANY)) > 0
+           MOVE SPACES TO MSG
+           STRING "Experience #" DELIMITED BY SIZE
+                  EXP-ID-TXT     DELIMITED BY SIZE
+                  " - Company/Organization:" DELIMITED BY SIZE
+             INTO MSG
+           END-STRING
+           PERFORM ECHO-DISPLAY
+
+           READ USER-IN
+               AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
+           END-READ
+
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               MOVE "Company/Organization is required." TO MSG
+               PERFORM ECHO-DISPLAY
+           ELSE
+               MOVE FUNCTION TRIM(USER-IN-REC) TO EXP-COMPANY
+           END-IF
+       END-PERFORM
+
+       *> Dates (required; re-prompt until non-blank)
+       MOVE SPACES TO EXP-DATES
+       PERFORM UNTIL FUNCTION LENGTH(FUNCTION TRIM(EXP-DATES)) > 0
+           MOVE SPACES TO MSG
+           STRING "Experience #" DELIMITED BY SIZE
+                  EXP-ID-TXT     DELIMITED BY SIZE
+                  " - Dates (e.g., Summer 2024):" DELIMITED BY SIZE
+             INTO MSG
+           END-STRING
+           PERFORM ECHO-DISPLAY
+
+           READ USER-IN
+               AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
+           END-READ
+
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               MOVE "Dates are required." TO MSG
+               PERFORM ECHO-DISPLAY
+           ELSE
+               MOVE FUNCTION TRIM(USER-IN-REC) TO EXP-DATES
+           END-IF
+       END-PERFORM
+
+       *> --- Description (optional; blank skips; 'DONE' also skips) ---
+       MOVE SPACES TO MSG
+       STRING "Experience #" DELIMITED BY SIZE
+              EXP-ID-TXT     DELIMITED BY SIZE
+              " - Description (optional, max 100 chars, blank to skip):"
+              DELIMITED BY SIZE
+         INTO MSG
+       END-STRING
+       PERFORM ECHO-DISPLAY
+
+       MOVE SPACES TO EXP-DESC
+       PERFORM UNTIL EOF-FLAG = "Y"
+           READ USER-IN
+               AT END MOVE "Y" TO EOF-FLAG EXIT PERFORM
+           END-READ
+           IF EOF-FLAG = "Y" EXIT PERFORM
+
+           *> Blank => skip description
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               EXIT PERFORM
+           END-IF
+
+           *> If user types DONE here, treat it as "no description" and continue
+           IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE"
+               EXIT PERFORM
+           END-IF
+
+           MOVE FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) TO DESC-LEN
+           IF DESC-LEN > 100
+               MOVE "Description must be at most 100 characters." TO MSG
+               PERFORM ECHO-DISPLAY
+
+           ELSE
+               MOVE FUNCTION TRIM(USER-IN-REC) TO EXP-DESC
+               EXIT PERFORM
+           END-IF
+       END-PERFORM
+       IF EOF-FLAG = "Y" EXIT PARAGRAPH
+
+       *> One experience completed
+       ADD 1 TO EXP-COUNT
+
+       EXIT PARAGRAPH.
+
+
+*> TO-DO: --------- NEED TO IMPLEMENT ---------
+GET-EDUCATION.
+      EXIT PARAGRAPH.
+
+
+*> TO-DO: --------- NEED TO IMPLEMENT ----------
+VIEW-PROFILE.
+       MOVE "--- Your Profile ---" TO MSG
+       PERFORM ECHO-DISPLAY
+       EXIT PARAGRAPH.
 
 
 SKILLS-MENU.
