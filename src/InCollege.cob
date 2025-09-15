@@ -55,12 +55,22 @@ WORKING-STORAGE SECTION.
 01 FOUND-FLAG     PIC X VALUE "N".     *> "Y" if username is already taken
 01 TMP-USER       PIC X(15).           *> Scratch for file load
 01 TMP-PASS       PIC X(12).           *> Scratch for file load
-01 PROFILE-FIRSTNAME   PIC X(20).
-01 PROFILE-LASTNAME    PIC X(20).
-01 PROFILE-UNIVERSITY  PIC X(40).
-01 PROFILE-MAJOR       PIC X(30).
-01 PROFILE-YEAR        PIC 9(4).
-01 PROFILE-ABOUT       PIC X(200).
+01 PROFILE-FIRSTNAME   PIC X(20).      *> Store profile first name
+01 PROFILE-LASTNAME    PIC X(20).      *> Store profile last name
+01 PROFILE-UNIVERSITY  PIC X(40).      *> Store profile university
+01 PROFILE-MAJOR       PIC X(30).      *> Store profile major
+01 PROFILE-YEAR        PIC 9(4).       *> Store profile graduation year
+01 PROFILE-ABOUT       PIC X(200).     *> Store profile about me section
+01 EXP-COUNT           PIC 9 VALUE 0.
+01 EXP-TITLE           PIC X(80).
+01 EXP-COMPANY         PIC X(80).
+01 EXP-DATES           PIC X(80).
+01 DESC-LEN            PIC 999.
+01 EXP-ID              PIC 9     VALUE 0.
+01 EXP-ID-TXT          PIC X     VALUE SPACE.
+01 NEXT-TITLE-SEED     PIC X(80) VALUE SPACES.
+
+
 
 
 PROCEDURE DIVISION.
@@ -393,8 +403,6 @@ NAVIGATION-MENU.
                EXIT PERFORM
            END-IF
 
-
-
            *> Tolerate blank lines by skipping them quietly
            IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
                CONTINUE
@@ -471,34 +479,8 @@ CREATE-PROFILE.
        PERFORM GET-MAJOR          *> Get major
        PERFORM GET-YEAR           *> Get graduation year
        PERFORM GET-ABOUT          *> Get about me (optional)
-
-       MOVE "Add Experience (optional, max 3 entries. Enter 'DONE' to finish):" TO MSG
-       PERFORM ECHO-DISPLAY
-       MOVE "Experience #1 - Title:" TO MSG
-       PERFORM ECHO-DISPLAY
-       MOVE "Experience #1 - Company/Organization:" TO MSG
-       PERFORM ECHO-DISPLAY
-       MOVE "Experience #1 - Dates (e.g., Summer 2024):" TO MSG
-       PERFORM ECHO-DISPLAY
-       MOVE "Experience #1 - Description (optional, max 100 chars, blank to skip):" TO MSG
-       PERFORM ECHO-DISPLAY
-       MOVE "Add Experience (optional, max 3 entries. Enter 'DONE' to finish):" TO MSG
-       PERFORM ECHO-DISPLAY
-       MOVE "DONE" TO MSG
-       PERFORM ECHO-DISPLAY
-
-       MOVE "Add Education (optional, max 3 entries. Enter 'DONE' to finish):" TO MSG
-       PERFORM ECHO-DISPLAY
-       MOVE "Education #1 - Degree:" TO MSG
-       PERFORM ECHO-DISPLAY
-       MOVE "Education #1 - University/College:" TO MSG
-       PERFORM ECHO-DISPLAY
-       MOVE "Education #1 - Years Attended (e.g., 2023-2025):" TO MSG
-       PERFORM ECHO-DISPLAY
-       MOVE "Add Education (optional, max 3 entries. Enter 'DONE' to finish):" TO MSG
-       PERFORM ECHO-DISPLAY
-       MOVE "DONE" TO MSG
-       PERFORM ECHO-DISPLAY
+       PERFORM GET-EXPERIENCE     *> Get experience (optional)
+       PERFORM GET-EDUCATION      *> Get education (optional)
 
        MOVE "Profile saved successfully!" TO MSG
        PERFORM ECHO-DISPLAY
@@ -507,12 +489,6 @@ CREATE-PROFILE.
 
 *> First name
 GET-FIRST.
-       IF EOF-FLAG = "Y"
-           MOVE "Enter First Name:" TO MSG
-           PERFORM ECHO-DISPLAY
-           EXIT PARAGRAPH
-       END-IF
-
        PERFORM UNTIL 1 = 0
            MOVE "Enter First Name:" TO MSG
            PERFORM ECHO-DISPLAY
@@ -536,11 +512,6 @@ GET-FIRST.
 
 *> Last name
 GET-LAST.
-       IF EOF-FLAG = "Y"
-           MOVE "Enter Last Name:" TO MSG
-           PERFORM ECHO-DISPLAY
-           EXIT PARAGRAPH
-       END-IF
        PERFORM UNTIL 1 = 0
            MOVE "Enter Last Name:" TO MSG
            PERFORM ECHO-DISPLAY
@@ -560,11 +531,6 @@ GET-LAST.
 
 *> University/College
 GET-UNIV.
-       IF EOF-FLAG = "Y"
-           MOVE "Enter University/College Attended:" TO MSG
-           PERFORM ECHO-DISPLAY
-           EXIT PARAGRAPH
-       END-IF
        PERFORM UNTIL 1 = 0
            MOVE "Enter University/College Attended:" TO MSG
            PERFORM ECHO-DISPLAY
@@ -584,11 +550,6 @@ GET-UNIV.
 
 *> Major
 GET-MAJOR.
-       IF EOF-FLAG = "Y"
-           MOVE "Enter Major:" TO MSG
-           PERFORM ECHO-DISPLAY
-           EXIT PARAGRAPH
-       END-IF
        PERFORM UNTIL 1 = 0
            MOVE "Enter Major:" TO MSG
            PERFORM ECHO-DISPLAY
@@ -608,11 +569,6 @@ GET-MAJOR.
 
 *> Graduation year
 GET-YEAR.
-       IF EOF-FLAG = "Y"
-           MOVE "Enter Graduation Year (YYYY):" TO MSG
-           PERFORM ECHO-DISPLAY
-           EXIT PARAGRAPH
-       END-IF
        PERFORM UNTIL 1 = 0
            MOVE "Enter Graduation Year (YYYY):" TO MSG
            PERFORM ECHO-DISPLAY
@@ -641,12 +597,6 @@ GET-YEAR.
 
 *> About me section
 GET-ABOUT.
-       IF EOF-FLAG = "Y"
-           MOVE "Enter About Me (optional, max 200 chars, enter blank line to skip):" TO MSG
-           PERFORM ECHO-DISPLAY
-           EXIT PARAGRAPH
-       END-IF
-
        PERFORM UNTIL 1 = 0
            MOVE "Enter About Me (optional, max 200 chars, enter blank line to skip):" TO MSG
            PERFORM ECHO-DISPLAY
@@ -673,11 +623,79 @@ GET-ABOUT.
        EXIT PARAGRAPH.
 
 
+*> Experience section
+*> Add up to 3 experiences. After each entry, user may type DONE to stop.
+*> Experience section
+GET-EXPERIENCE.
+       MOVE EXP-COUNT TO EXP-ID
+       ADD 1 TO EXP-ID
+       MOVE EXP-ID TO EXP-ID-TXT
+
+       *> Show banner once
+       MOVE "Add Experience (optional, max 3 entries. Enter 'DONE' to finish):" TO MSG
+       PERFORM ECHO-DISPLAY
+
+
+       *> Title (required; re-prompt until non-blank)
+       MOVE SPACES TO EXP-TITLE
+       PERFORM UNTIL FUNCTION LENGTH(FUNCTION TRIM(EXP-TITLE)) > 0
+           MOVE SPACES TO MSG
+           STRING "Experience #" DELIMITED BY SIZE
+                  EXP-ID-TXT     DELIMITED BY SIZE
+                  " - Title:"    DELIMITED BY SIZE
+             INTO MSG
+           END-STRING
+           PERFORM ECHO-DISPLAY
+
+           READ USER-IN
+               AT END MOVE "Y" TO EOF-FLAG EXIT PERFORM
+           END-READ
+
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               MOVE "Title is required." TO MSG
+               PERFORM ECHO-DISPLAY
+           ELSE
+               MOVE FUNCTION TRIM(USER-IN-REC) TO EXP-TITLE
+           END-IF
+       END-PERFORM
+
+       *> Company/Organization (required; re-prompt until non-blank)
+       MOVE SPACES TO EXP-COMPANY
+       PERFORM UNTIL FUNCTION LENGTH(FUNCTION TRIM(EXP-COMPANY)) > 0
+           MOVE SPACES TO MSG
+           STRING "Experience #" DELIMITED BY SIZE
+                  EXP-ID-TXT     DELIMITED BY SIZE
+                  " - Company/Organization:" DELIMITED BY SIZE
+             INTO MSG
+           END-STRING
+           PERFORM ECHO-DISPLAY
+
+           READ USER-IN
+               AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
+           END-READ
+
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               MOVE "Company/Organization is required." TO MSG
+               PERFORM ECHO-DISPLAY
+           ELSE
+               MOVE FUNCTION TRIM(USER-IN-REC) TO EXP-COMPANY
+           END-IF
+       END-PERFORM
+
+       EXIT PARAGRAPH.
+
+
+
+*> TO-DO: --------- NEED TO IMPLEMENT ---------
+GET-EDUCATION.
+      EXIT PARAGRAPH.
+
+
+*> TO-DO: --------- NEED TO IMPLEMENT ----------
 VIEW-PROFILE.
        MOVE "--- Your Profile ---" TO MSG
        PERFORM ECHO-DISPLAY
        EXIT PARAGRAPH.
-
 
 
 SKILLS-MENU.
