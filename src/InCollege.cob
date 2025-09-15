@@ -65,12 +65,10 @@ WORKING-STORAGE SECTION.
 01 EXP-TITLE           PIC X(80).
 01 EXP-COMPANY         PIC X(80).
 01 EXP-DATES           PIC X(80).
+01 EXP-DESC            PIC X(100).
 01 DESC-LEN            PIC 999.
 01 EXP-ID              PIC 9     VALUE 0.
 01 EXP-ID-TXT          PIC X     VALUE SPACE.
-01 NEXT-TITLE-SEED     PIC X(80) VALUE SPACES.
-
-
 
 
 PROCEDURE DIVISION.
@@ -705,9 +703,49 @@ GET-EXPERIENCE.
            END-IF
        END-PERFORM
 
+       *> --- Description (optional; blank skips; 'DONE' also skips) ---
+       MOVE SPACES TO MSG
+       STRING "Experience #" DELIMITED BY SIZE
+              EXP-ID-TXT     DELIMITED BY SIZE
+              " - Description (optional, max 100 chars, blank to skip):"
+              DELIMITED BY SIZE
+         INTO MSG
+       END-STRING
+       PERFORM ECHO-DISPLAY
+
+       MOVE SPACES TO EXP-DESC
+       PERFORM UNTIL EOF-FLAG = "Y"
+           READ USER-IN
+               AT END MOVE "Y" TO EOF-FLAG EXIT PERFORM
+           END-READ
+           IF EOF-FLAG = "Y" EXIT PERFORM
+
+           *> Blank => skip description
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               EXIT PERFORM
+           END-IF
+
+           *> If user types DONE here, treat it as "no description" and continue
+           IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE"
+               EXIT PERFORM
+           END-IF
+
+           MOVE FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) TO DESC-LEN
+           IF DESC-LEN > 100
+               MOVE "Description must be at most 100 characters." TO MSG
+               PERFORM ECHO-DISPLAY
+
+           ELSE
+               MOVE FUNCTION TRIM(USER-IN-REC) TO EXP-DESC
+               EXIT PERFORM
+           END-IF
+       END-PERFORM
+       IF EOF-FLAG = "Y" EXIT PARAGRAPH
+
+       *> One experience completed
+       ADD 1 TO EXP-COUNT
 
        EXIT PARAGRAPH.
-
 
 
 *> TO-DO: --------- NEED TO IMPLEMENT ---------

@@ -1,3 +1,6 @@
+2
+Anna
+Qwerty1!
 1
 Anna
 Qwerty1!
@@ -10,6 +13,5 @@ Computer Science
 Hello everyone!
 Software Engineer
 Imagination
-
-
 May 2026
+Create an app
