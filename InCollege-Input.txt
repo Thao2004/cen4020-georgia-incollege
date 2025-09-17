@@ -1,17 +1,39 @@
 2
-Anna
-Qwerty1!
+Brian
+Qazwsx2@
 1
-Anna
-Qwerty1!
+Brian
+Qazwsx2@
 1
-Anna
-Lehan
-University of South FLorida
-Computer Science
+Brian
+Zenichsky
+University of Kentucky
+Biotechnology
+2025
+I don't have anything interesting
+Hardware Engineer
+ABC Corp
+June 2023
+
+Research Intern
+XYZ Inc
+May 2022
+Develop a new algorithm for data processing
+Data Analyst
+LMN Ltd
+August 2021
+Analyzed sales data to improve marketing strategies
+Sales Associate
+DONE
+Bachelor's of Science
+University of Kentucky
 2026
-Hello everyone!
-Software Engineer
-Imagination
-May 2026
-Create an app
+Bachelor's of Arts
+University of Alabama
+2023
+Bachelor's of Engineering
+University of California
+2020
+Bachelor
+DONE
+2

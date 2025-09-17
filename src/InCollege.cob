@@ -16,6 +16,9 @@ FILE-CONTROL.
     *> OPTIONAL so the first run works even if the file does not exist yet
     SELECT OPTIONAL ACCOUNTS ASSIGN TO 'accounts.dat'
        ORGANIZATION IS LINE SEQUENTIAL.
+    *> Persistent storage for user profiles
+    SELECT OPTIONAL PROFILES ASSIGN TO 'profiles.dat'
+       ORGANIZATION IS LINE SEQUENTIAL.
 
 
 DATA DIVISION.
@@ -26,6 +29,8 @@ FD USER-OUT.
 01 USER-OUT-REC    PIC X(80).
 FD ACCOUNTS.
 01 ACC-REC         PIC X(80).      *> One line: "username,password"
+FD PROFILES.
+01 PROFILE-REC     PIC X(800).     *> Profile data storage
 
 WORKING-STORAGE SECTION.
 01 MSG             PIC X(80).      *> Reusable message buffer for display/logging
@@ -55,6 +60,12 @@ WORKING-STORAGE SECTION.
 01 FOUND-FLAG     PIC X VALUE "N".     *> "Y" if username is already taken
 01 TMP-USER       PIC X(15).           *> Scratch for file load
 01 TMP-PASS       PIC X(12).           *> Scratch for file load
+*> Additional temporary variables for profile parsing
+01 TMP-FIELD1     PIC X(50).           *> Temporary field for skipping data
+01 TMP-FIELD2     PIC X(50).           *> Temporary field for skipping data
+01 TMP-FIELD3     PIC X(50).           *> Temporary field for skipping data
+01 TMP-COUNT1     PIC 9.               *> Temporary count for skipping
+01 TMP-COUNT2     PIC 9.               *> Temporary count for skipping
 01 PROFILE-FIRSTNAME   PIC X(20).      *> Store profile first name
 01 PROFILE-LASTNAME    PIC X(20).      *> Store profile last name
 01 PROFILE-UNIVERSITY  PIC X(40).      *> Store profile university
@@ -69,6 +80,56 @@ WORKING-STORAGE SECTION.
 01 DESC-LEN            PIC 999.
 01 EXP-ID              PIC 9     VALUE 0.
 01 EXP-ID-TXT          PIC X     VALUE SPACE.
+
+*> Temporary variable for education entry numbering
+01 EDU-ID              PIC 9     VALUE 0.
+01 EDU-ID-TXT          PIC X     VALUE SPACE.
+
+*> Education entries (up to 3)
+01 EDU-COUNT           PIC 9 VALUE 0.
+01 EDUCATION-TABLE.
+       05 EDU-ENTRY OCCURS 3 INDEXED BY EDU-IX.
+           10 EDU-DEGREE      PIC X(50).
+           10 EDU-UNIVERSITY  PIC X(50).
+           10 EDU-YEARS       PIC X(20).
+
+*> Experience entries (up to 3) - structured storage
+01 EXPERIENCE-TABLE.
+       05 EXP-ENTRY OCCURS 3 INDEXED BY EXP-IX.
+           10 EXP-ENTRY-TITLE       PIC X(80).
+           10 EXP-ENTRY-COMPANY     PIC X(80).
+           10 EXP-ENTRY-DATES       PIC X(80).
+           10 EXP-ENTRY-DESC        PIC X(100).
+
+*> Profile management flags
+01 PROFILE-EXISTS      PIC X VALUE "N".
+01 CURRENT-USER        PIC X(15).      *> Store logged-in username
+
+*> Multi-user profile storage
+01 MAX-STORED-PROFILES PIC 9 VALUE 5.
+01 STORED-PROFILE-COUNT PIC 9 VALUE 0.
+01 STORED-PROFILES.
+    05 STORED-PROFILE OCCURS 5 INDEXED BY SP-IX.
+        10 SP-USERNAME     PIC X(15).
+        10 SP-FIRSTNAME    PIC X(20).
+        10 SP-LASTNAME     PIC X(20).
+        10 SP-UNIVERSITY   PIC X(40).
+        10 SP-MAJOR        PIC X(30).
+        10 SP-YEAR         PIC 9(4).
+        10 SP-ABOUT        PIC X(200).
+        10 SP-EXP-COUNT    PIC 9.
+        10 SP-EDU-COUNT    PIC 9.
+        10 SP-EXPERIENCES.
+            15 SP-EXP-ENTRY OCCURS 3 INDEXED BY SP-EXP-IX.
+                20 SP-EXP-TITLE    PIC X(80).
+                20 SP-EXP-COMPANY  PIC X(80).
+                20 SP-EXP-DATES    PIC X(80).
+                20 SP-EXP-DESC     PIC X(100).
+        10 SP-EDUCATIONS.
+            15 SP-EDU-ENTRY OCCURS 3 INDEXED BY SP-EDU-IX.
+                20 SP-EDU-DEGREE   PIC X(50).
+                20 SP-EDU-UNIV     PIC X(50).
+                20 SP-EDU-YEARS    PIC X(20).
 
 
 PROCEDURE DIVISION.
@@ -373,6 +434,10 @@ LOGIN-UNLIMITED.
                    MOVE "Welcome, " TO MSG
                    STRING "Welcome, " FUNCTION TRIM(USERNAME) "!" DELIMITED BY SIZE INTO MSG
                    PERFORM ECHO-DISPLAY
+                   *> Store current user for profile operations
+                   MOVE USERNAME TO CURRENT-USER
+                   *> Load existing profile when user logs in
+                   PERFORM LOAD-PROFILE
                    PERFORM NAVIGATION-MENU
                    EXIT PERFORM
                ELSE
@@ -471,6 +536,11 @@ CREATE-PROFILE.
        MOVE "--- Create/Edit Profile ---" TO MSG
        PERFORM ECHO-DISPLAY
 
+       *> Initialize counters for new profile creation
+       MOVE 0 TO EXP-COUNT EDU-COUNT
+       *> Load existing profile if it exists (for editing)
+       PERFORM LOAD-PROFILE
+
        PERFORM GET-FIRST          *> Get first name
        PERFORM GET-LAST           *> Get last name
        PERFORM GET-UNIV           *> Get university/college
@@ -479,6 +549,9 @@ CREATE-PROFILE.
        PERFORM GET-ABOUT          *> Get about me (optional)
        PERFORM GET-EXPERIENCE     *> Get experience (optional)
        PERFORM GET-EDUCATION      *> Get education (optional)
+
+       *> Save the profile
+       PERFORM SAVE-PROFILE
 
        MOVE "Profile saved successfully!" TO MSG
        PERFORM ECHO-DISPLAY
@@ -623,141 +696,723 @@ GET-ABOUT.
 
 *> Experience section
 *> Add up to 3 experiences. After each entry, user may type DONE to stop.
-*> Experience section
 GET-EXPERIENCE.
-       MOVE EXP-COUNT TO EXP-ID
-       ADD 1 TO EXP-ID
-       MOVE EXP-ID TO EXP-ID-TXT
-
        *> Show banner once
        MOVE "Add Experience (optional, max 3 entries. Enter 'DONE' to finish):" TO MSG
        PERFORM ECHO-DISPLAY
 
-
-       *> Title (required; re-prompt until non-blank)
-       MOVE SPACES TO EXP-TITLE
-       PERFORM UNTIL FUNCTION LENGTH(FUNCTION TRIM(EXP-TITLE)) > 0
-           MOVE SPACES TO MSG
-           STRING "Experience #" DELIMITED BY SIZE
-                  EXP-ID-TXT     DELIMITED BY SIZE
-                  " - Title:"    DELIMITED BY SIZE
-             INTO MSG
-           END-STRING
-           PERFORM ECHO-DISPLAY
-
-           READ USER-IN
-               AT END MOVE "Y" TO EOF-FLAG EXIT PERFORM
-           END-READ
-
-           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
-               MOVE "Title is required." TO MSG
-               PERFORM ECHO-DISPLAY
-           ELSE
-               MOVE FUNCTION TRIM(USER-IN-REC) TO EXP-TITLE
-           END-IF
-       END-PERFORM
-
-       *> Company/Organization (required; re-prompt until non-blank)
-       MOVE SPACES TO EXP-COMPANY
-       PERFORM UNTIL FUNCTION LENGTH(FUNCTION TRIM(EXP-COMPANY)) > 0
-           MOVE SPACES TO MSG
-           STRING "Experience #" DELIMITED BY SIZE
-                  EXP-ID-TXT     DELIMITED BY SIZE
-                  " - Company/Organization:" DELIMITED BY SIZE
-             INTO MSG
-           END-STRING
-           PERFORM ECHO-DISPLAY
-
-           READ USER-IN
-               AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
-           END-READ
-
-           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
-               MOVE "Company/Organization is required." TO MSG
-               PERFORM ECHO-DISPLAY
-           ELSE
-               MOVE FUNCTION TRIM(USER-IN-REC) TO EXP-COMPANY
-           END-IF
-       END-PERFORM
-
-       *> Dates (required; re-prompt until non-blank)
-       MOVE SPACES TO EXP-DATES
-       PERFORM UNTIL FUNCTION LENGTH(FUNCTION TRIM(EXP-DATES)) > 0
-           MOVE SPACES TO MSG
-           STRING "Experience #" DELIMITED BY SIZE
-                  EXP-ID-TXT     DELIMITED BY SIZE
-                  " - Dates (e.g., Summer 2024):" DELIMITED BY SIZE
-             INTO MSG
-           END-STRING
-           PERFORM ECHO-DISPLAY
-
-           READ USER-IN
-               AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
-           END-READ
-
-           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
-               MOVE "Dates are required." TO MSG
-               PERFORM ECHO-DISPLAY
-           ELSE
-               MOVE FUNCTION TRIM(USER-IN-REC) TO EXP-DATES
-           END-IF
-       END-PERFORM
-
-       *> --- Description (optional; blank skips; 'DONE' also skips) ---
-       MOVE SPACES TO MSG
-       STRING "Experience #" DELIMITED BY SIZE
-              EXP-ID-TXT     DELIMITED BY SIZE
-              " - Description (optional, max 100 chars, blank to skip):"
-              DELIMITED BY SIZE
-         INTO MSG
-       END-STRING
-       PERFORM ECHO-DISPLAY
-
-       MOVE SPACES TO EXP-DESC
+       *> Loop until user types DONE or reaches maximum
        PERFORM UNTIL EOF-FLAG = "Y"
+           *> Check if already at maximum entries FIRST
+           IF EXP-COUNT >= 3
+               MOVE "Maximum of 3 experience entries allowed. Enter 'DONE' to continue." TO MSG
+               PERFORM ECHO-DISPLAY
+
+               *> Keep reading until user types DONE
+               PERFORM UNTIL EOF-FLAG = "Y"
+                   READ USER-IN
+                       AT END MOVE "Y" TO EOF-FLAG EXIT PERFORM
+                   END-READ
+
+                   IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE"
+                       EXIT PERFORM
+                   END-IF
+
+                   *> If not DONE, show error again
+                   MOVE "Maximum of 3 experience entries allowed. Enter 'DONE' to continue." TO MSG
+                   PERFORM ECHO-DISPLAY
+               END-PERFORM
+               EXIT PERFORM
+           END-IF
+
+           *> If not at maximum, proceed with adding new experience
+           *> Set up entry number for display
+           MOVE EXP-COUNT TO EXP-ID
+           ADD 1 TO EXP-ID
+           MOVE EXP-ID TO EXP-ID-TXT
+
+           *> Title (required; re-prompt until non-blank or DONE)
+           MOVE SPACES TO EXP-TITLE
+           PERFORM UNTIL FUNCTION LENGTH(FUNCTION TRIM(EXP-TITLE)) > 0
+               MOVE SPACES TO MSG
+               STRING "Experience #" DELIMITED BY SIZE
+                      EXP-ID-TXT     DELIMITED BY SIZE
+                      " - Title:"    DELIMITED BY SIZE
+                 INTO MSG
+               END-STRING
+               PERFORM ECHO-DISPLAY
+
+               READ USER-IN
+                   AT END MOVE "Y" TO EOF-FLAG EXIT PERFORM
+               END-READ
+
+               *> Check for DONE at title prompt
+               IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE"
+                   EXIT PERFORM
+               END-IF
+
+               IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+                   MOVE "Title is required." TO MSG
+                   PERFORM ECHO-DISPLAY
+               ELSE
+                   MOVE FUNCTION TRIM(USER-IN-REC) TO EXP-TITLE
+               END-IF
+           END-PERFORM
+
+           *> If user typed DONE or hit EOF, exit
+           IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE" OR EOF-FLAG = "Y"
+               EXIT PERFORM
+           END-IF
+
+           *> Company/Organization (required; re-prompt until non-blank)
+           MOVE SPACES TO EXP-COMPANY
+           PERFORM UNTIL FUNCTION LENGTH(FUNCTION TRIM(EXP-COMPANY)) > 0
+               MOVE SPACES TO MSG
+               STRING "Experience #" DELIMITED BY SIZE
+                      EXP-ID-TXT     DELIMITED BY SIZE
+                      " - Company/Organization:" DELIMITED BY SIZE
+                 INTO MSG
+               END-STRING
+               PERFORM ECHO-DISPLAY
+
+               READ USER-IN
+                   AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
+               END-READ
+
+               IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+                   MOVE "Company/Organization is required." TO MSG
+                   PERFORM ECHO-DISPLAY
+               ELSE
+                   MOVE FUNCTION TRIM(USER-IN-REC) TO EXP-COMPANY
+               END-IF
+           END-PERFORM
+
+           *> Dates (required; re-prompt until non-blank)
+           MOVE SPACES TO EXP-DATES
+           PERFORM UNTIL FUNCTION LENGTH(FUNCTION TRIM(EXP-DATES)) > 0
+               MOVE SPACES TO MSG
+               STRING "Experience #" DELIMITED BY SIZE
+                      EXP-ID-TXT     DELIMITED BY SIZE
+                      " - Dates (e.g., Summer 2024):" DELIMITED BY SIZE
+                 INTO MSG
+               END-STRING
+               PERFORM ECHO-DISPLAY
+
+               READ USER-IN
+                   AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
+               END-READ
+
+               IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+                   MOVE "Dates are required." TO MSG
+                   PERFORM ECHO-DISPLAY
+               ELSE
+                   MOVE FUNCTION TRIM(USER-IN-REC) TO EXP-DATES
+               END-IF
+           END-PERFORM
+
+           *> Description (optional; blank skips)
+           MOVE SPACES TO MSG
+           STRING "Experience #" DELIMITED BY SIZE
+                  EXP-ID-TXT     DELIMITED BY SIZE
+                  " - Description (optional, max 100 chars, blank to skip):"
+                  DELIMITED BY SIZE
+             INTO MSG
+           END-STRING
+           PERFORM ECHO-DISPLAY
+
+           MOVE SPACES TO EXP-DESC
            READ USER-IN
                AT END MOVE "Y" TO EOF-FLAG EXIT PERFORM
            END-READ
-           IF EOF-FLAG = "Y" EXIT PERFORM
 
            *> Blank => skip description
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               MOVE SPACES TO EXP-DESC
+           ELSE
+               MOVE FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) TO DESC-LEN
+               IF DESC-LEN > 100
+                   MOVE "Description must be at most 100 characters." TO MSG
+                   PERFORM ECHO-DISPLAY
+                   MOVE SPACES TO EXP-DESC
+               ELSE
+                   MOVE FUNCTION TRIM(USER-IN-REC) TO EXP-DESC
+               END-IF
+           END-IF
+
+           *> Store experience in structured table
+           ADD 1 TO EXP-COUNT
+           SET EXP-IX TO EXP-COUNT
+           MOVE EXP-TITLE TO EXP-ENTRY-TITLE (EXP-IX)
+           MOVE EXP-COMPANY TO EXP-ENTRY-COMPANY (EXP-IX)
+           MOVE EXP-DATES TO EXP-ENTRY-DATES (EXP-IX)
+           MOVE EXP-DESC TO EXP-ENTRY-DESC (EXP-IX)
+
+           *> Ask for next experience entry ONLY if under the limit
+           IF EXP-COUNT < 3
+               MOVE "Add Experience (optional, max 3 entries. Enter 'DONE' to finish):" TO MSG
+               PERFORM ECHO-DISPLAY
+           END-IF
+       END-PERFORM
+
+       EXIT PARAGRAPH.
+
+
+*> Education section
+GET-EDUCATION.
+       *> Initialize education count if this is first time
+       MOVE "Add Education (optional, max 3 entries. Enter 'DONE' to finish):" TO MSG
+       PERFORM ECHO-DISPLAY
+
+       *> Loop until user types DONE or reaches maximum
+       PERFORM UNTIL EOF-FLAG = "Y"
+           *> Check if already at maximum entries FIRST
+           IF EDU-COUNT >= 3
+               MOVE "Maximum of 3 education entries allowed. Enter 'DONE' to continue." TO MSG
+               PERFORM ECHO-DISPLAY
+
+               *> Keep reading until user types DONE
+               PERFORM UNTIL EOF-FLAG = "Y"
+                   READ USER-IN
+                       AT END MOVE "Y" TO EOF-FLAG EXIT PERFORM
+                   END-READ
+
+                   IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE"
+                       EXIT PERFORM
+                   END-IF
+
+                   *> If not DONE, show error again
+                   MOVE "Maximum of 3 education entries allowed. Enter 'DONE' to continue." TO MSG
+                   PERFORM ECHO-DISPLAY
+               END-PERFORM
+               EXIT PERFORM
+           END-IF
+
+           *> If not at maximum, proceed with adding new education
+           *> Set up entry number for display
+           COMPUTE EDU-ID = EDU-COUNT + 1
+           MOVE EDU-ID TO EDU-ID-TXT
+
+           *> Ask for degree
+           MOVE SPACES TO MSG
+           STRING "Education #" DELIMITED BY SIZE
+                  EDU-ID-TXT DELIMITED BY SIZE
+                  " - Degree:" DELIMITED BY SIZE
+             INTO MSG
+           END-STRING
+           PERFORM ECHO-DISPLAY
+
+           READ USER-IN
+               AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
+           END-READ
+
+           *> If user enters DONE or blank, exit
            IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
                EXIT PERFORM
            END-IF
 
-           *> If user types DONE here, treat it as "no description" and continue
            IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE"
                EXIT PERFORM
            END-IF
 
-           MOVE FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) TO DESC-LEN
-           IF DESC-LEN > 100
-               MOVE "Description must be at most 100 characters." TO MSG
+           *> Add new education entry - now increment count and set index
+           ADD 1 TO EDU-COUNT
+           SET EDU-IX TO EDU-COUNT
+           MOVE FUNCTION TRIM(USER-IN-REC) TO EDU-DEGREE (EDU-IX)
+
+           *> Get University/College (required for education entry)
+           PERFORM UNTIL 1 = 0
+               MOVE SPACES TO MSG
+               STRING "Education #" DELIMITED BY SIZE
+                      EDU-ID-TXT DELIMITED BY SIZE
+                      " - University/College:" DELIMITED BY SIZE
+                 INTO MSG
+               END-STRING
                PERFORM ECHO-DISPLAY
 
-           ELSE
-               MOVE FUNCTION TRIM(USER-IN-REC) TO EXP-DESC
-               EXIT PERFORM
+               READ USER-IN
+                   AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
+               END-READ
+
+               IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+                   MOVE "University/College is required." TO MSG
+                   PERFORM ECHO-DISPLAY
+               ELSE
+                   MOVE FUNCTION TRIM(USER-IN-REC) TO EDU-UNIVERSITY (EDU-IX)
+                   EXIT PERFORM
+               END-IF
+           END-PERFORM
+
+           *> Get Years Attended (required for education entry)
+           PERFORM UNTIL 1 = 0
+               MOVE SPACES TO MSG
+               STRING "Education #" DELIMITED BY SIZE
+                      EDU-ID-TXT DELIMITED BY SIZE
+                      " - Years Attended (e.g., 2023-2025):" DELIMITED BY SIZE
+                 INTO MSG
+               END-STRING
+               PERFORM ECHO-DISPLAY
+
+               READ USER-IN
+                   AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
+               END-READ
+
+               IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+                   MOVE "Years Attended is required." TO MSG
+                   PERFORM ECHO-DISPLAY
+               ELSE
+                   MOVE FUNCTION TRIM(USER-IN-REC) TO EDU-YEARS (EDU-IX)
+                   EXIT PERFORM
+               END-IF
+           END-PERFORM
+
+           *> Ask for next education entry ONLY if under the limit
+           IF EDU-COUNT < 3
+               MOVE "Add Education (optional, max 3 entries. Enter 'DONE' to finish):" TO MSG
+               PERFORM ECHO-DISPLAY
            END-IF
        END-PERFORM
-       IF EOF-FLAG = "Y" EXIT PARAGRAPH
-
-       *> One experience completed
-       ADD 1 TO EXP-COUNT
 
        EXIT PARAGRAPH.
 
 
-*> TO-DO: --------- NEED TO IMPLEMENT ---------
-GET-EDUCATION.
-      EXIT PARAGRAPH.
-
-
-*> TO-DO: --------- NEED TO IMPLEMENT ----------
+*> VIEW PROFILE
 VIEW-PROFILE.
+       *> Load profile data first
+       PERFORM LOAD-PROFILE
+
+       IF PROFILE-EXISTS = "N"
+           MOVE "No profile found. Please create a profile first." TO MSG
+           PERFORM ECHO-DISPLAY
+           EXIT PARAGRAPH
+       END-IF
+
        MOVE "--- Your Profile ---" TO MSG
        PERFORM ECHO-DISPLAY
+
+       *> Display basic information
+       MOVE SPACES TO MSG
+       STRING "Name: " FUNCTION TRIM(PROFILE-FIRSTNAME) " "
+              FUNCTION TRIM(PROFILE-LASTNAME) DELIMITED BY SIZE INTO MSG
+       END-STRING
+       PERFORM ECHO-DISPLAY
+
+       MOVE SPACES TO MSG
+       STRING "University: " FUNCTION TRIM(PROFILE-UNIVERSITY) DELIMITED BY SIZE INTO MSG
+       END-STRING
+       PERFORM ECHO-DISPLAY
+
+       MOVE SPACES TO MSG
+       STRING "Major: " FUNCTION TRIM(PROFILE-MAJOR) DELIMITED BY SIZE INTO MSG
+       END-STRING
+       PERFORM ECHO-DISPLAY
+
+       MOVE SPACES TO MSG
+       STRING "Graduation Year: " PROFILE-YEAR DELIMITED BY SIZE INTO MSG
+       END-STRING
+       PERFORM ECHO-DISPLAY
+
+       *> Display About Me if exists
+       IF FUNCTION LENGTH(FUNCTION TRIM(PROFILE-ABOUT)) > 0
+           MOVE SPACES TO MSG
+           STRING "About Me: " FUNCTION TRIM(PROFILE-ABOUT) DELIMITED BY SIZE INTO MSG
+           END-STRING
+           PERFORM ECHO-DISPLAY
+       END-IF
+
+       *> Display Experience if exists
+       IF EXP-COUNT > 0
+           MOVE "Experience:" TO MSG
+           PERFORM ECHO-DISPLAY
+           SET EXP-IX TO 1
+           PERFORM UNTIL EXP-IX > EXP-COUNT
+               MOVE SPACES TO MSG
+               STRING " Title: " FUNCTION TRIM(EXP-ENTRY-TITLE (EXP-IX))
+                      DELIMITED BY SIZE INTO MSG
+               END-STRING
+               PERFORM ECHO-DISPLAY
+
+               MOVE SPACES TO MSG
+               STRING " Company: " FUNCTION TRIM(EXP-ENTRY-COMPANY (EXP-IX))
+                      DELIMITED BY SIZE INTO MSG
+               END-STRING
+               PERFORM ECHO-DISPLAY
+
+               MOVE SPACES TO MSG
+               STRING " Dates: " FUNCTION TRIM(EXP-ENTRY-DATES (EXP-IX))
+                      DELIMITED BY SIZE INTO MSG
+               END-STRING
+               PERFORM ECHO-DISPLAY
+
+               IF FUNCTION LENGTH(FUNCTION TRIM(EXP-ENTRY-DESC (EXP-IX))) > 0
+                   MOVE SPACES TO MSG
+                   STRING " Description: " FUNCTION TRIM(EXP-ENTRY-DESC (EXP-IX))
+                          DELIMITED BY SIZE INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+               END-IF
+
+               SET EXP-IX UP BY 1
+           END-PERFORM
+       END-IF
+
+       *> Display Education if exists
+       IF EDU-COUNT > 0
+           MOVE "Education:" TO MSG
+           PERFORM ECHO-DISPLAY
+           SET EDU-IX TO 1
+           PERFORM UNTIL EDU-IX > EDU-COUNT
+               MOVE SPACES TO MSG
+               STRING " Degree: " FUNCTION TRIM(EDU-DEGREE (EDU-IX))
+                      DELIMITED BY SIZE INTO MSG
+               END-STRING
+               PERFORM ECHO-DISPLAY
+
+               MOVE SPACES TO MSG
+               STRING " University: " FUNCTION TRIM(EDU-UNIVERSITY (EDU-IX))
+                      DELIMITED BY SIZE INTO MSG
+               END-STRING
+               PERFORM ECHO-DISPLAY
+
+               MOVE SPACES TO MSG
+               STRING " Years: " FUNCTION TRIM(EDU-YEARS (EDU-IX))
+                      DELIMITED BY SIZE INTO MSG
+               END-STRING
+               PERFORM ECHO-DISPLAY
+
+               SET EDU-IX UP BY 1
+           END-PERFORM
+       END-IF
+
+       MOVE "--------------------" TO MSG
+       PERFORM ECHO-DISPLAY
+
        EXIT PARAGRAPH.
+
+
+*> Profile persistence functions
+LOAD-PROFILE.
+       MOVE "N" TO PROFILE-EXISTS
+       *> Initialize counters
+       MOVE 0 TO EXP-COUNT EDU-COUNT
+
+       OPEN INPUT PROFILES
+       PERFORM UNTIL 1 = 0
+           READ PROFILES
+               AT END EXIT PERFORM
+           END-READ
+
+           *> Check if this profile belongs to current user
+           IF PROFILE-REC (1:15) = CURRENT-USER
+               MOVE "Y" TO PROFILE-EXISTS
+               *> Parse basic profile data from the record
+               UNSTRING PROFILE-REC DELIMITED BY "|"
+                   INTO TMP-USER PROFILE-FIRSTNAME PROFILE-LASTNAME
+                        PROFILE-UNIVERSITY PROFILE-MAJOR PROFILE-YEAR
+                        PROFILE-ABOUT EXP-COUNT EDU-COUNT
+               END-UNSTRING
+
+               *> Load experience entries if any exist
+               IF EXP-COUNT > 0
+                   SET EXP-IX TO 1
+                   PERFORM EXP-COUNT TIMES
+                       READ PROFILES
+                           AT END EXIT PERFORM
+                       END-READ
+                       UNSTRING PROFILE-REC DELIMITED BY "|"
+                           INTO EXP-ENTRY-TITLE (EXP-IX)
+                                EXP-ENTRY-COMPANY (EXP-IX)
+                                EXP-ENTRY-DATES (EXP-IX)
+                                EXP-ENTRY-DESC (EXP-IX)
+                       END-UNSTRING
+                       SET EXP-IX UP BY 1
+                   END-PERFORM
+               END-IF
+
+               *> Load education entries if any exist
+               IF EDU-COUNT > 0
+                   SET EDU-IX TO 1
+                   PERFORM EDU-COUNT TIMES
+                       READ PROFILES
+                           AT END EXIT PERFORM
+                       END-READ
+                       UNSTRING PROFILE-REC DELIMITED BY "|"
+                           INTO EDU-DEGREE (EDU-IX)
+                                EDU-UNIVERSITY (EDU-IX)
+                                EDU-YEARS (EDU-IX)
+                       END-UNSTRING
+                       SET EDU-IX UP BY 1
+                   END-PERFORM
+               END-IF
+
+               EXIT PERFORM
+           ELSE
+               *> This profile belongs to another user, skip their data
+               *> Read their exp_count and edu_count to know how many lines to skip
+               UNSTRING PROFILE-REC DELIMITED BY "|"
+                   INTO TMP-USER TMP-FIELD1 TMP-FIELD2 TMP-FIELD3
+                        TMP-FIELD1 TMP-FIELD2 TMP-FIELD3
+                        TMP-COUNT1 TMP-COUNT2
+               END-UNSTRING
+
+               *> Skip experience lines
+               IF TMP-COUNT1 > 0
+                   PERFORM TMP-COUNT1 TIMES
+                       READ PROFILES
+                           AT END EXIT PERFORM
+                       END-READ
+                   END-PERFORM
+               END-IF
+
+               *> Skip education lines
+               IF TMP-COUNT2 > 0
+                   PERFORM TMP-COUNT2 TIMES
+                       READ PROFILES
+                           AT END EXIT PERFORM
+                       END-READ
+                   END-PERFORM
+               END-IF
+           END-IF
+       END-PERFORM
+       CLOSE PROFILES
+       EXIT.
+
+
+*> Preserve other users' profiles
+SAVE-PROFILE.
+       *> Load all existing profiles into memory
+       PERFORM LOAD-ALL-PROFILES
+
+       *> Update current user's profile in memory
+       PERFORM UPDATE-CURRENT-PROFILE
+
+       *> Save all profiles back to file
+       PERFORM SAVE-ALL-PROFILES
+       EXIT.
+
+
+*> Load all profiles from file into STORED-PROFILES table
+LOAD-ALL-PROFILES.
+       MOVE 0 TO STORED-PROFILE-COUNT
+
+       OPEN INPUT PROFILES
+       PERFORM UNTIL 1 = 0
+           READ PROFILES
+               AT END EXIT PERFORM
+           END-READ
+
+           *> Don't exceed our storage limit
+           IF STORED-PROFILE-COUNT >= MAX-STORED-PROFILES
+               *> Skip remaining profiles if we're at limit
+               PERFORM SKIP-PROFILE-DATA
+           ELSE
+               *> Add this profile to our stored profiles
+               ADD 1 TO STORED-PROFILE-COUNT
+               SET SP-IX TO STORED-PROFILE-COUNT
+
+               *> Parse basic profile data
+               UNSTRING PROFILE-REC DELIMITED BY "|"
+                   INTO SP-USERNAME (SP-IX) SP-FIRSTNAME (SP-IX)
+                        SP-LASTNAME (SP-IX) SP-UNIVERSITY (SP-IX)
+                        SP-MAJOR (SP-IX) SP-YEAR (SP-IX)
+                        SP-ABOUT (SP-IX) SP-EXP-COUNT (SP-IX)
+                        SP-EDU-COUNT (SP-IX)
+               END-UNSTRING
+
+               *> Load experience entries
+               IF SP-EXP-COUNT (SP-IX) > 0
+                   SET SP-EXP-IX TO 1
+                   PERFORM SP-EXP-COUNT (SP-IX) TIMES
+                       READ PROFILES
+                           AT END EXIT PERFORM
+                       END-READ
+                       UNSTRING PROFILE-REC DELIMITED BY "|"
+                           INTO SP-EXP-TITLE (SP-IX, SP-EXP-IX)
+                                SP-EXP-COMPANY (SP-IX, SP-EXP-IX)
+                                SP-EXP-DATES (SP-IX, SP-EXP-IX)
+                                SP-EXP-DESC (SP-IX, SP-EXP-IX)
+                       END-UNSTRING
+                       SET SP-EXP-IX UP BY 1
+                   END-PERFORM
+               END-IF
+
+               *> Load education entries
+               IF SP-EDU-COUNT (SP-IX) > 0
+                   SET SP-EDU-IX TO 1
+                   PERFORM SP-EDU-COUNT (SP-IX) TIMES
+                       READ PROFILES
+                           AT END EXIT PERFORM
+                       END-READ
+                       UNSTRING PROFILE-REC DELIMITED BY "|"
+                           INTO SP-EDU-DEGREE (SP-IX, SP-EDU-IX)
+                                SP-EDU-UNIV (SP-IX, SP-EDU-IX)
+                                SP-EDU-YEARS (SP-IX, SP-EDU-IX)
+                       END-UNSTRING
+                       SET SP-EDU-IX UP BY 1
+                   END-PERFORM
+               END-IF
+           END-IF
+       END-PERFORM
+       CLOSE PROFILES
+       EXIT.
+
+
+*> Skip profile data when we're at storage limit
+SKIP-PROFILE-DATA.
+       *> Parse the counts to know how many lines to skip
+       UNSTRING PROFILE-REC DELIMITED BY "|"
+           INTO TMP-USER TMP-FIELD1 TMP-FIELD2 TMP-FIELD3
+                TMP-FIELD1 TMP-FIELD2 TMP-FIELD3
+                TMP-COUNT1 TMP-COUNT2
+       END-UNSTRING
+
+       *> Skip experience lines
+       IF TMP-COUNT1 > 0
+           PERFORM TMP-COUNT1 TIMES
+               READ PROFILES
+                   AT END EXIT PERFORM
+               END-READ
+           END-PERFORM
+       END-IF
+
+       *> Skip education lines
+       IF TMP-COUNT2 > 0
+           PERFORM TMP-COUNT2 TIMES
+               READ PROFILES
+                   AT END EXIT PERFORM
+               END-READ
+           END-PERFORM
+       END-IF
+       EXIT.
+
+
+*> Update or add current user's profile in STORED-PROFILES
+UPDATE-CURRENT-PROFILE.
+       *> Look for existing profile for current user
+       MOVE "N" TO FOUND-FLAG
+       IF STORED-PROFILE-COUNT > 0
+           SET SP-IX TO 1
+           PERFORM UNTIL SP-IX > STORED-PROFILE-COUNT
+               IF FUNCTION UPPER-CASE(FUNCTION TRIM(SP-USERNAME (SP-IX)))
+                    = FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
+                   MOVE "Y" TO FOUND-FLAG
+                   EXIT PERFORM
+               ELSE
+                   SET SP-IX UP BY 1
+               END-IF
+           END-PERFORM
+       END-IF
+
+       *> If not found and we have space, add new profile
+       IF FOUND-FLAG = "N"
+           IF STORED-PROFILE-COUNT < MAX-STORED-PROFILES
+               ADD 1 TO STORED-PROFILE-COUNT
+               SET SP-IX TO STORED-PROFILE-COUNT
+           ELSE
+               *> No space to add new profile, exit
+               EXIT PARAGRAPH
+           END-IF
+       END-IF
+
+       *> Update the profile data (whether existing or new)
+       MOVE CURRENT-USER TO SP-USERNAME (SP-IX)
+       MOVE PROFILE-FIRSTNAME TO SP-FIRSTNAME (SP-IX)
+       MOVE PROFILE-LASTNAME TO SP-LASTNAME (SP-IX)
+       MOVE PROFILE-UNIVERSITY TO SP-UNIVERSITY (SP-IX)
+       MOVE PROFILE-MAJOR TO SP-MAJOR (SP-IX)
+       MOVE PROFILE-YEAR TO SP-YEAR (SP-IX)
+       MOVE PROFILE-ABOUT TO SP-ABOUT (SP-IX)
+       MOVE EXP-COUNT TO SP-EXP-COUNT (SP-IX)
+       MOVE EDU-COUNT TO SP-EDU-COUNT (SP-IX)
+
+       *> Copy experience entries
+       IF EXP-COUNT > 0
+           SET EXP-IX TO 1
+           SET SP-EXP-IX TO 1
+           PERFORM EXP-COUNT TIMES
+               MOVE EXP-ENTRY-TITLE (EXP-IX) TO SP-EXP-TITLE (SP-IX, SP-EXP-IX)
+               MOVE EXP-ENTRY-COMPANY (EXP-IX) TO SP-EXP-COMPANY (SP-IX, SP-EXP-IX)
+               MOVE EXP-ENTRY-DATES (EXP-IX) TO SP-EXP-DATES (SP-IX, SP-EXP-IX)
+               MOVE EXP-ENTRY-DESC (EXP-IX) TO SP-EXP-DESC (SP-IX, SP-EXP-IX)
+               SET EXP-IX UP BY 1
+               SET SP-EXP-IX UP BY 1
+           END-PERFORM
+       END-IF
+
+       *> Copy education entries
+       IF EDU-COUNT > 0
+           SET EDU-IX TO 1
+           SET SP-EDU-IX TO 1
+           PERFORM EDU-COUNT TIMES
+               MOVE EDU-DEGREE (EDU-IX) TO SP-EDU-DEGREE (SP-IX, SP-EDU-IX)
+               MOVE EDU-UNIVERSITY (EDU-IX) TO SP-EDU-UNIV (SP-IX, SP-EDU-IX)
+               MOVE EDU-YEARS (EDU-IX) TO SP-EDU-YEARS (SP-IX, SP-EDU-IX)
+               SET EDU-IX UP BY 1
+               SET SP-EDU-IX UP BY 1
+           END-PERFORM
+       END-IF
+       EXIT.
+
+
+*> Save all profiles from STORED-PROFILES back to file
+SAVE-ALL-PROFILES.
+       OPEN OUTPUT PROFILES
+
+       *> Write each stored profile
+       IF STORED-PROFILE-COUNT > 0
+           SET SP-IX TO 1
+           PERFORM UNTIL SP-IX > STORED-PROFILE-COUNT
+               *> Write basic profile information
+               MOVE SPACES TO PROFILE-REC
+               STRING SP-USERNAME (SP-IX) "|"
+                      FUNCTION TRIM(SP-FIRSTNAME (SP-IX)) "|"
+                      FUNCTION TRIM(SP-LASTNAME (SP-IX)) "|"
+                      FUNCTION TRIM(SP-UNIVERSITY (SP-IX)) "|"
+                      FUNCTION TRIM(SP-MAJOR (SP-IX)) "|"
+                      SP-YEAR (SP-IX) "|"
+                      FUNCTION TRIM(SP-ABOUT (SP-IX)) "|"
+                      SP-EXP-COUNT (SP-IX) "|"
+                      SP-EDU-COUNT (SP-IX)
+                      DELIMITED BY SIZE INTO PROFILE-REC
+               END-STRING
+               WRITE PROFILE-REC
+
+               *> Write experience entries
+               IF SP-EXP-COUNT (SP-IX) > 0
+                   SET SP-EXP-IX TO 1
+                   PERFORM SP-EXP-COUNT (SP-IX) TIMES
+                       MOVE SPACES TO PROFILE-REC
+                       STRING FUNCTION TRIM(SP-EXP-TITLE (SP-IX, SP-EXP-IX)) "|"
+                              FUNCTION TRIM(SP-EXP-COMPANY (SP-IX, SP-EXP-IX)) "|"
+                              FUNCTION TRIM(SP-EXP-DATES (SP-IX, SP-EXP-IX)) "|"
+                              FUNCTION TRIM(SP-EXP-DESC (SP-IX, SP-EXP-IX))
+                              DELIMITED BY SIZE INTO PROFILE-REC
+                       END-STRING
+                       WRITE PROFILE-REC
+                       SET SP-EXP-IX UP BY 1
+                   END-PERFORM
+               END-IF
+
+               *> Write education entries
+               IF SP-EDU-COUNT (SP-IX) > 0
+                   SET SP-EDU-IX TO 1
+                   PERFORM SP-EDU-COUNT (SP-IX) TIMES
+                       MOVE SPACES TO PROFILE-REC
+                       STRING FUNCTION TRIM(SP-EDU-DEGREE (SP-IX, SP-EDU-IX)) "|"
+                              FUNCTION TRIM(SP-EDU-UNIV (SP-IX, SP-EDU-IX)) "|"
+                              FUNCTION TRIM(SP-EDU-YEARS (SP-IX, SP-EDU-IX))
+                              DELIMITED BY SIZE INTO PROFILE-REC
+                       END-STRING
+                       WRITE PROFILE-REC
+                       SET SP-EDU-IX UP BY 1
+                   END-PERFORM
+               END-IF
+
+               SET SP-IX UP BY 1
+           END-PERFORM
+       END-IF
+
+       CLOSE PROFILES
+       EXIT.
 
 
 SKILLS-MENU.
