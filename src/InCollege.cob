@@ -105,6 +105,32 @@ WORKING-STORAGE SECTION.
 01 PROFILE-EXISTS      PIC X VALUE "N".
 01 CURRENT-USER        PIC X(15).      *> Store logged-in username
 
+*> Multi-user profile storage
+01 MAX-STORED-PROFILES PIC 9 VALUE 5.
+01 STORED-PROFILE-COUNT PIC 9 VALUE 0.
+01 STORED-PROFILES.
+    05 STORED-PROFILE OCCURS 5 INDEXED BY SP-IX.
+        10 SP-USERNAME     PIC X(15).
+        10 SP-FIRSTNAME    PIC X(20).
+        10 SP-LASTNAME     PIC X(20).
+        10 SP-UNIVERSITY   PIC X(40).
+        10 SP-MAJOR        PIC X(30).
+        10 SP-YEAR         PIC 9(4).
+        10 SP-ABOUT        PIC X(200).
+        10 SP-EXP-COUNT    PIC 9.
+        10 SP-EDU-COUNT    PIC 9.
+        10 SP-EXPERIENCES.
+            15 SP-EXP-ENTRY OCCURS 3 INDEXED BY SP-EXP-IX.
+                20 SP-EXP-TITLE    PIC X(80).
+                20 SP-EXP-COMPANY  PIC X(80).
+                20 SP-EXP-DATES    PIC X(80).
+                20 SP-EXP-DESC     PIC X(100).
+        10 SP-EDUCATIONS.
+            15 SP-EDU-ENTRY OCCURS 3 INDEXED BY SP-EDU-IX.
+                20 SP-EDU-DEGREE   PIC X(50).
+                20 SP-EDU-UNIV     PIC X(50).
+                20 SP-EDU-YEARS    PIC X(20).
+
 
 PROCEDURE DIVISION.
 MAIN-PARA.
@@ -410,6 +436,8 @@ LOGIN-UNLIMITED.
                    PERFORM ECHO-DISPLAY
                    *> Store current user for profile operations
                    MOVE USERNAME TO CURRENT-USER
+                   *> Load existing profile when user logs in
+                   PERFORM LOAD-PROFILE
                    PERFORM NAVIGATION-MENU
                    EXIT PERFORM
                ELSE
@@ -1149,53 +1177,237 @@ LOAD-PROFILE.
        EXIT.
 
 
+*> Preserve other users' profiles
 SAVE-PROFILE.
-       *> Save profile to file with experience and education data
-       OPEN OUTPUT PROFILES
+       *> Load all existing profiles into memory
+       PERFORM LOAD-ALL-PROFILES
 
-       *> Save basic profile information with counts
-       MOVE SPACES TO PROFILE-REC
-       STRING CURRENT-USER "|"
-              FUNCTION TRIM(PROFILE-FIRSTNAME) "|"
-              FUNCTION TRIM(PROFILE-LASTNAME) "|"
-              FUNCTION TRIM(PROFILE-UNIVERSITY) "|"
-              FUNCTION TRIM(PROFILE-MAJOR) "|"
-              PROFILE-YEAR "|"
-              FUNCTION TRIM(PROFILE-ABOUT) "|"
-              EXP-COUNT "|"
-              EDU-COUNT
-              DELIMITED BY SIZE INTO PROFILE-REC
-       END-STRING
-       WRITE PROFILE-REC
+       *> Update current user's profile in memory
+       PERFORM UPDATE-CURRENT-PROFILE
 
-       *> Save experience entries
-       IF EXP-COUNT > 0
-           SET EXP-IX TO 1
-           PERFORM EXP-COUNT TIMES
-               MOVE SPACES TO PROFILE-REC
-               STRING FUNCTION TRIM(EXP-ENTRY-TITLE (EXP-IX)) "|"
-                      FUNCTION TRIM(EXP-ENTRY-COMPANY (EXP-IX)) "|"
-                      FUNCTION TRIM(EXP-ENTRY-DATES (EXP-IX)) "|"
-                      FUNCTION TRIM(EXP-ENTRY-DESC (EXP-IX))
-                      DELIMITED BY SIZE INTO PROFILE-REC
-               END-STRING
-               WRITE PROFILE-REC
-               SET EXP-IX UP BY 1
+       *> Save all profiles back to file
+       PERFORM SAVE-ALL-PROFILES
+       EXIT.
+
+
+*> Load all profiles from file into STORED-PROFILES table
+LOAD-ALL-PROFILES.
+       MOVE 0 TO STORED-PROFILE-COUNT
+
+       OPEN INPUT PROFILES
+       PERFORM UNTIL 1 = 0
+           READ PROFILES
+               AT END EXIT PERFORM
+           END-READ
+
+           *> Don't exceed our storage limit
+           IF STORED-PROFILE-COUNT >= MAX-STORED-PROFILES
+               *> Skip remaining profiles if we're at limit
+               PERFORM SKIP-PROFILE-DATA
+           ELSE
+               *> Add this profile to our stored profiles
+               ADD 1 TO STORED-PROFILE-COUNT
+               SET SP-IX TO STORED-PROFILE-COUNT
+
+               *> Parse basic profile data
+               UNSTRING PROFILE-REC DELIMITED BY "|"
+                   INTO SP-USERNAME (SP-IX) SP-FIRSTNAME (SP-IX)
+                        SP-LASTNAME (SP-IX) SP-UNIVERSITY (SP-IX)
+                        SP-MAJOR (SP-IX) SP-YEAR (SP-IX)
+                        SP-ABOUT (SP-IX) SP-EXP-COUNT (SP-IX)
+                        SP-EDU-COUNT (SP-IX)
+               END-UNSTRING
+
+               *> Load experience entries
+               IF SP-EXP-COUNT (SP-IX) > 0
+                   SET SP-EXP-IX TO 1
+                   PERFORM SP-EXP-COUNT (SP-IX) TIMES
+                       READ PROFILES
+                           AT END EXIT PERFORM
+                       END-READ
+                       UNSTRING PROFILE-REC DELIMITED BY "|"
+                           INTO SP-EXP-TITLE (SP-IX, SP-EXP-IX)
+                                SP-EXP-COMPANY (SP-IX, SP-EXP-IX)
+                                SP-EXP-DATES (SP-IX, SP-EXP-IX)
+                                SP-EXP-DESC (SP-IX, SP-EXP-IX)
+                       END-UNSTRING
+                       SET SP-EXP-IX UP BY 1
+                   END-PERFORM
+               END-IF
+
+               *> Load education entries
+               IF SP-EDU-COUNT (SP-IX) > 0
+                   SET SP-EDU-IX TO 1
+                   PERFORM SP-EDU-COUNT (SP-IX) TIMES
+                       READ PROFILES
+                           AT END EXIT PERFORM
+                       END-READ
+                       UNSTRING PROFILE-REC DELIMITED BY "|"
+                           INTO SP-EDU-DEGREE (SP-IX, SP-EDU-IX)
+                                SP-EDU-UNIV (SP-IX, SP-EDU-IX)
+                                SP-EDU-YEARS (SP-IX, SP-EDU-IX)
+                       END-UNSTRING
+                       SET SP-EDU-IX UP BY 1
+                   END-PERFORM
+               END-IF
+           END-IF
+       END-PERFORM
+       CLOSE PROFILES
+       EXIT.
+
+
+*> Skip profile data when we're at storage limit
+SKIP-PROFILE-DATA.
+       *> Parse the counts to know how many lines to skip
+       UNSTRING PROFILE-REC DELIMITED BY "|"
+           INTO TMP-USER TMP-FIELD1 TMP-FIELD2 TMP-FIELD3
+                TMP-FIELD1 TMP-FIELD2 TMP-FIELD3
+                TMP-COUNT1 TMP-COUNT2
+       END-UNSTRING
+
+       *> Skip experience lines
+       IF TMP-COUNT1 > 0
+           PERFORM TMP-COUNT1 TIMES
+               READ PROFILES
+                   AT END EXIT PERFORM
+               END-READ
            END-PERFORM
        END-IF
 
-       *> Save education entries
+       *> Skip education lines
+       IF TMP-COUNT2 > 0
+           PERFORM TMP-COUNT2 TIMES
+               READ PROFILES
+                   AT END EXIT PERFORM
+               END-READ
+           END-PERFORM
+       END-IF
+       EXIT.
+
+
+*> Update or add current user's profile in STORED-PROFILES
+UPDATE-CURRENT-PROFILE.
+       *> Look for existing profile for current user
+       MOVE "N" TO FOUND-FLAG
+       IF STORED-PROFILE-COUNT > 0
+           SET SP-IX TO 1
+           PERFORM UNTIL SP-IX > STORED-PROFILE-COUNT
+               IF FUNCTION UPPER-CASE(FUNCTION TRIM(SP-USERNAME (SP-IX)))
+                    = FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
+                   MOVE "Y" TO FOUND-FLAG
+                   EXIT PERFORM
+               ELSE
+                   SET SP-IX UP BY 1
+               END-IF
+           END-PERFORM
+       END-IF
+
+       *> If not found and we have space, add new profile
+       IF FOUND-FLAG = "N"
+           IF STORED-PROFILE-COUNT < MAX-STORED-PROFILES
+               ADD 1 TO STORED-PROFILE-COUNT
+               SET SP-IX TO STORED-PROFILE-COUNT
+           ELSE
+               *> No space to add new profile, exit
+               EXIT PARAGRAPH
+           END-IF
+       END-IF
+
+       *> Update the profile data (whether existing or new)
+       MOVE CURRENT-USER TO SP-USERNAME (SP-IX)
+       MOVE PROFILE-FIRSTNAME TO SP-FIRSTNAME (SP-IX)
+       MOVE PROFILE-LASTNAME TO SP-LASTNAME (SP-IX)
+       MOVE PROFILE-UNIVERSITY TO SP-UNIVERSITY (SP-IX)
+       MOVE PROFILE-MAJOR TO SP-MAJOR (SP-IX)
+       MOVE PROFILE-YEAR TO SP-YEAR (SP-IX)
+       MOVE PROFILE-ABOUT TO SP-ABOUT (SP-IX)
+       MOVE EXP-COUNT TO SP-EXP-COUNT (SP-IX)
+       MOVE EDU-COUNT TO SP-EDU-COUNT (SP-IX)
+
+       *> Copy experience entries
+       IF EXP-COUNT > 0
+           SET EXP-IX TO 1
+           SET SP-EXP-IX TO 1
+           PERFORM EXP-COUNT TIMES
+               MOVE EXP-ENTRY-TITLE (EXP-IX) TO SP-EXP-TITLE (SP-IX, SP-EXP-IX)
+               MOVE EXP-ENTRY-COMPANY (EXP-IX) TO SP-EXP-COMPANY (SP-IX, SP-EXP-IX)
+               MOVE EXP-ENTRY-DATES (EXP-IX) TO SP-EXP-DATES (SP-IX, SP-EXP-IX)
+               MOVE EXP-ENTRY-DESC (EXP-IX) TO SP-EXP-DESC (SP-IX, SP-EXP-IX)
+               SET EXP-IX UP BY 1
+               SET SP-EXP-IX UP BY 1
+           END-PERFORM
+       END-IF
+
+       *> Copy education entries
        IF EDU-COUNT > 0
            SET EDU-IX TO 1
+           SET SP-EDU-IX TO 1
            PERFORM EDU-COUNT TIMES
+               MOVE EDU-DEGREE (EDU-IX) TO SP-EDU-DEGREE (SP-IX, SP-EDU-IX)
+               MOVE EDU-UNIVERSITY (EDU-IX) TO SP-EDU-UNIV (SP-IX, SP-EDU-IX)
+               MOVE EDU-YEARS (EDU-IX) TO SP-EDU-YEARS (SP-IX, SP-EDU-IX)
+               SET EDU-IX UP BY 1
+               SET SP-EDU-IX UP BY 1
+           END-PERFORM
+       END-IF
+       EXIT.
+
+
+*> Save all profiles from STORED-PROFILES back to file
+SAVE-ALL-PROFILES.
+       OPEN OUTPUT PROFILES
+
+       *> Write each stored profile
+       IF STORED-PROFILE-COUNT > 0
+           SET SP-IX TO 1
+           PERFORM UNTIL SP-IX > STORED-PROFILE-COUNT
+               *> Write basic profile information
                MOVE SPACES TO PROFILE-REC
-               STRING FUNCTION TRIM(EDU-DEGREE (EDU-IX)) "|"
-                      FUNCTION TRIM(EDU-UNIVERSITY (EDU-IX)) "|"
-                      FUNCTION TRIM(EDU-YEARS (EDU-IX))
+               STRING SP-USERNAME (SP-IX) "|"
+                      FUNCTION TRIM(SP-FIRSTNAME (SP-IX)) "|"
+                      FUNCTION TRIM(SP-LASTNAME (SP-IX)) "|"
+                      FUNCTION TRIM(SP-UNIVERSITY (SP-IX)) "|"
+                      FUNCTION TRIM(SP-MAJOR (SP-IX)) "|"
+                      SP-YEAR (SP-IX) "|"
+                      FUNCTION TRIM(SP-ABOUT (SP-IX)) "|"
+                      SP-EXP-COUNT (SP-IX) "|"
+                      SP-EDU-COUNT (SP-IX)
                       DELIMITED BY SIZE INTO PROFILE-REC
                END-STRING
                WRITE PROFILE-REC
-               SET EDU-IX UP BY 1
+
+               *> Write experience entries
+               IF SP-EXP-COUNT (SP-IX) > 0
+                   SET SP-EXP-IX TO 1
+                   PERFORM SP-EXP-COUNT (SP-IX) TIMES
+                       MOVE SPACES TO PROFILE-REC
+                       STRING FUNCTION TRIM(SP-EXP-TITLE (SP-IX, SP-EXP-IX)) "|"
+                              FUNCTION TRIM(SP-EXP-COMPANY (SP-IX, SP-EXP-IX)) "|"
+                              FUNCTION TRIM(SP-EXP-DATES (SP-IX, SP-EXP-IX)) "|"
+                              FUNCTION TRIM(SP-EXP-DESC (SP-IX, SP-EXP-IX))
+                              DELIMITED BY SIZE INTO PROFILE-REC
+                       END-STRING
+                       WRITE PROFILE-REC
+                       SET SP-EXP-IX UP BY 1
+                   END-PERFORM
+               END-IF
+
+               *> Write education entries
+               IF SP-EDU-COUNT (SP-IX) > 0
+                   SET SP-EDU-IX TO 1
+                   PERFORM SP-EDU-COUNT (SP-IX) TIMES
+                       MOVE SPACES TO PROFILE-REC
+                       STRING FUNCTION TRIM(SP-EDU-DEGREE (SP-IX, SP-EDU-IX)) "|"
+                              FUNCTION TRIM(SP-EDU-UNIV (SP-IX, SP-EDU-IX)) "|"
+                              FUNCTION TRIM(SP-EDU-YEARS (SP-IX, SP-EDU-IX))
+                              DELIMITED BY SIZE INTO PROFILE-REC
+                       END-STRING
+                       WRITE PROFILE-REC
+                       SET SP-EDU-IX UP BY 1
+                   END-PERFORM
+               END-IF
+
+               SET SP-IX UP BY 1
            END-PERFORM
        END-IF
 
