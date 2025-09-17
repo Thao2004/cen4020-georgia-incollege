@@ -1,0 +1,653 @@
+TEST 1 OUTPUT
+
+root@8da7e2f96745:/workspace# ./InCollege
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+Account created.
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in
+Welcome, Alex!
+
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+=============================
+Enter your choice:
+--- Create/Edit Profile ---
+Enter First Name:
+Enter Last Name:
+Enter University/College Attended:
+Enter Major:
+Enter Graduation Year (YYYY):
+Enter About Me (optional, max 200 chars, enter blank line to skip):
+Add Experience (optional, max 3 entries. Enter 'DONE' to finish):
+Experience #1 - Title:
+Experience #1 - Company/Organization:
+Experience #1 - Dates (e.g., Summer 2024):
+Experience #1 - Description (optional, max 100 chars, blank to skip):
+Add Experience (optional, max 3 entries. Enter 'DONE' to finish):
+Experience #2 - Title:
+Add Education (optional, max 3 entries. Enter 'DONE' to finish):
+Education #1 - Degree:
+Profile saved successfully!
+
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+=============================
+Enter your choice:
+
+TEST 2 OUTPUT
+
+root@8da7e2f96745:/workspace# ./InCollege
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Username already exists.
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Invalid choice.
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in
+Welcome, Alex!
+
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+=============================
+Enter your choice:
+--- Create/Edit Profile ---
+Enter First Name:
+Enter Last Name:
+Enter University/College Attended:
+Enter Major:
+Enter Graduation Year (YYYY):
+Enter About Me (optional, max 200 chars, enter blank line to skip):
+Add Experience (optional, max 3 entries. Enter 'DONE' to finish):
+Experience #2 - Title:
+Experience #2 - Company/Organization:
+Experience #2 - Dates (e.g., Summer 2024):
+Experience #2 - Description (optional, max 100 chars, blank to skip):
+Add Experience (optional, max 3 entries. Enter 'DONE' to finish):
+Experience #3 - Title:
+Add Education (optional, max 3 entries. Enter 'DONE' to finish):
+Education #1 - Degree:
+Profile saved successfully!
+
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+=============================
+Enter your choice:
+
+TEST 3 OUTPUT
+
+root@8da7e2f96745:/workspace# ./InCollege
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Username already exists.
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Invalid choice.
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in
+Welcome, Alex!
+
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+=============================
+Enter your choice:
+--- Create/Edit Profile ---
+Enter First Name:
+Enter Last Name:
+Enter University/College Attended:
+Enter Major:
+Enter Graduation Year (YYYY):
+Enter About Me (optional, max 200 chars, enter blank line to skip):
+Add Experience (optional, max 3 entries. Enter 'DONE' to finish):
+Experience #3 - Title:
+Experience #3 - Company/Organization:
+Experience #3 - Dates (e.g., Summer 2024):
+Experience #3 - Description (optional, max 100 chars, blank to skip):
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Add Education (optional, max 3 entries. Enter 'DONE' to finish):
+Education #1 - Degree:
+Profile saved successfully!
+
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+=============================
+Enter your choice:
+
+TEST 4 OUTPUT
+
+root@8da7e2f96745:/workspace# ./InCollege
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in
+Welcome, Alex!
+
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+=============================
+Enter your choice:
+--- Create/Edit Profile ---
+Enter First Name:
+Enter Last Name:
+Enter University/College Attended:
+Enter Major:
+Enter Graduation Year (YYYY):
+Enter About Me (optional, max 200 chars, enter blank line to skip):
+Add Experience (optional, max 3 entries. Enter 'DONE' to finish):
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Add Education (optional, max 3 entries. Enter 'DONE' to finish):
+Education #1 - Degree:
+Profile saved successfully!
+
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+=============================
+Enter your choice:
+
+TEST 5 OUTPUT
+
+root@8da7e2f96745:/workspace# ./InCollege
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in
+Welcome, Alex!
+
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+=============================
+Enter your choice:
+--- Create/Edit Profile ---
+Enter First Name:
+Enter Last Name:
+Enter University/College Attended:
+Enter Major:
+Enter Graduation Year (YYYY):
+Enter About Me (optional, max 200 chars, enter blank line to skip):
+Add Experience (optional, max 3 entries. Enter 'DONE' to finish):
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Add Education (optional, max 3 entries. Enter 'DONE' to finish):
+Education #1 - Degree:
+Profile saved successfully!
+
+TEST 6 OUTPUT
+
+root@8da7e2f96745:/workspace# ./InCollege
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in
+Welcome, Alex!
+
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+=============================
+Enter your choice:
+--- Create/Edit Profile ---
+Enter First Name:
+Enter Last Name:
+Enter University/College Attended:
+Enter Major:
+Enter Graduation Year (YYYY):
+Enter About Me (optional, max 200 chars, enter blank line to skip):
+Add Experience (optional, max 3 entries. Enter 'DONE' to finish):
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
+Add Education (optional, max 3 entries. Enter 'DONE' to finish):
+Education #1 - Degree:
+Profile saved successfully!
+
+TEST 7 OUTPUT
+
+root@8da7e2f96745:/workspace# ./InCollege
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+Account created.
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+Account created.
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+Account created.
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+Account created.
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+Account created.
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+All permitted accounts have been created, please come back later
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Invalid choice.
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Invalid choice.
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+
+TEST 8 OUTPUT
+
+root@8da7e2f96745:/workspace# ./InCollege
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+Account created.
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in
+Welcome, TestUser1!
+
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+=============================
+Enter your choice:
+--- Create/Edit Profile ---
+Enter First Name:
+Enter Last Name:
+Enter University/College Attended:
+Enter Major:
+Enter Graduation Year (YYYY):
+Enter About Me (optional, max 200 chars, enter blank line to skip):
+Add Experience (optional, max 3 entries. Enter 'DONE' to finish):
+Experience #1 - Title:
+Add Education (optional, max 3 entries. Enter 'DONE' to finish):
+Education #1 - Degree:
+
+TEST 9 OUTPUT
+
+root@8da7e2f96745:/workspace# ./InCollege
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+Account created.
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in
+Welcome, TestUser2!
+
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+=============================
+Enter your choice:
+--- Create/Edit Profile ---
+Enter First Name:
+Enter Last Name:
+Enter University/College Attended:
+Enter Major:
+Enter Graduation Year (YYYY):
+Enter About Me (optional, max 200 chars, enter blank line to skip):
+About Me must be at most 200 characters.
+Enter About Me (optional, max 200 chars, enter blank line to skip):
+Add Experience (optional, max 3 entries. Enter 'DONE' to finish):
+Experience #1 - Title:
+Add Education (optional, max 3 entries. Enter 'DONE' to finish):
+Education #1 - Degree:
+Profile saved successfully!
+
+TEST 10 OUTPUT
+
+root@8da7e2f96745:/workspace# ./InCollege
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+Account created.
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in
+Welcome, TestUser3!
+
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+=============================
+Enter your choice:
+--- Create/Edit Profile ---
+Enter First Name:
+Enter Last Name:
+Enter University/College Attended:
+Enter Major:
+Enter Graduation Year (YYYY):
+Enter About Me (optional, max 200 chars, enter blank line to skip):
+Add Experience (optional, max 3 entries. Enter 'DONE' to finish):
+Experience #1 - Title:
+Add Education (optional, max 3 entries. Enter 'DONE' to finish):
+Education #1 - Degree:
+Profile saved successfully!
+
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+=============================
+Enter your choice:
+
+TEST 11 OUTPUT
+
+root@8da7e2f96745:/workspace# ./InCollege
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+Account created.
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in
+Welcome, TestUser4!
+
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+=============================
+Enter your choice:
+--- Create/Edit Profile ---
+Enter First Name:
+Enter Last Name:
+Enter University/College Attended:
+Enter Major:
+Enter Graduation Year (YYYY):
+Enter About Me (optional, max 200 chars, enter blank line to skip):
+Add Experience (optional, max 3 entries. Enter 'DONE' to finish):
+Experience #1 - Title:
+Add Education (optional, max 3 entries. Enter 'DONE' to finish):
+Education #1 - Degree:
+Education #1 - University/College:
+Education #1 - Years Attended (e.g., 2023-2025):
+Add Education (optional, max 3 entries. Enter 'DONE' to finish):
+Education #2 - Degree:
+Education #2 - University/College:
+Education #2 - Years Attended (e.g., 2023-2025):
+Add Education (optional, max 3 entries. Enter 'DONE' to finish):
+Education #3 - Degree:
+Education #3 - University/College:
+Education #3 - Years Attended (e.g., 2023-2025):
+Maximum of 3 education entries allowed. Enter 'DONE' to continue.
+Profile saved successfully!
+
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+=============================
+Enter your choice:
+
+TEST 12 OUTPUT
+
+root@8da7e2f96745:/workspace# ./InCollege
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+Account created.
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in
+Welcome, TestUser5!
+
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+=============================
+Enter your choice:
+--- Create/Edit Profile ---
+Enter First Name:
+Enter Last Name:
+Enter University/College Attended:
+Enter Major:
+Enter Graduation Year (YYYY):
+Enter About Me (optional, max 200 chars, enter blank line to skip):
+Add Experience (optional, max 3 entries. Enter 'DONE' to finish):
+Experience #1 - Title:
+Add Education (optional, max 3 entries. Enter 'DONE' to finish):
+Education #1 - Degree:
+Education #1 - University/College:
+Education #1 - Years Attended (e.g., 2023-2025):
+Add Education (optional, max 3 entries. Enter 'DONE' to finish):
+Education #2 - Degree:
+Education #2 - University/College:
+Education #2 - Years Attended (e.g., 2023-2025):
+Add Education (optional, max 3 entries. Enter 'DONE' to finish):
+Education #3 - Degree:
+Education #3 - University/College:
+Education #3 - Years Attended (e.g., 2023-2025):
+Maximum of 3 education entries allowed. Enter 'DONE' to continue.
+Maximum of 3 education entries allowed. Enter 'DONE' to continue.
+Maximum of 3 education entries allowed. Enter 'DONE' to continue.
+Maximum of 3 education entries allowed. Enter 'DONE' to continue.
+Profile saved successfully!
+
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+=============================
+Enter your choice:
