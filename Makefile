@@ -15,4 +15,4 @@ run: build
 
 # Clean generated files
 clean:
-	rm -f $(BIN) InCollege-Output.txt accounts.dat
+	rm -f $(BIN) InCollege-Output.txt accounts.dat profiles.dat
