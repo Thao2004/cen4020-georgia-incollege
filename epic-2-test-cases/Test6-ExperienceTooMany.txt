@@ -1,0 +1,23 @@
+1
+Alex
+Pass@123
+1
+Alex
+Smith
+USF
+Computer Science
+2026
+About text
+BS Computer Science
+USF
+2022-2026
+MS Data Science
+USF
+2026-2028
+PhD AI
+USF
+2028-2032
+Another Degree
+USF
+2032-2036
+DONE
