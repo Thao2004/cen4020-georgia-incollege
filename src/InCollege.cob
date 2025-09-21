@@ -43,6 +43,9 @@ WORKING-STORAGE SECTION.
 01 SKILLS-SELECTION PIC 99 VALUE 0.     *> skills menu choice (numeric)
 01 EOF-FLAG          PIC X VALUE "N".    *> "Y" at end of input
 
+*> Temporary variable for safe year validation
+01 TEMP-YEAR       PIC S9(8) VALUE 0.   *> Temporary year holder for validation
+
 *> In-memory table (max 5 accounts)
 01 ACCOUNT-COUNT  PIC 9 VALUE 0.
 01 USER-TABLE.
@@ -60,6 +63,7 @@ WORKING-STORAGE SECTION.
 01 FOUND-FLAG     PIC X VALUE "N".     *> "Y" if username is already taken
 01 TMP-USER       PIC X(15).           *> Scratch for file load
 01 TMP-PASS       PIC X(12).           *> Scratch for file load
+
 *> Additional temporary variables for profile parsing
 01 TMP-FIELD1     PIC X(50).           *> Temporary field for skipping data
 01 TMP-FIELD2     PIC X(50).           *> Temporary field for skipping data
@@ -656,10 +660,20 @@ GET-YEAR.
                CONTINUE
            END-IF
 
-           IF FUNCTION TEST-NUMVAL(USER-IN-REC) = 0
-               MOVE FUNCTION NUMVAL(USER-IN-REC) TO PROFILE-YEAR
-               IF PROFILE-YEAR >= 1900 AND PROFILE-YEAR <= 2100
-                   EXIT PERFORM
+           *> Check for decimal point first - reject if found
+           IF FUNCTION SUBSTITUTE(USER-IN-REC, ".", "") NOT = USER-IN-REC
+               *> Input contains decimal point - reject it
+               CONTINUE
+           ELSE
+               IF FUNCTION TEST-NUMVAL(USER-IN-REC) = 0
+                   *> Move to temporary variable first to avoid runtime errors
+                   MOVE FUNCTION NUMVAL(USER-IN-REC) TO TEMP-YEAR
+                   *> Validate range and ensure value is within PIC 9(4) limits
+                   IF TEMP-YEAR >= 1900 AND TEMP-YEAR <= 2100
+                      AND TEMP-YEAR >= 0 AND TEMP-YEAR <= 9999
+                       MOVE TEMP-YEAR TO PROFILE-YEAR
+                       EXIT PERFORM
+                   END-IF
                END-IF
            END-IF
 
