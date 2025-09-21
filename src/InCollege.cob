@@ -131,6 +131,9 @@ WORKING-STORAGE SECTION.
                 20 SP-EDU-UNIV     PIC X(50).
                 20 SP-EDU-YEARS    PIC X(20).
 
+*> Display variables for numbered entries
+01 DISPLAY-EXP-NUM     PIC 9.               *> For displaying experience number
+01 DISPLAY-EDU-NUM     PIC 9.               *> For displaying education number
 
 PROCEDURE DIVISION.
 MAIN-PARA.
@@ -1021,10 +1024,49 @@ VIEW-PROFILE.
 
        *> Display Experience if exists
        IF EXP-COUNT > 0
-           MOVE "Experience:" TO MSG
-           PERFORM ECHO-DISPLAY
-           SET EXP-IX TO 1
-           PERFORM UNTIL EXP-IX > EXP-COUNT
+           IF EXP-COUNT > 1
+               *> Multiple experiences - show numbered entries
+               SET EXP-IX TO 1
+               PERFORM UNTIL EXP-IX > EXP-COUNT
+                   MOVE EXP-IX TO DISPLAY-EXP-NUM
+                   MOVE SPACES TO MSG
+                   STRING "Experience #" DISPLAY-EXP-NUM ":" DELIMITED BY SIZE INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+
+                   MOVE SPACES TO MSG
+                   STRING " Title: " FUNCTION TRIM(EXP-ENTRY-TITLE (EXP-IX))
+                          DELIMITED BY SIZE INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+
+                   MOVE SPACES TO MSG
+                   STRING " Company: " FUNCTION TRIM(EXP-ENTRY-COMPANY (EXP-IX))
+                          DELIMITED BY SIZE INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+
+                   MOVE SPACES TO MSG
+                   STRING " Dates: " FUNCTION TRIM(EXP-ENTRY-DATES (EXP-IX))
+                          DELIMITED BY SIZE INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+
+                   IF FUNCTION LENGTH(FUNCTION TRIM(EXP-ENTRY-DESC (EXP-IX))) > 0
+                       MOVE SPACES TO MSG
+                       STRING " Description: " FUNCTION TRIM(EXP-ENTRY-DESC (EXP-IX))
+                              DELIMITED BY SIZE INTO MSG
+                       END-STRING
+                       PERFORM ECHO-DISPLAY
+                   END-IF
+
+                   SET EXP-IX UP BY 1
+               END-PERFORM
+           ELSE
+               *> Single experience - show without number
+               MOVE "Experience:" TO MSG
+               PERFORM ECHO-DISPLAY
+               SET EXP-IX TO 1
                MOVE SPACES TO MSG
                STRING " Title: " FUNCTION TRIM(EXP-ENTRY-TITLE (EXP-IX))
                       DELIMITED BY SIZE INTO MSG
@@ -1050,17 +1092,46 @@ VIEW-PROFILE.
                    END-STRING
                    PERFORM ECHO-DISPLAY
                END-IF
-
-               SET EXP-IX UP BY 1
-           END-PERFORM
+           END-IF
        END-IF
 
        *> Display Education if exists
        IF EDU-COUNT > 0
-           MOVE "Education:" TO MSG
-           PERFORM ECHO-DISPLAY
-           SET EDU-IX TO 1
-           PERFORM UNTIL EDU-IX > EDU-COUNT
+           IF EDU-COUNT > 1
+               *> Multiple education entries - show numbered entries
+               SET EDU-IX TO 1
+               PERFORM UNTIL EDU-IX > EDU-COUNT
+                   MOVE EDU-IX TO DISPLAY-EDU-NUM
+                   MOVE SPACES TO MSG
+                   STRING "Education #" DISPLAY-EDU-NUM ":" DELIMITED BY SIZE INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+
+                   MOVE SPACES TO MSG
+                   STRING " Degree: " FUNCTION TRIM(EDU-DEGREE (EDU-IX))
+                          DELIMITED BY SIZE INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+
+                   MOVE SPACES TO MSG
+                   STRING " University: " FUNCTION TRIM(EDU-UNIVERSITY (EDU-IX))
+                          DELIMITED BY SIZE INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+
+                   MOVE SPACES TO MSG
+                   STRING " Years: " FUNCTION TRIM(EDU-YEARS (EDU-IX))
+                          DELIMITED BY SIZE INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+
+                   SET EDU-IX UP BY 1
+               END-PERFORM
+           ELSE
+               *> Single education entry - show without number
+               MOVE "Education:" TO MSG
+               PERFORM ECHO-DISPLAY
+               SET EDU-IX TO 1
                MOVE SPACES TO MSG
                STRING " Degree: " FUNCTION TRIM(EDU-DEGREE (EDU-IX))
                       DELIMITED BY SIZE INTO MSG
@@ -1078,9 +1149,7 @@ VIEW-PROFILE.
                       DELIMITED BY SIZE INTO MSG
                END-STRING
                PERFORM ECHO-DISPLAY
-
-               SET EDU-IX UP BY 1
-           END-PERFORM
+           END-IF
        END-IF
 
        MOVE "--------------------" TO MSG
