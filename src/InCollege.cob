@@ -43,6 +43,9 @@ WORKING-STORAGE SECTION.
 01 SKILLS-SELECTION PIC 99 VALUE 0.     *> skills menu choice (numeric)
 01 EOF-FLAG          PIC X VALUE "N".    *> "Y" at end of input
 
+*> Temporary variable for safe year validation
+01 TEMP-YEAR       PIC S9(8) VALUE 0.   *> Temporary year holder for validation
+
 *> In-memory table (max 5 accounts)
 01 ACCOUNT-COUNT  PIC 9 VALUE 0.
 01 USER-TABLE.
@@ -60,6 +63,7 @@ WORKING-STORAGE SECTION.
 01 FOUND-FLAG     PIC X VALUE "N".     *> "Y" if username is already taken
 01 TMP-USER       PIC X(15).           *> Scratch for file load
 01 TMP-PASS       PIC X(12).           *> Scratch for file load
+
 *> Additional temporary variables for profile parsing
 01 TMP-FIELD1     PIC X(50).           *> Temporary field for skipping data
 01 TMP-FIELD2     PIC X(50).           *> Temporary field for skipping data
@@ -131,6 +135,9 @@ WORKING-STORAGE SECTION.
                 20 SP-EDU-UNIV     PIC X(50).
                 20 SP-EDU-YEARS    PIC X(20).
 
+*> Display variables for numbered entries
+01 DISPLAY-EXP-NUM     PIC 9.               *> For displaying experience number
+01 DISPLAY-EDU-NUM     PIC 9.               *> For displaying education number
 
 PROCEDURE DIVISION.
 MAIN-PARA.
@@ -653,10 +660,20 @@ GET-YEAR.
                CONTINUE
            END-IF
 
-           IF FUNCTION TEST-NUMVAL(USER-IN-REC) = 0
-               MOVE FUNCTION NUMVAL(USER-IN-REC) TO PROFILE-YEAR
-               IF PROFILE-YEAR >= 1900 AND PROFILE-YEAR <= 2100
-                   EXIT PERFORM
+           *> Check for decimal point first - reject if found
+           IF FUNCTION SUBSTITUTE(USER-IN-REC, ".", "") NOT = USER-IN-REC
+               *> Input contains decimal point - reject it
+               CONTINUE
+           ELSE
+               IF FUNCTION TEST-NUMVAL(USER-IN-REC) = 0
+                   *> Move to temporary variable first to avoid runtime errors
+                   MOVE FUNCTION NUMVAL(USER-IN-REC) TO TEMP-YEAR
+                   *> Validate range and ensure value is within PIC 9(4) limits
+                   IF TEMP-YEAR >= 1900 AND TEMP-YEAR <= 2100
+                      AND TEMP-YEAR >= 0 AND TEMP-YEAR <= 9999
+                       MOVE TEMP-YEAR TO PROFILE-YEAR
+                       EXIT PERFORM
+                   END-IF
                END-IF
            END-IF
 
@@ -779,6 +796,13 @@ GET-EXPERIENCE.
                    AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
                END-READ
 
+               *> Check for DONE at Company prompt
+               IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE"
+                   MOVE "This entry isn't recorded because it doesn't have enough required information." TO MSG
+                   PERFORM ECHO-DISPLAY
+                   EXIT PERFORM
+               END-IF
+
                IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
                    MOVE "Company/Organization is required." TO MSG
                    PERFORM ECHO-DISPLAY
@@ -786,6 +810,11 @@ GET-EXPERIENCE.
                    MOVE FUNCTION TRIM(USER-IN-REC) TO EXP-COMPANY
                END-IF
            END-PERFORM
+
+           *> If user typed DONE or hit EOF, exit
+           IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE" OR EOF-FLAG = "Y"
+               EXIT PERFORM
+           END-IF
 
            *> Dates (required; re-prompt until non-blank)
            MOVE SPACES TO EXP-DATES
@@ -802,6 +831,13 @@ GET-EXPERIENCE.
                    AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
                END-READ
 
+               *> Check for DONE at Dates prompt
+               IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE"
+                   MOVE "This entry isn't recorded because it doesn't have enough required information." TO MSG
+                   PERFORM ECHO-DISPLAY
+                   EXIT PERFORM
+               END-IF
+
                IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
                    MOVE "Dates are required." TO MSG
                    PERFORM ECHO-DISPLAY
@@ -809,6 +845,11 @@ GET-EXPERIENCE.
                    MOVE FUNCTION TRIM(USER-IN-REC) TO EXP-DATES
                END-IF
            END-PERFORM
+
+           *> If user typed DONE or hit EOF, exit
+           IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE" OR EOF-FLAG = "Y"
+               EXIT PERFORM
+           END-IF
 
            *> Description (optional; blank skips)
            MOVE SPACES TO MSG
@@ -892,32 +933,41 @@ GET-EDUCATION.
            COMPUTE EDU-ID = EDU-COUNT + 1
            MOVE EDU-ID TO EDU-ID-TXT
 
-           *> Ask for degree
-           MOVE SPACES TO MSG
-           STRING "Education #" DELIMITED BY SIZE
-                  EDU-ID-TXT DELIMITED BY SIZE
-                  " - Degree:" DELIMITED BY SIZE
-             INTO MSG
-           END-STRING
-           PERFORM ECHO-DISPLAY
+           *> Get Degree (required for education entry)
+           PERFORM UNTIL 1 = 0
+               MOVE SPACES TO MSG
+               STRING "Education #" DELIMITED BY SIZE
+                      EDU-ID-TXT DELIMITED BY SIZE
+                      " - Degree:" DELIMITED BY SIZE
+                 INTO MSG
+               END-STRING
+               PERFORM ECHO-DISPLAY
 
-           READ USER-IN
-               AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
-           END-READ
+               READ USER-IN
+                   AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
+               END-READ
 
-           *> If user enters DONE or blank, exit
-           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
-               EXIT PERFORM
-           END-IF
+               *> Check for DONE at Degree prompt
+               IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE"
+                   EXIT PERFORM
+               END-IF
 
+               IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+                   MOVE "Degree is required." TO MSG
+                   PERFORM ECHO-DISPLAY
+               ELSE
+                   *> Add new education entry - now increment count and set index
+                   ADD 1 TO EDU-COUNT
+                   SET EDU-IX TO EDU-COUNT
+                   MOVE FUNCTION TRIM(USER-IN-REC) TO EDU-DEGREE (EDU-IX)
+                   EXIT PERFORM
+               END-IF
+           END-PERFORM
+
+           *> If user typed DONE, exit
            IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE"
                EXIT PERFORM
            END-IF
-
-           *> Add new education entry - now increment count and set index
-           ADD 1 TO EDU-COUNT
-           SET EDU-IX TO EDU-COUNT
-           MOVE FUNCTION TRIM(USER-IN-REC) TO EDU-DEGREE (EDU-IX)
 
            *> Get University/College (required for education entry)
            PERFORM UNTIL 1 = 0
@@ -933,6 +983,15 @@ GET-EDUCATION.
                    AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
                END-READ
 
+               *> Check for DONE at University prompt
+               IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE"
+                   MOVE "This entry isn't recorded because it doesn't have enough required information." TO MSG
+                   PERFORM ECHO-DISPLAY
+                   *> Remove the education entry that was partially added
+                   SUBTRACT 1 FROM EDU-COUNT
+                   EXIT PERFORM
+               END-IF
+
                IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
                    MOVE "University/College is required." TO MSG
                    PERFORM ECHO-DISPLAY
@@ -941,6 +1000,11 @@ GET-EDUCATION.
                    EXIT PERFORM
                END-IF
            END-PERFORM
+
+           *> If user typed DONE, exit
+           IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE"
+               EXIT PERFORM
+           END-IF
 
            *> Get Years Attended (required for education entry)
            PERFORM UNTIL 1 = 0
@@ -956,6 +1020,15 @@ GET-EDUCATION.
                    AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
                END-READ
 
+               *> Check for DONE at Years prompt
+               IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE"
+                   MOVE "This entry isn't recorded because it doesn't have enough required information." TO MSG
+                   PERFORM ECHO-DISPLAY
+                   *> Remove the education entry that was partially added
+                   SUBTRACT 1 FROM EDU-COUNT
+                   EXIT PERFORM
+               END-IF
+
                IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
                    MOVE "Years Attended is required." TO MSG
                    PERFORM ECHO-DISPLAY
@@ -964,6 +1037,11 @@ GET-EDUCATION.
                    EXIT PERFORM
                END-IF
            END-PERFORM
+
+           *> If user typed DONE, exit
+           IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE"
+               EXIT PERFORM
+           END-IF
 
            *> Ask for next education entry ONLY if under the limit
            IF EDU-COUNT < 3
@@ -1021,10 +1099,49 @@ VIEW-PROFILE.
 
        *> Display Experience if exists
        IF EXP-COUNT > 0
-           MOVE "Experience:" TO MSG
-           PERFORM ECHO-DISPLAY
-           SET EXP-IX TO 1
-           PERFORM UNTIL EXP-IX > EXP-COUNT
+           IF EXP-COUNT > 1
+               *> Multiple experiences - show numbered entries
+               SET EXP-IX TO 1
+               PERFORM UNTIL EXP-IX > EXP-COUNT
+                   MOVE EXP-IX TO DISPLAY-EXP-NUM
+                   MOVE SPACES TO MSG
+                   STRING "Experience #" DISPLAY-EXP-NUM ":" DELIMITED BY SIZE INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+
+                   MOVE SPACES TO MSG
+                   STRING " Title: " FUNCTION TRIM(EXP-ENTRY-TITLE (EXP-IX))
+                          DELIMITED BY SIZE INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+
+                   MOVE SPACES TO MSG
+                   STRING " Company: " FUNCTION TRIM(EXP-ENTRY-COMPANY (EXP-IX))
+                          DELIMITED BY SIZE INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+
+                   MOVE SPACES TO MSG
+                   STRING " Dates: " FUNCTION TRIM(EXP-ENTRY-DATES (EXP-IX))
+                          DELIMITED BY SIZE INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+
+                   IF FUNCTION LENGTH(FUNCTION TRIM(EXP-ENTRY-DESC (EXP-IX))) > 0
+                       MOVE SPACES TO MSG
+                       STRING " Description: " FUNCTION TRIM(EXP-ENTRY-DESC (EXP-IX))
+                              DELIMITED BY SIZE INTO MSG
+                       END-STRING
+                       PERFORM ECHO-DISPLAY
+                   END-IF
+
+                   SET EXP-IX UP BY 1
+               END-PERFORM
+           ELSE
+               *> Single experience - show without number
+               MOVE "Experience:" TO MSG
+               PERFORM ECHO-DISPLAY
+               SET EXP-IX TO 1
                MOVE SPACES TO MSG
                STRING " Title: " FUNCTION TRIM(EXP-ENTRY-TITLE (EXP-IX))
                       DELIMITED BY SIZE INTO MSG
@@ -1050,17 +1167,46 @@ VIEW-PROFILE.
                    END-STRING
                    PERFORM ECHO-DISPLAY
                END-IF
-
-               SET EXP-IX UP BY 1
-           END-PERFORM
+           END-IF
        END-IF
 
        *> Display Education if exists
        IF EDU-COUNT > 0
-           MOVE "Education:" TO MSG
-           PERFORM ECHO-DISPLAY
-           SET EDU-IX TO 1
-           PERFORM UNTIL EDU-IX > EDU-COUNT
+           IF EDU-COUNT > 1
+               *> Multiple education entries - show numbered entries
+               SET EDU-IX TO 1
+               PERFORM UNTIL EDU-IX > EDU-COUNT
+                   MOVE EDU-IX TO DISPLAY-EDU-NUM
+                   MOVE SPACES TO MSG
+                   STRING "Education #" DISPLAY-EDU-NUM ":" DELIMITED BY SIZE INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+
+                   MOVE SPACES TO MSG
+                   STRING " Degree: " FUNCTION TRIM(EDU-DEGREE (EDU-IX))
+                          DELIMITED BY SIZE INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+
+                   MOVE SPACES TO MSG
+                   STRING " University: " FUNCTION TRIM(EDU-UNIVERSITY (EDU-IX))
+                          DELIMITED BY SIZE INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+
+                   MOVE SPACES TO MSG
+                   STRING " Years: " FUNCTION TRIM(EDU-YEARS (EDU-IX))
+                          DELIMITED BY SIZE INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+
+                   SET EDU-IX UP BY 1
+               END-PERFORM
+           ELSE
+               *> Single education entry - show without number
+               MOVE "Education:" TO MSG
+               PERFORM ECHO-DISPLAY
+               SET EDU-IX TO 1
                MOVE SPACES TO MSG
                STRING " Degree: " FUNCTION TRIM(EDU-DEGREE (EDU-IX))
                       DELIMITED BY SIZE INTO MSG
@@ -1078,9 +1224,7 @@ VIEW-PROFILE.
                       DELIMITED BY SIZE INTO MSG
                END-STRING
                PERFORM ECHO-DISPLAY
-
-               SET EDU-IX UP BY 1
-           END-PERFORM
+           END-IF
        END-IF
 
        MOVE "--------------------" TO MSG
