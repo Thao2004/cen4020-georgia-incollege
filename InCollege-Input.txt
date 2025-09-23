@@ -1,17 +1,16 @@
 2
-jenny11
-Abcdef@1!
+AboutEdge
+V@lidPass1
 1
-jenny11
-Abcdef@1!
+AboutEdge
+V@lidPass1
 1
-Jenny
-Park
+Edge
+Case
 USF
-Data Science
-2028
-This About text is intentionally too long to exceed the two-hundred–character limit so we can verify that the program rejects it and asks again. It keeps going with extra filler words to clearly pass the threshold for validation failure.
-Curious about ML systems and analytics; enjoy mentoring peers and building features that make a difference.
+BoundaryTesting
+2026
+123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456780901234567890123456789012345678901234567890123456789012345678901234567890
 DONE
 DONE
 2
