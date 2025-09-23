@@ -1,12 +1,4 @@
 1
 agus
 Agu$1234
-1
-Agus
-Test
-USF
-Computer Science
-2026
-
-DONE
-DONE
+2

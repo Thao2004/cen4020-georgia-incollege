@@ -34,13 +34,13 @@ FD PROFILES.
 
 WORKING-STORAGE SECTION.
 01 MSG             PIC X(80).      *> Reusable message buffer for display/logging
-01 CHOICE          PIC 9 VALUE 0.  *> Menu choice for login and create account only
-01 NAV-CHOICE      PIC 9 VALUE 0.  *> Navigation choice
+01 CHOICE           PIC S9  VALUE 0.  *> Menu choice for login and create account only
+01 NAV-CHOICE       PIC S9  VALUE 0. *> Navigation choice
 01 USERNAME        PIC X(15).      *> Limit username to 15 (storage size)
 01 PASSWORD        PIC X(12).      *> Password stored max 12 chars
 01 INPUT-USER      PIC X(80).      *> Sratch for username length gating
 01 USER-LEN        PIC 99 VALUE 0. *> Length of INPUT-USER
-01 SKILLS-SELECTION PIC 99 VALUE 0.     *> skills menu choice (numeric)
+01 SKILLS-SELECTION PIC S99 VALUE 0.     *> skills menu choice (numeric)
 01 EOF-FLAG          PIC X VALUE "N".    *> "Y" at end of input
 
 *> Temporary variable for safe year validation
