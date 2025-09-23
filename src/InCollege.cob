@@ -139,6 +139,10 @@ WORKING-STORAGE SECTION.
 01 DISPLAY-EXP-NUM     PIC 9.               *> For displaying experience number
 01 DISPLAY-EDU-NUM     PIC 9.               *> For displaying education number
 
+*> Search inputs (Stories 3–6,7)
+01 SRCH-FIRSTNAME      PIC X(20).
+01 SRCH-LASTNAME       PIC X(20).
+
 PROCEDURE DIVISION.
 MAIN-PARA.
         *> Open input/output streams
@@ -438,9 +442,13 @@ LOGIN-UNLIMITED.
                IF PASSWORD = T-PASSWORD (U-IX)
                    MOVE "You have successfully logged in" TO MSG
                    PERFORM ECHO-DISPLAY
-                   MOVE "Welcome, " TO MSG
-                   STRING "Welcome, " FUNCTION TRIM(USERNAME) "!" DELIMITED BY SIZE INTO MSG
+
+                   MOVE SPACES TO MSG
+                   STRING "Welcome, " FUNCTION TRIM(USERNAME) "!"
+                     DELIMITED BY SIZE INTO MSG
+                   END-STRING
                    PERFORM ECHO-DISPLAY
+
                    *> Store current user for profile operations
                    MOVE USERNAME TO CURRENT-USER
                    *> Load existing profile when user logs in
@@ -528,8 +536,7 @@ NAV-MENU-CHOICE.
                MOVE "Search for a job is under construction." TO MSG
                PERFORM ECHO-DISPLAY
            WHEN 4
-               MOVE "Find someone you know is under construction." TO MSG
-               PERFORM ECHO-DISPLAY
+               PERFORM FIND-SOMEONE-YOU-KNOW
            WHEN 5
                PERFORM SKILLS-MENU
            WHEN OTHER
@@ -1053,7 +1060,7 @@ GET-EDUCATION.
        EXIT PARAGRAPH.
 
 
-*> VIEW PROFILE
+*> VIEW PROFILE (current user)
 VIEW-PROFILE.
        *> Load profile data first
        PERFORM LOAD-PROFILE
@@ -1621,3 +1628,247 @@ SKILLS-MENU.
     EXIT.
 
 
+*> =========================
+*> Search & View Other Users
+*> Stories 3–6 and 7
+*> =========================
+FIND-SOMEONE-YOU-KNOW.
+       MOVE "--- Find Someone You Know ---" TO MSG
+       PERFORM ECHO-DISPLAY
+
+       *> Prompt for First Name (required)
+       PERFORM UNTIL 1 = 0
+           MOVE "Enter First Name to search:" TO MSG
+           PERFORM ECHO-DISPLAY
+           READ USER-IN
+               AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
+           END-READ
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               MOVE "First Name is required." TO MSG
+               PERFORM ECHO-DISPLAY
+           ELSE
+               MOVE FUNCTION TRIM(USER-IN-REC) TO SRCH-FIRSTNAME
+               EXIT PERFORM
+           END-IF
+       END-PERFORM
+       IF EOF-FLAG = "Y" EXIT PARAGRAPH END-IF
+
+       *> Prompt for Last Name (required)
+       PERFORM UNTIL 1 = 0
+           MOVE "Enter Last Name to search:" TO MSG
+           PERFORM ECHO-DISPLAY
+           READ USER-IN
+               AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
+           END-READ
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               MOVE "Last Name is required." TO MSG
+               PERFORM ECHO-DISPLAY
+           ELSE
+               MOVE FUNCTION TRIM(USER-IN-REC) TO SRCH-LASTNAME
+               EXIT PERFORM
+           END-IF
+       END-PERFORM
+       IF EOF-FLAG = "Y" EXIT PARAGRAPH END-IF
+
+       *> Load all profiles and search for exact full-name match (case-insensitive)
+       PERFORM LOAD-ALL-PROFILES
+
+       MOVE "N" TO FOUND-FLAG
+       IF STORED-PROFILE-COUNT > 0
+           SET SP-IX TO 1
+           PERFORM UNTIL SP-IX > STORED-PROFILE-COUNT
+               IF FUNCTION UPPER-CASE(FUNCTION TRIM(SP-FIRSTNAME (SP-IX)))
+                    = FUNCTION UPPER-CASE(FUNCTION TRIM(SRCH-FIRSTNAME))
+                AND FUNCTION UPPER-CASE(FUNCTION TRIM(SP-LASTNAME (SP-IX)))
+                    = FUNCTION UPPER-CASE(FUNCTION TRIM(SRCH-LASTNAME))
+                   MOVE "Y" TO FOUND-FLAG
+                   EXIT PERFORM
+               ELSE
+                   SET SP-IX UP BY 1
+               END-IF
+           END-PERFORM
+       END-IF
+
+       IF FOUND-FLAG = "Y"
+           *> Display the matched user's full profile
+           PERFORM VIEW-OTHER-PROFILE
+       ELSE
+           MOVE SPACES TO MSG
+           STRING "No user named " FUNCTION TRIM(SRCH-FIRSTNAME) " "
+                  FUNCTION TRIM(SRCH-LASTNAME) " was found."
+                  DELIMITED BY SIZE INTO MSG
+           END-STRING
+           PERFORM ECHO-DISPLAY
+       END-IF
+       EXIT PARAGRAPH.
+
+
+*> Display profile for SP-IX entry in easy-to-read format (Stories 2,4,5)
+VIEW-OTHER-PROFILE.
+       MOVE SPACES TO MSG
+       STRING "--- Profile for " FUNCTION TRIM(SP-FIRSTNAME (SP-IX)) " "
+              FUNCTION TRIM(SP-LASTNAME (SP-IX)) " ---" DELIMITED BY SIZE INTO MSG
+       END-STRING
+       PERFORM ECHO-DISPLAY
+
+       MOVE SPACES TO MSG
+       STRING "Name: " FUNCTION TRIM(SP-FIRSTNAME (SP-IX)) " "
+              FUNCTION TRIM(SP-LASTNAME (SP-IX)) DELIMITED BY SIZE INTO MSG
+       END-STRING
+       PERFORM ECHO-DISPLAY
+
+       MOVE SPACES TO MSG
+       STRING "University: " FUNCTION TRIM(SP-UNIVERSITY (SP-IX)) DELIMITED BY SIZE INTO MSG
+       END-STRING
+       PERFORM ECHO-DISPLAY
+
+       MOVE SPACES TO MSG
+       STRING "Major: " FUNCTION TRIM(SP-MAJOR (SP-IX)) DELIMITED BY SIZE INTO MSG
+       END-STRING
+       PERFORM ECHO-DISPLAY
+
+       MOVE SPACES TO MSG
+       STRING "Graduation Year: " SP-YEAR (SP-IX) DELIMITED BY SIZE INTO MSG
+       END-STRING
+       PERFORM ECHO-DISPLAY
+
+       IF FUNCTION LENGTH(FUNCTION TRIM(SP-ABOUT (SP-IX))) > 0
+           MOVE SPACES TO MSG
+           STRING "About Me: " FUNCTION TRIM(SP-ABOUT (SP-IX)) DELIMITED BY SIZE INTO MSG
+           END-STRING
+           PERFORM ECHO-DISPLAY
+       END-IF
+
+       *> Experiences
+       IF SP-EXP-COUNT (SP-IX) > 0
+           IF SP-EXP-COUNT (SP-IX) > 1
+               SET SP-EXP-IX TO 1
+               PERFORM SP-EXP-COUNT (SP-IX) TIMES
+                   MOVE SP-EXP-IX TO DISPLAY-EXP-NUM
+                   MOVE SPACES TO MSG
+                   STRING "Experience #" DISPLAY-EXP-NUM ":" DELIMITED BY SIZE INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+
+                   MOVE SPACES TO MSG
+                   STRING " Title: " FUNCTION TRIM(SP-EXP-TITLE (SP-IX, SP-EXP-IX))
+                          DELIMITED BY SIZE INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+
+                   MOVE SPACES TO MSG
+                   STRING " Company: " FUNCTION TRIM(SP-EXP-COMPANY (SP-IX, SP-EXP-IX))
+                          DELIMITED BY SIZE INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+
+                   MOVE SPACES TO MSG
+                   STRING " Dates: " FUNCTION TRIM(SP-EXP-DATES (SP-IX, SP-EXP-IX))
+                          DELIMITED BY SIZE INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+
+                   IF FUNCTION LENGTH(FUNCTION TRIM(SP-EXP-DESC (SP-IX, SP-EXP-IX))) > 0
+                       MOVE SPACES TO MSG
+                       STRING " Description: "
+                              FUNCTION TRIM(SP-EXP-DESC (SP-IX, SP-EXP-IX))
+                              DELIMITED BY SIZE INTO MSG
+                       END-STRING
+                       PERFORM ECHO-DISPLAY
+                   END-IF
+
+                   SET SP-EXP-IX UP BY 1
+               END-PERFORM
+           ELSE
+               MOVE "Experience:" TO MSG
+               PERFORM ECHO-DISPLAY
+               SET SP-EXP-IX TO 1
+
+               MOVE SPACES TO MSG
+               STRING " Title: " FUNCTION TRIM(SP-EXP-TITLE (SP-IX, SP-EXP-IX))
+                      DELIMITED BY SIZE INTO MSG
+               END-STRING
+               PERFORM ECHO-DISPLAY
+
+               MOVE SPACES TO MSG
+               STRING " Company: " FUNCTION TRIM(SP-EXP-COMPANY (SP-IX, SP-EXP-IX))
+                      DELIMITED BY SIZE INTO MSG
+               END-STRING
+               PERFORM ECHO-DISPLAY
+
+               MOVE SPACES TO MSG
+               STRING " Dates: " FUNCTION TRIM(SP-EXP-DATES (SP-IX, SP-EXP-IX))
+                      DELIMITED BY SIZE INTO MSG
+               END-STRING
+               PERFORM ECHO-DISPLAY
+
+               IF FUNCTION LENGTH(FUNCTION TRIM(SP-EXP-DESC (SP-IX, SP-EXP-IX))) > 0
+                   MOVE SPACES TO MSG
+                   STRING " Description: "
+                          FUNCTION TRIM(SP-EXP-DESC (SP-IX, SP-EXP-IX))
+                          DELIMITED BY SIZE INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+               END-IF
+           END-IF
+       END-IF
+
+       *> Education
+       IF SP-EDU-COUNT (SP-IX) > 0
+           IF SP-EDU-COUNT (SP-IX) > 1
+               SET SP-EDU-IX TO 1
+               PERFORM SP-EDU-COUNT (SP-IX) TIMES
+                   MOVE SP-EDU-IX TO DISPLAY-EDU-NUM
+                   MOVE SPACES TO MSG
+                   STRING "Education #" DISPLAY-EDU-NUM ":" DELIMITED BY SIZE INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+
+                   MOVE SPACES TO MSG
+                   STRING " Degree: " FUNCTION TRIM(SP-EDU-DEGREE (SP-IX, SP-EDU-IX))
+                          DELIMITED BY SIZE INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+
+                   MOVE SPACES TO MSG
+                   STRING " University: " FUNCTION TRIM(SP-EDU-UNIV (SP-IX, SP-EDU-IX))
+                          DELIMITED BY SIZE INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+
+                   MOVE SPACES TO MSG
+                   STRING " Years: " FUNCTION TRIM(SP-EDU-YEARS (SP-IX, SP-EDU-IX))
+                          DELIMITED BY SIZE INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+
+                   SET SP-EDU-IX UP BY 1
+               END-PERFORM
+           ELSE
+               MOVE "Education:" TO MSG
+               PERFORM ECHO-DISPLAY
+               SET SP-EDU-IX TO 1
+
+               MOVE SPACES TO MSG
+               STRING " Degree: " FUNCTION TRIM(SP-EDU-DEGREE (SP-IX, SP-EDU-IX))
+                      DELIMITED BY SIZE INTO MSG
+               END-STRING
+               PERFORM ECHO-DISPLAY
+
+               MOVE SPACES TO MSG
+               STRING " University: " FUNCTION TRIM(SP-EDU-UNIV (SP-IX, SP-EDU-IX))
+                      DELIMITED BY SIZE INTO MSG
+               END-STRING
+               PERFORM ECHO-DISPLAY
+
+               MOVE SPACES TO MSG
+               STRING " Years: " FUNCTION TRIM(SP-EDU-YEARS (SP-IX, SP-EDU-IX))
+                      DELIMITED BY SIZE INTO MSG
+               END-STRING
+               PERFORM ECHO-DISPLAY
+           END-IF
+       END-IF
+
+       MOVE "--------------------" TO MSG
+       PERFORM ECHO-DISPLAY
+       EXIT PARAGRAPH.
