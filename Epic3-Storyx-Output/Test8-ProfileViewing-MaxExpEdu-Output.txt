@@ -32,31 +32,25 @@ Enter Major:
 Enter Graduation Year (YYYY):
 Enter About Me (optional, max 200 chars, enter blank line to skip):
 Add Experience (optional, max 3 entries. Enter 'DONE' to finish):
-Experience #1 - Title:
 Experience #1 - Company/Organization:
 Experience #1 - Dates (e.g., Summer 2024):
 Experience #1 - Description (optional, max 100 chars, blank to skip):
 Add Experience (optional, max 3 entries. Enter 'DONE' to finish):
-Experience #2 - Title:
 Experience #2 - Company/Organization:
 Experience #2 - Dates (e.g., Summer 2024):
 Experience #2 - Description (optional, max 100 chars, blank to skip):
 Add Experience (optional, max 3 entries. Enter 'DONE' to finish):
-Experience #3 - Title:
 Experience #3 - Company/Organization:
 Experience #3 - Dates (e.g., Summer 2024):
 Experience #3 - Description (optional, max 100 chars, blank to skip):
 Maximum of 3 experience entries allowed. Enter 'DONE' to continue.
 Add Education (optional, max 3 entries. Enter 'DONE' to finish):
-Education #1 - Degree:
 Education #1 - University/College:
 Education #1 - Years Attended (e.g., 2023-2025):
 Add Education (optional, max 3 entries. Enter 'DONE' to finish):
-Education #2 - Degree:
 Education #2 - University/College:
 Education #2 - Years Attended (e.g., 2023-2025):
 Add Education (optional, max 3 entries. Enter 'DONE' to finish):
-Education #3 - Degree:
 Education #3 - University/College:
 Education #3 - Years Attended (e.g., 2023-2025):
 Maximum of 3 education entries allowed. Enter 'DONE' to continue.
@@ -77,7 +71,8 @@ Name: Jenny Vo
 University: USF
 Major: Information Technology
 Graduation Year: 2029
-About Me: Always learning and building impactful systems
+About Me:
+Always learning and building impactful systems
 Experience #1:
  Title: Software Intern
  Company: Meta
