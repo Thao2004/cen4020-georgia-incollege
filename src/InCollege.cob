@@ -750,31 +750,51 @@ GET-EXPERIENCE.
 
            *> Title (required; re-prompt until non-blank or DONE)
            MOVE SPACES TO EXP-TITLE
-           PERFORM UNTIL FUNCTION LENGTH(FUNCTION TRIM(EXP-TITLE)) > 0
-               MOVE SPACES TO MSG
-               STRING "Experience #" DELIMITED BY SIZE
-                      EXP-ID-TXT     DELIMITED BY SIZE
-                      " - Title:"    DELIMITED BY SIZE
-                 INTO MSG
-               END-STRING
+           *> Check for DONE before showing first detailed prompt
+           READ USER-IN
+               AT END MOVE "Y" TO EOF-FLAG EXIT PERFORM
+           END-READ
+
+           *> Check for DONE immediately - if DONE, exit without showing prompt
+           IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE"
+               EXIT PERFORM
+           END-IF
+
+           *> If not DONE, validate the input as title
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               MOVE "Title is required." TO MSG
                PERFORM ECHO-DISPLAY
-
-               READ USER-IN
-                   AT END MOVE "Y" TO EOF-FLAG EXIT PERFORM
-               END-READ
-
-               *> Check for DONE at title prompt
-               IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE"
-                   EXIT PERFORM
-               END-IF
-
-               IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
-                   MOVE "Title is required." TO MSG
+               *> Now enter the re-prompt loop for empty title
+               PERFORM UNTIL FUNCTION LENGTH(FUNCTION TRIM(EXP-TITLE)) > 0
+                   MOVE SPACES TO MSG
+                   STRING "Experience #" DELIMITED BY SIZE
+                          EXP-ID-TXT     DELIMITED BY SIZE
+                          " - Title:"    DELIMITED BY SIZE
+                     INTO MSG
+                   END-STRING
                    PERFORM ECHO-DISPLAY
-               ELSE
-                   MOVE FUNCTION TRIM(USER-IN-REC) TO EXP-TITLE
-               END-IF
-           END-PERFORM
+
+                   READ USER-IN
+                       AT END MOVE "Y" TO EOF-FLAG EXIT PERFORM
+                   END-READ
+
+                   IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE"
+                       MOVE "This entry isn't recorded because it doesn't have enough required information." TO MSG
+                       PERFORM ECHO-DISPLAY
+                       EXIT PERFORM
+                   END-IF
+
+                   IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+                       MOVE "Title is required." TO MSG
+                       PERFORM ECHO-DISPLAY
+                   ELSE
+                       MOVE FUNCTION TRIM(USER-IN-REC) TO EXP-TITLE
+                   END-IF
+               END-PERFORM
+           ELSE
+               *> Valid title entered on first try
+               MOVE FUNCTION TRIM(USER-IN-REC) TO EXP-TITLE
+           END-IF
 
            *> If user typed DONE or hit EOF, exit
            IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE" OR EOF-FLAG = "Y"
@@ -934,35 +954,56 @@ GET-EDUCATION.
            MOVE EDU-ID TO EDU-ID-TXT
 
            *> Get Degree (required for education entry)
-           PERFORM UNTIL 1 = 0
-               MOVE SPACES TO MSG
-               STRING "Education #" DELIMITED BY SIZE
-                      EDU-ID-TXT DELIMITED BY SIZE
-                      " - Degree:" DELIMITED BY SIZE
-                 INTO MSG
-               END-STRING
+           *> Check for DONE before showing first detailed prompt
+           READ USER-IN
+               AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
+           END-READ
+
+           *> Check for DONE immediately - if DONE, exit without showing prompt
+           IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE"
+               EXIT PERFORM
+           END-IF
+
+           *> If not DONE, validate the input as degree
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               MOVE "Degree is required." TO MSG
                PERFORM ECHO-DISPLAY
-
-               READ USER-IN
-                   AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
-               END-READ
-
-               *> Check for DONE at Degree prompt
-               IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE"
-                   EXIT PERFORM
-               END-IF
-
-               IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
-                   MOVE "Degree is required." TO MSG
+               *> Now enter the re-prompt loop for empty degree
+               PERFORM UNTIL 1 = 0
+                   MOVE SPACES TO MSG
+                   STRING "Education #" DELIMITED BY SIZE
+                          EDU-ID-TXT DELIMITED BY SIZE
+                          " - Degree:" DELIMITED BY SIZE
+                     INTO MSG
+                   END-STRING
                    PERFORM ECHO-DISPLAY
-               ELSE
-                   *> Add new education entry - now increment count and set index
-                   ADD 1 TO EDU-COUNT
-                   SET EDU-IX TO EDU-COUNT
-                   MOVE FUNCTION TRIM(USER-IN-REC) TO EDU-DEGREE (EDU-IX)
-                   EXIT PERFORM
-               END-IF
-           END-PERFORM
+
+                   READ USER-IN
+                       AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
+                   END-READ
+
+                   *> Check for DONE at Degree prompt
+                   IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE"
+                       EXIT PERFORM
+                   END-IF
+
+                   IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+                       MOVE "Degree is required." TO MSG
+                       PERFORM ECHO-DISPLAY
+                   ELSE
+                       *> Add new education entry - now increment count and set index
+                       ADD 1 TO EDU-COUNT
+                       SET EDU-IX TO EDU-COUNT
+                       MOVE FUNCTION TRIM(USER-IN-REC) TO EDU-DEGREE (EDU-IX)
+                       EXIT PERFORM
+                   END-IF
+               END-PERFORM
+           ELSE
+               *> Valid degree entered on first try
+               ADD 1 TO EDU-COUNT
+               SET EDU-IX TO EDU-COUNT
+               MOVE FUNCTION TRIM(USER-IN-REC) TO EDU-DEGREE (EDU-IX)
+           END-IF
 
            *> If user typed DONE, exit
            IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE"
