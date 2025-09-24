@@ -1,41 +1,41 @@
-Welcome to InCollege!                                                           
-1. Log In                                                                       
-2. Create New Account                                                           
-Enter your choice:                                                              
-Please enter your username:                                                     
-Please enter your password:                                                     
-Account created.                                                                
-Welcome to InCollege!                                                           
-1. Log In                                                                       
-2. Create New Account                                                           
-Enter your choice:                                                              
-Please enter your username:                                                     
-Please enter your password:                                                     
-You have successfully logged in                                                 
-Welcome, Seek1!                                                                 
-                                                                                
-=============================                                                   
-     InCollege Main Menu                                                        
-=============================                                                   
-  1. Create/Edit My Profile                                                     
-  2. View My Profile                                                            
-  3. Search for a job                                                           
-  4. Find someone you know                                                      
-  5. Learn a New Skill                                                          
-=============================                                                   
-Enter your choice:                                                              
---- Find Someone You Know ---                                                   
-Enter First Name to search:                                                     
-Enter Last Name to search:                                                      
-No user named Nonname Nonlast was found.                                        
-                                                                                
-=============================                                                   
-     InCollege Main Menu                                                        
-=============================                                                   
-  1. Create/Edit My Profile                                                     
-  2. View My Profile                                                            
-  3. Search for a job                                                           
-  4. Find someone you know                                                      
-  5. Learn a New Skill                                                          
-=============================                                                   
-Enter your choice:  
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+Account created.
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in
+Welcome, Seek1!
+
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+=============================
+Enter your choice:
+--- Find Someone You Know ---
+Enter First Name to search:
+Enter Last Name to search:
+No user named Nonname Nonlast was found.
+
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+=============================
+Enter your choice:

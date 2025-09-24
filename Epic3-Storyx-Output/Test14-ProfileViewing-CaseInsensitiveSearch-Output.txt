@@ -1,70 +1,68 @@
-Welcome to InCollege!                                                           
-1. Log In                                                                       
-2. Create New Account                                                           
-Enter your choice:                                                              
-Please enter your username:                                                     
-Please enter your password:                                                     
-Account created.                                                                
-Welcome to InCollege!                                                           
-1. Log In                                                                       
-2. Create New Account                                                           
-Enter your choice:                                                              
-Please enter your username:                                                     
-Please enter your password:                                                     
-You have successfully logged in                                                 
-Welcome, UserF!                                                                 
-                                                                                
-=============================                                                   
-     InCollege Main Menu                                                        
-=============================                                                   
-  1. Create/Edit My Profile                                                     
-  2. View My Profile                                                            
-  3. Search for a job                                                           
-  4. Find someone you know                                                      
-  5. Learn a New Skill                                                          
-=============================                                                   
-Enter your choice:                                                              
---- Create/Edit Profile ---                                                     
-Enter First Name:                                                               
-Enter Last Name:                                                                
-Enter University/College Attended:                                              
-Enter Major:                                                                    
-Enter Graduation Year (YYYY):                                                   
-Enter About Me (optional, max 200 chars, enter blank line to skip):             
-Add Experience (optional, max 3 entries. Enter 'DONE' to finish):               
-Experience #1 - Title:                                                          
-Add Education (optional, max 3 entries. Enter 'DONE' to finish):                
-Education #1 - Degree:                                                          
-Profile saved successfully!                                                     
-                                                                                
-=============================                                                   
-     InCollege Main Menu                                                        
-=============================                                                   
-  1. Create/Edit My Profile                                                     
-  2. View My Profile                                                            
-  3. Search for a job                                                           
-  4. Find someone you know                                                      
-  5. Learn a New Skill                                                          
-=============================                                                   
-Enter your choice:                                                              
---- Find Someone You Know ---                                                   
-Enter First Name to search:                                                     
-Enter Last Name to search:                                                      
---- Profile for Chris Johnson ---                                               
-Name: Chris Johnson                                                             
-University: USF                                                                 
-Major: Finance                                                                  
-Graduation Year: 2029                                                           
-About Me: About Chris                                                           
---------------------                                                            
-                                                                                
-=============================                                                   
-     InCollege Main Menu                                                        
-=============================                                                   
-  1. Create/Edit My Profile                                                     
-  2. View My Profile                                                            
-  3. Search for a job                                                           
-  4. Find someone you know                                                      
-  5. Learn a New Skill                                                          
-=============================                                                   
-Enter your choice: 
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+Account created.
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in
+Welcome, UserF!
+
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+=============================
+Enter your choice:
+--- Create/Edit Profile ---
+Enter First Name:
+Enter Last Name:
+Enter University/College Attended:
+Enter Major:
+Enter Graduation Year (YYYY):
+Enter About Me (optional, max 200 chars, enter blank line to skip):
+Add Experience (optional, max 3 entries. Enter 'DONE' to finish):
+Add Education (optional, max 3 entries. Enter 'DONE' to finish):
+Profile saved successfully!
+
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+=============================
+Enter your choice:
+--- Find Someone You Know ---
+Enter First Name to search:
+Enter Last Name to search:
+--- Profile for Chris Johnson ---
+Name: Chris Johnson
+University: USF
+Major: Finance
+Graduation Year: 2029
+About Me: About Chris
+--------------------
+
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+=============================
+Enter your choice:

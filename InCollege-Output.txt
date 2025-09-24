@@ -16,7 +16,7 @@ Enter your choice:
 Please enter your username:
 Please enter your password:
 You have successfully logged in
-Welcome, AboutEdge!
+Welcome, TestUser!
 
 =============================
      InCollege Main Menu
@@ -36,9 +36,14 @@ Enter Major:
 Enter Graduation Year (YYYY):
 Enter About Me (optional, max 200 chars, enter blank line to skip):
 Add Experience (optional, max 3 entries. Enter 'DONE' to finish):
-Experience #1 - Title:
+Experience #2 - Company/Organization:
+Experience #2 - Dates (e.g., Summer 2024):
+Experience #2 - Description (optional, max 100 chars, blank to skip):
+Add Experience (optional, max 3 entries. Enter 'DONE' to finish):
 Add Education (optional, max 3 entries. Enter 'DONE' to finish):
-Education #1 - Degree:
+Education #2 - University/College:
+Education #2 - Years Attended (e.g., 2023-2025):
+Add Education (optional, max 3 entries. Enter 'DONE' to finish):
 Profile saved successfully!
 
 =============================
@@ -52,12 +57,69 @@ Profile saved successfully!
 =============================
 Enter your choice:
 --- Your Profile ---
-Name: Edge Case
-University: USF
-Major: BoundaryTesting
-Graduation Year: 2026
-About Me: 1234567890123456789012345678901234567890123456789012345678901234567890
+Name: Test User
+University: State University
+Major: Computer Science
+Graduation Year: 2025
+About Me:
+Passionate about software development
+Experience #1:
+ Title: Intern
+ Company: Tech Solutions
+ Dates: Summer 2024
+ Description: Assisted with front-end development
+Experience #2:
+ Title: Intern
+ Company: Tech Solutions
+ Dates: Summer 2024
+ Description: Assisted with front-end development
+Education #1:
+ Degree: Bachelor's
+ University: State University
+ Years: 2021-2025
+Education #2:
+ Degree: Bachelor's
+ University: State University
+ Years: 2021-2025
 --------------------
+
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+=============================
+Enter your choice:
+--- Find Someone You Know ---
+Enter First Name to search:
+Enter Last Name to search:
+--- Profile for Another Student ---
+Name: Another Student
+University: City College
+Major: Electrical Engineering
+Graduation Year: 2026
+About Me: Robotics enthusiast
+--------------------
+
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+=============================
+Enter your choice:
+--- Find Someone You Know ---
+Enter First Name to search:
+Enter Last Name to search:
+Last Name is required.
+Enter Last Name to search:
+No user named Mystery Man was found.
 
 =============================
      InCollege Main Menu
