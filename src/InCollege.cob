@@ -139,6 +139,14 @@ WORKING-STORAGE SECTION.
 01 DISPLAY-EXP-NUM     PIC 9.               *> For displaying experience number
 01 DISPLAY-EDU-NUM     PIC 9.               *> For displaying education number
 
+*> Variables for displaying long text in chunks
+01 LONG-TEXT-POS       PIC 999 VALUE 1.     *> Position in long text
+01 LONG-TEXT-LEN       PIC 999 VALUE 0.     *> Length of long text
+01 CHUNK-SIZE          PIC 99 VALUE 80.     *> Size of each display chunk
+01 REMAINING-LEN       PIC 999 VALUE 0.     *> Remaining characters to display
+01 CHUNK-LEN           PIC 99 VALUE 0.      *> Length of current chunk
+01 INPUT-LEN           PIC 999 VALUE 0.     *> Length of user input for validation
+
 PROCEDURE DIVISION.
 MAIN-PARA.
         *> Open input/output streams
@@ -700,10 +708,14 @@ GET-ABOUT.
                EXIT PARAGRAPH
            END-IF
 
-           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) > 200
+           *> Enhanced validation with better error handling
+           MOVE FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) TO INPUT-LEN
+           IF INPUT-LEN > 200
                MOVE "About Me must be at most 200 characters." TO MSG
                PERFORM ECHO-DISPLAY
+               *> Continue the loop to re-prompt for input
            ELSE
+               *> Input is valid, save it
                MOVE FUNCTION TRIM(USER-IN-REC) TO PROFILE-ABOUT
                EXIT PERFORM
            END-IF
@@ -1130,12 +1142,11 @@ VIEW-PROFILE.
        END-STRING
        PERFORM ECHO-DISPLAY
 
-       *> Display About Me if exists
+       *> Display About Me if exists - handle long text properly
        IF FUNCTION LENGTH(FUNCTION TRIM(PROFILE-ABOUT)) > 0
-           MOVE SPACES TO MSG
-           STRING "About Me: " FUNCTION TRIM(PROFILE-ABOUT) DELIMITED BY SIZE INTO MSG
-           END-STRING
+           MOVE "About Me:" TO MSG
            PERFORM ECHO-DISPLAY
+           PERFORM DISPLAY-LONG-TEXT
        END-IF
 
        *> Display Experience if exists
@@ -1273,6 +1284,59 @@ VIEW-PROFILE.
 
        EXIT PARAGRAPH.
 
+*> Helper routine to display long text with word wrapping
+DISPLAY-LONG-TEXT.
+       MOVE FUNCTION TRIM(PROFILE-ABOUT) TO PROFILE-ABOUT
+       MOVE FUNCTION LENGTH(FUNCTION TRIM(PROFILE-ABOUT)) TO LONG-TEXT-LEN
+       MOVE 1 TO LONG-TEXT-POS
+
+       PERFORM UNTIL LONG-TEXT-POS > LONG-TEXT-LEN
+           COMPUTE REMAINING-LEN = LONG-TEXT-LEN - LONG-TEXT-POS + 1
+
+           IF REMAINING-LEN > CHUNK-SIZE
+               MOVE CHUNK-SIZE TO CHUNK-LEN
+               *> Check if we're breaking in the middle of a word
+               PERFORM ADJUST-FOR-WORD-WRAP
+           ELSE
+               MOVE REMAINING-LEN TO CHUNK-LEN
+           END-IF
+
+           MOVE SPACES TO MSG
+           MOVE PROFILE-ABOUT (LONG-TEXT-POS:CHUNK-LEN) TO MSG
+           PERFORM ECHO-DISPLAY
+
+           ADD CHUNK-LEN TO LONG-TEXT-POS
+       END-PERFORM
+       EXIT.
+
+*> Adjust chunk length to avoid breaking words
+ADJUST-FOR-WORD-WRAP.
+       *> If the character at the break point is a space, no adjustment needed
+       IF PROFILE-ABOUT (LONG-TEXT-POS + CHUNK-LEN - 1:1) = SPACE
+           EXIT PARAGRAPH
+       END-IF
+
+       *> If the next character is a space, no adjustment needed
+       IF LONG-TEXT-POS + CHUNK-LEN <= LONG-TEXT-LEN
+           IF PROFILE-ABOUT (LONG-TEXT-POS + CHUNK-LEN:1) = SPACE
+               EXIT PARAGRAPH
+           END-IF
+       END-IF
+
+       *> Find the last space within the chunk to break at
+       PERFORM VARYING I FROM CHUNK-LEN BY -1 UNTIL I < 1
+           IF PROFILE-ABOUT (LONG-TEXT-POS + I - 1:1) = SPACE
+               MOVE I TO CHUNK-LEN
+               EXIT PERFORM
+           END-IF
+       END-PERFORM
+
+       *> If no space found within chunk, keep original chunk size
+       *> (this handles cases where a single word is longer than 80 chars)
+       IF I < 1
+           MOVE CHUNK-SIZE TO CHUNK-LEN
+       END-IF
+       EXIT.
 
 *> Profile persistence functions
 LOAD-PROFILE.
