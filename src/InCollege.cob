@@ -139,9 +139,19 @@ WORKING-STORAGE SECTION.
 01 DISPLAY-EXP-NUM     PIC 9.               *> For displaying experience number
 01 DISPLAY-EDU-NUM     PIC 9.               *> For displaying education number
 
+
+*> Variables for displaying long text in chunks
+01 LONG-TEXT-POS       PIC 999 VALUE 1.     *> Position in long text
+01 LONG-TEXT-LEN       PIC 999 VALUE 0.     *> Length of long text
+01 CHUNK-SIZE          PIC 99 VALUE 80.     *> Size of each display chunk
+01 REMAINING-LEN       PIC 999 VALUE 0.     *> Remaining characters to display
+01 CHUNK-LEN           PIC 99 VALUE 0.      *> Length of current chunk
+01 INPUT-LEN           PIC 999 VALUE 0.     *> Length of user input for validation
+
 *> Search inputs (Stories 3–6,7)
 01 SRCH-FIRSTNAME      PIC X(20).
 01 SRCH-LASTNAME       PIC X(20).
+
 
 PROCEDURE DIVISION.
 MAIN-PARA.
@@ -707,10 +717,14 @@ GET-ABOUT.
                EXIT PARAGRAPH
            END-IF
 
-           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) > 200
+           *> Enhanced validation with better error handling
+           MOVE FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) TO INPUT-LEN
+           IF INPUT-LEN > 200
                MOVE "About Me must be at most 200 characters." TO MSG
                PERFORM ECHO-DISPLAY
+               *> Continue the loop to re-prompt for input
            ELSE
+               *> Input is valid, save it
                MOVE FUNCTION TRIM(USER-IN-REC) TO PROFILE-ABOUT
                EXIT PERFORM
            END-IF
@@ -757,31 +771,51 @@ GET-EXPERIENCE.
 
            *> Title (required; re-prompt until non-blank or DONE)
            MOVE SPACES TO EXP-TITLE
-           PERFORM UNTIL FUNCTION LENGTH(FUNCTION TRIM(EXP-TITLE)) > 0
-               MOVE SPACES TO MSG
-               STRING "Experience #" DELIMITED BY SIZE
-                      EXP-ID-TXT     DELIMITED BY SIZE
-                      " - Title:"    DELIMITED BY SIZE
-                 INTO MSG
-               END-STRING
+           *> Check for DONE before showing first detailed prompt
+           READ USER-IN
+               AT END MOVE "Y" TO EOF-FLAG EXIT PERFORM
+           END-READ
+
+           *> Check for DONE immediately - if DONE, exit without showing prompt
+           IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE"
+               EXIT PERFORM
+           END-IF
+
+           *> If not DONE, validate the input as title
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               MOVE "Title is required." TO MSG
                PERFORM ECHO-DISPLAY
-
-               READ USER-IN
-                   AT END MOVE "Y" TO EOF-FLAG EXIT PERFORM
-               END-READ
-
-               *> Check for DONE at title prompt
-               IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE"
-                   EXIT PERFORM
-               END-IF
-
-               IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
-                   MOVE "Title is required." TO MSG
+               *> Now enter the re-prompt loop for empty title
+               PERFORM UNTIL FUNCTION LENGTH(FUNCTION TRIM(EXP-TITLE)) > 0
+                   MOVE SPACES TO MSG
+                   STRING "Experience #" DELIMITED BY SIZE
+                          EXP-ID-TXT     DELIMITED BY SIZE
+                          " - Title:"    DELIMITED BY SIZE
+                     INTO MSG
+                   END-STRING
                    PERFORM ECHO-DISPLAY
-               ELSE
-                   MOVE FUNCTION TRIM(USER-IN-REC) TO EXP-TITLE
-               END-IF
-           END-PERFORM
+
+                   READ USER-IN
+                       AT END MOVE "Y" TO EOF-FLAG EXIT PERFORM
+                   END-READ
+
+                   IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE"
+                       MOVE "This entry isn't recorded because it doesn't have enough required information." TO MSG
+                       PERFORM ECHO-DISPLAY
+                       EXIT PERFORM
+                   END-IF
+
+                   IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+                       MOVE "Title is required." TO MSG
+                       PERFORM ECHO-DISPLAY
+                   ELSE
+                       MOVE FUNCTION TRIM(USER-IN-REC) TO EXP-TITLE
+                   END-IF
+               END-PERFORM
+           ELSE
+               *> Valid title entered on first try
+               MOVE FUNCTION TRIM(USER-IN-REC) TO EXP-TITLE
+           END-IF
 
            *> If user typed DONE or hit EOF, exit
            IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE" OR EOF-FLAG = "Y"
@@ -941,35 +975,56 @@ GET-EDUCATION.
            MOVE EDU-ID TO EDU-ID-TXT
 
            *> Get Degree (required for education entry)
-           PERFORM UNTIL 1 = 0
-               MOVE SPACES TO MSG
-               STRING "Education #" DELIMITED BY SIZE
-                      EDU-ID-TXT DELIMITED BY SIZE
-                      " - Degree:" DELIMITED BY SIZE
-                 INTO MSG
-               END-STRING
+           *> Check for DONE before showing first detailed prompt
+           READ USER-IN
+               AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
+           END-READ
+
+           *> Check for DONE immediately - if DONE, exit without showing prompt
+           IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE"
+               EXIT PERFORM
+           END-IF
+
+           *> If not DONE, validate the input as degree
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               MOVE "Degree is required." TO MSG
                PERFORM ECHO-DISPLAY
-
-               READ USER-IN
-                   AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
-               END-READ
-
-               *> Check for DONE at Degree prompt
-               IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE"
-                   EXIT PERFORM
-               END-IF
-
-               IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
-                   MOVE "Degree is required." TO MSG
+               *> Now enter the re-prompt loop for empty degree
+               PERFORM UNTIL 1 = 0
+                   MOVE SPACES TO MSG
+                   STRING "Education #" DELIMITED BY SIZE
+                          EDU-ID-TXT DELIMITED BY SIZE
+                          " - Degree:" DELIMITED BY SIZE
+                     INTO MSG
+                   END-STRING
                    PERFORM ECHO-DISPLAY
-               ELSE
-                   *> Add new education entry - now increment count and set index
-                   ADD 1 TO EDU-COUNT
-                   SET EDU-IX TO EDU-COUNT
-                   MOVE FUNCTION TRIM(USER-IN-REC) TO EDU-DEGREE (EDU-IX)
-                   EXIT PERFORM
-               END-IF
-           END-PERFORM
+
+                   READ USER-IN
+                       AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
+                   END-READ
+
+                   *> Check for DONE at Degree prompt
+                   IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE"
+                       EXIT PERFORM
+                   END-IF
+
+                   IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+                       MOVE "Degree is required." TO MSG
+                       PERFORM ECHO-DISPLAY
+                   ELSE
+                       *> Add new education entry - now increment count and set index
+                       ADD 1 TO EDU-COUNT
+                       SET EDU-IX TO EDU-COUNT
+                       MOVE FUNCTION TRIM(USER-IN-REC) TO EDU-DEGREE (EDU-IX)
+                       EXIT PERFORM
+                   END-IF
+               END-PERFORM
+           ELSE
+               *> Valid degree entered on first try
+               ADD 1 TO EDU-COUNT
+               SET EDU-IX TO EDU-COUNT
+               MOVE FUNCTION TRIM(USER-IN-REC) TO EDU-DEGREE (EDU-IX)
+           END-IF
 
            *> If user typed DONE, exit
            IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "DONE"
@@ -1096,12 +1151,11 @@ VIEW-PROFILE.
        END-STRING
        PERFORM ECHO-DISPLAY
 
-       *> Display About Me if exists
+       *> Display About Me if exists - handle long text properly
        IF FUNCTION LENGTH(FUNCTION TRIM(PROFILE-ABOUT)) > 0
-           MOVE SPACES TO MSG
-           STRING "About Me: " FUNCTION TRIM(PROFILE-ABOUT) DELIMITED BY SIZE INTO MSG
-           END-STRING
+           MOVE "About Me:" TO MSG
            PERFORM ECHO-DISPLAY
+           PERFORM DISPLAY-LONG-TEXT
        END-IF
 
        *> Display Experience if exists
@@ -1239,6 +1293,59 @@ VIEW-PROFILE.
 
        EXIT PARAGRAPH.
 
+*> Helper routine to display long text with word wrapping
+DISPLAY-LONG-TEXT.
+       MOVE FUNCTION TRIM(PROFILE-ABOUT) TO PROFILE-ABOUT
+       MOVE FUNCTION LENGTH(FUNCTION TRIM(PROFILE-ABOUT)) TO LONG-TEXT-LEN
+       MOVE 1 TO LONG-TEXT-POS
+
+       PERFORM UNTIL LONG-TEXT-POS > LONG-TEXT-LEN
+           COMPUTE REMAINING-LEN = LONG-TEXT-LEN - LONG-TEXT-POS + 1
+
+           IF REMAINING-LEN > CHUNK-SIZE
+               MOVE CHUNK-SIZE TO CHUNK-LEN
+               *> Check if we're breaking in the middle of a word
+               PERFORM ADJUST-FOR-WORD-WRAP
+           ELSE
+               MOVE REMAINING-LEN TO CHUNK-LEN
+           END-IF
+
+           MOVE SPACES TO MSG
+           MOVE PROFILE-ABOUT (LONG-TEXT-POS:CHUNK-LEN) TO MSG
+           PERFORM ECHO-DISPLAY
+
+           ADD CHUNK-LEN TO LONG-TEXT-POS
+       END-PERFORM
+       EXIT.
+
+*> Adjust chunk length to avoid breaking words
+ADJUST-FOR-WORD-WRAP.
+       *> If the character at the break point is a space, no adjustment needed
+       IF PROFILE-ABOUT (LONG-TEXT-POS + CHUNK-LEN - 1:1) = SPACE
+           EXIT PARAGRAPH
+       END-IF
+
+       *> If the next character is a space, no adjustment needed
+       IF LONG-TEXT-POS + CHUNK-LEN <= LONG-TEXT-LEN
+           IF PROFILE-ABOUT (LONG-TEXT-POS + CHUNK-LEN:1) = SPACE
+               EXIT PARAGRAPH
+           END-IF
+       END-IF
+
+       *> Find the last space within the chunk to break at
+       PERFORM VARYING I FROM CHUNK-LEN BY -1 UNTIL I < 1
+           IF PROFILE-ABOUT (LONG-TEXT-POS + I - 1:1) = SPACE
+               MOVE I TO CHUNK-LEN
+               EXIT PERFORM
+           END-IF
+       END-PERFORM
+
+       *> If no space found within chunk, keep original chunk size
+       *> (this handles cases where a single word is longer than 80 chars)
+       IF I < 1
+           MOVE CHUNK-SIZE TO CHUNK-LEN
+       END-IF
+       EXIT.
 
 *> Profile persistence functions
 LOAD-PROFILE.
