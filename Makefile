@@ -5,9 +5,13 @@ SRC=src/InCollege.cob
 # Default target
 all: run
 
-# Compile the COBOL program into bin/
-build:
+# Ensure bin directory exists
+$(BIN): $(SRC)
+	@mkdir -p $(dir $(BIN))
 	@cobc -x -free -o $(BIN) $(SRC)
+
+# Compile the COBOL program into bin/
+build: $(BIN)
 
 # Run after building
 run: build
