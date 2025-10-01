@@ -181,6 +181,14 @@ WORKING-STORAGE SECTION.
 01 RESP-ACT                PIC X(7).     *> ACCEPT / REJECT
 01 OTHER-USER              PIC X(15).
 
+*> --- Send request helpers ---
+01 CHECK-USER            PIC X(15).   *> scratch for existence check
+01 TARGET-USER           PIC X(15).   *> receiver username when sending
+01 ANY-FOUND             PIC X VALUE "N".
+
+01 USER-A               PIC X(15).
+01 USER-B               PIC X(15).
+
 
 PROCEDURE DIVISION.
 MAIN-PARA.
@@ -2009,6 +2017,17 @@ VIEW-OTHER-PROFILE.
            END-IF
        END-IF
 
+       *> Offer to send friend request to this user (uses SP-USERNAME (SP-IX))
+       MOVE "Would you like to send a friend request? (1=Yes, 2=No)" TO MSG
+       PERFORM ECHO-DISPLAY
+       READ USER-IN
+           AT END EXIT PARAGRAPH
+       END-READ
+       IF FUNCTION TRIM(USER-IN-REC) = "1"
+           MOVE FUNCTION TRIM(SP-USERNAME (SP-IX)) TO TARGET-USER
+           PERFORM SEND-FRIEND-REQUEST
+       END-IF
+
        MOVE "--------------------" TO MSG
        PERFORM ECHO-DISPLAY
        EXIT PARAGRAPH.
@@ -2045,8 +2064,8 @@ SAVE-ALL-CONNECTIONS.
         PERFORM UNTIL C-IX > CONN-COUNT
             MOVE SPACES TO CONN-REC
             STRING
-                FUNCTION TRIM(C-SENDER (C-IX))   "|" 
-                FUNCTION TRIM(C-RECEIVER (C-IX)) "|" 
+                FUNCTION TRIM(C-SENDER (C-IX))   "|"
+                FUNCTION TRIM(C-RECEIVER (C-IX)) "|"
                 FUNCTION TRIM(C-STATUS (C-IX))
                 DELIMITED BY SIZE
                 INTO CONN-REC
@@ -2067,6 +2086,97 @@ GET-OTHER-USER.
         MOVE C-SENDER (C-IX)   TO OTHER-USER
     END-IF
     EXIT.
+
+*> Case-insensitive existence check for an arbitrary username in USER-TABLE
+EXISTS-USER-BY-NAME.
+    MOVE "N" TO FOUND-FLAG
+    IF ACCOUNT-COUNT > 0
+        SET U-IX TO 1
+        PERFORM UNTIL U-IX > ACCOUNT-COUNT
+            IF FUNCTION UPPER-CASE(FUNCTION TRIM(CHECK-USER))
+               = FUNCTION UPPER-CASE(FUNCTION TRIM(T-USERNAME (U-IX)))
+                MOVE "Y" TO FOUND-FLAG
+                EXIT PERFORM
+            ELSE
+                SET U-IX UP BY 1
+            END-IF
+        END-PERFORM
+    END-IF
+    EXIT.
+
+
+*> Does ANY record exist between USER-A and USER-B (either direction)?
+FIND-ANY-CONNECTION.
+    MOVE "N" TO ANY-FOUND
+    IF CONN-COUNT > 0
+        SET C-IX TO 1
+        PERFORM UNTIL C-IX > CONN-COUNT
+            IF ( FUNCTION UPPER-CASE(FUNCTION TRIM(C-SENDER (C-IX))) =
+                 FUNCTION UPPER-CASE(FUNCTION TRIM(USER-A))
+             AND FUNCTION UPPER-CASE(FUNCTION TRIM(C-RECEIVER (C-IX))) =
+                 FUNCTION UPPER-CASE(FUNCTION TRIM(USER-B)) )
+             OR ( FUNCTION UPPER-CASE(FUNCTION TRIM(C-SENDER (C-IX))) =
+                 FUNCTION UPPER-CASE(FUNCTION TRIM(USER-B))
+             AND FUNCTION UPPER-CASE(FUNCTION TRIM(C-RECEIVER (C-IX))) =
+                 FUNCTION UPPER-CASE(FUNCTION TRIM(USER-A)) )
+                MOVE "Y" TO ANY-FOUND
+                EXIT PERFORM
+            ELSE
+                SET C-IX UP BY 1
+            END-IF
+        END-PERFORM
+    END-IF
+    EXIT.
+
+
+*> Create a pending request CURRENT-USER -> TARGET-USER
+SEND-FRIEND-REQUEST.
+    *> Ensure connections are current
+    PERFORM LOAD-ALL-CONNECTIONS
+
+    *> 1) No self-add
+    IF FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER)) =
+       FUNCTION UPPER-CASE(FUNCTION TRIM(TARGET-USER))
+        MOVE "You cannot add yourself." TO MSG
+        PERFORM ECHO-DISPLAY
+        EXIT PARAGRAPH
+    END-IF
+
+    *> 2) Receiver must exist
+    MOVE FUNCTION TRIM(TARGET-USER) TO CHECK-USER
+    PERFORM EXISTS-USER-BY-NAME
+    IF FOUND-FLAG NOT = "Y"
+        MOVE "User does not exist." TO MSG
+        PERFORM ECHO-DISPLAY
+        EXIT PARAGRAPH
+    END-IF
+
+    *> 3) No existing request/connection either direction
+    MOVE FUNCTION TRIM(CURRENT-USER) TO USER-A
+    MOVE FUNCTION TRIM(TARGET-USER)  TO USER-B
+    PERFORM FIND-ANY-CONNECTION
+    IF ANY-FOUND = "Y"
+        MOVE "There is already a request or connection between you." TO MSG
+        PERFORM ECHO-DISPLAY
+        EXIT PARAGRAPH
+    END-IF
+
+    *> 4) Append new PENDING record (sender=current, receiver=target)
+    IF CONN-COUNT < MAX-CONNECTIONS
+        ADD 1 TO CONN-COUNT
+        SET C-IX TO CONN-COUNT
+        MOVE FUNCTION TRIM(CURRENT-USER) TO C-SENDER   (C-IX)
+        MOVE FUNCTION TRIM(TARGET-USER)  TO C-RECEIVER (C-IX)
+        MOVE "PENDING"                   TO C-STATUS   (C-IX)
+        PERFORM SAVE-ALL-CONNECTIONS
+        MOVE "Friend request sent."      TO MSG
+        PERFORM ECHO-DISPLAY
+    ELSE
+        MOVE "Cannot send request: connections storage is full." TO MSG
+        PERFORM ECHO-DISPLAY
+    END-IF
+    EXIT PARAGRAPH.
+
 
 *> ===== Connections Menu & Features (Juan) =====
 CONNECTIONS-MENU.

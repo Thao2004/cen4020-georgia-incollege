@@ -1,11 +1,13 @@
 # InCollege Project
 
-This project is an implementation of **Epic #1: Log In, Part 1** for the InCollege system, written in COBOL.
-It provides basic **user account management**:
-- Create up to 5 accounts (unique usernames, validated passwords)
-- Log in with unlimited attempts until success
-- Persistence of accounts in a file (`accounts.dat`)
-- Input is driven from a text file; output is duplicated to the terminal and to `InCollege-Output.txt`
+This project is an implementation of the InCollege system in COBOL, developed incrementally through Epics 1–4.  
+Current features include:  
+- Create up to 5 accounts (validated, unique usernames and passwords) [Epic 1]  
+- Log in with unlimited attempts [Epic 1]  
+- Create, edit, and view user profiles (with About Me, experience, and education) [Epic 2]  
+- Search for users by full name and view their profiles [Epic 3]  
+- Send, accept, reject, and view connection requests [Epic 4]  
+- Persistence across program runs (`accounts.dat`, `profiles.dat`, `connections.dat`)  
 
 ---
 
@@ -132,10 +134,28 @@ make run
 - The program will reject the first attempt, displaying: `Incorrect username/password, please try again`.
 - On the second attempt, you’ll see: `You have succesfully logged in`
 
+### Example 3: Create/Edit Profile
+After logging in, choose option `1` from the main menu.  
+Required fields: first name, last name, university, major, graduation year.  
+Optional fields: About Me (200 chars max), up to 3 experiences, up to 3 education entries.  
+
+### Example 4: Search for User and Send Connection Request
+After logging in, choose option `4` (Find someone you know).  
+Enter first and last name exactly. If found, the profile is displayed.  
+You may then choose to send a connection request.  
+Requests are saved in `connections.dat` with status `PENDING`.  
+
+### Example 5: View and Respond to Pending Requests
+From the main menu, choose `5` (View My Pending Connection Requests).  
+You can accept or reject requests. Accepted connections move to your list; rejected ones disappear.  
+
 ## Output Files
 `InCollege-Output.txt`: Contains a copy of all prompts and messages shown in the terminal.
 
 `accounts.dat`: Stores created accounts in the format `username, password`
+
+`profiles.dat`: Stores user profiles (basic info, About Me, experiences, education).  
+`connections.dat`: Stores connection requests and accepted connections.  
 
 ## Cleaning Up
 To remove the compiled binary, output file, and accounts file:
@@ -155,6 +175,8 @@ make clean
 ├── src/                  # COBOL source code
 │   └── InCollege.cob
 ├── accounts.dat          # Account storage (generated)
+├── profiles.dat        # Profile storage (generated)
+├── connections.dat     # Connection requests & connections (generated)
 ├── InCollege-Input.txt   # Input file (edit this to test)
 ├── InCollege-Output.txt  # Output log (generated)
 ├── InCollege-Test.txt    # Test file
