@@ -19,6 +19,9 @@ FILE-CONTROL.
     *> Persistent storage for user profiles
     SELECT OPTIONAL PROFILES ASSIGN TO 'profiles.dat'
        ORGANIZATION IS LINE SEQUENTIAL.
+    *> Persistent storage for friend requests/connections
+    SELECT OPTIONAL CONNECTIONS ASSIGN TO 'connections.dat'
+       ORGANIZATION IS LINE SEQUENTIAL.
 
 
 DATA DIVISION.
@@ -31,6 +34,8 @@ FD ACCOUNTS.
 01 ACC-REC         PIC X(80).      *> One line: "username,password"
 FD PROFILES.
 01 PROFILE-REC     PIC X(800).     *> Profile data storage
+FD CONNECTIONS.
+01 CONN-REC        PIC X(80).      *> One line: "sender|receiver|status"
 
 WORKING-STORAGE SECTION.
 01 MSG             PIC X(80).      *> Reusable message buffer for display/logging
@@ -151,6 +156,30 @@ WORKING-STORAGE SECTION.
 *> Search inputs (Stories 3–6,7)
 01 SRCH-FIRSTNAME      PIC X(20).
 01 SRCH-LASTNAME       PIC X(20).
+
+*> ===== Connections (Epic #4) =====
+01 MAX-CONNECTIONS         PIC 99  VALUE 50.
+01 CONN-COUNT              PIC 99  VALUE 0.
+01 CONN-TABLE.
+   05 CONN-ENTRY OCCURS 50 INDEXED BY C-IX.
+      10 C-SENDER         PIC X(15).
+      10 C-RECEIVER       PIC X(15).
+      10 C-STATUS         PIC X(9).     *> PENDING | ACCEPTED | REJECTED
+
+*> Scratch for parsing connections
+01 CT-TMP1                 PIC X(15).
+01 CT-TMP2                 PIC X(15).
+01 CT-TMP3                 PIC X(9).
+
+*> Connections menu helpers
+01 CONN-MENU-CHOICE        PIC S9 VALUE 0.
+01 PENDING-COUNT           PIC 99 VALUE 0.
+01 PENDING-INDEXES.
+   05 PENDING-IDX OCCURS 50 INDEXED BY P-IX.
+      10 P-ROW            PIC 99.
+01 RESP-USER               PIC X(15).
+01 RESP-ACT                PIC X(7).     *> ACCEPT / REJECT
+01 OTHER-USER              PIC X(15).
 
 
 PROCEDURE DIVISION.
@@ -529,6 +558,8 @@ DISPLAY-MENU.
        PERFORM ECHO-DISPLAY
        MOVE "  5. Learn a New Skill" TO MSG
        PERFORM ECHO-DISPLAY
+       MOVE "  6. Connections" TO MSG
+       PERFORM ECHO-DISPLAY
        MOVE "=============================" TO MSG
        PERFORM ECHO-DISPLAY
        MOVE "Enter your choice: " TO MSG
@@ -549,6 +580,8 @@ NAV-MENU-CHOICE.
                PERFORM FIND-SOMEONE-YOU-KNOW
            WHEN 5
                PERFORM SKILLS-MENU
+           WHEN 6
+               PERFORM CONNECTIONS-MENU
            WHEN OTHER
                *> 0, 999, or any other number is invalid
                MOVE "Invalid choice, please try again." TO MSG
@@ -1979,3 +2012,250 @@ VIEW-OTHER-PROFILE.
        MOVE "--------------------" TO MSG
        PERFORM ECHO-DISPLAY
        EXIT PARAGRAPH.
+
+*> ===== Connections Persistence =====
+*> Read entire connections.dat into CONN-TABLE
+LOAD-ALL-CONNECTIONS.
+    MOVE 0 TO CONN-COUNT
+    OPEN INPUT CONNECTIONS
+    PERFORM UNTIL 1 = 0
+        READ CONNECTIONS
+           AT END EXIT PERFORM
+        END-READ
+        IF CONN-COUNT < MAX-CONNECTIONS
+           ADD 1 TO CONN-COUNT
+           SET C-IX TO CONN-COUNT
+           UNSTRING CONN-REC DELIMITED BY "|"
+               INTO C-SENDER (C-IX) C-RECEIVER (C-IX) C-STATUS (C-IX)
+           END-UNSTRING
+           *> Trim
+           MOVE FUNCTION TRIM(C-SENDER (C-IX))   TO C-SENDER (C-IX)
+           MOVE FUNCTION TRIM(C-RECEIVER (C-IX)) TO C-RECEIVER (C-IX)
+           MOVE FUNCTION TRIM(C-STATUS (C-IX))   TO C-STATUS (C-IX)
+        END-IF
+    END-PERFORM
+    CLOSE CONNECTIONS
+    EXIT.
+
+*> Rewrite entire file from memory
+SAVE-ALL-CONNECTIONS.
+    OPEN OUTPUT CONNECTIONS
+    IF CONN-COUNT > 0
+        SET C-IX TO 1
+        PERFORM UNTIL C-IX > CONN-COUNT
+            MOVE SPACES TO CONN-REC
+            STRING
+                FUNCTION TRIM(C-SENDER (C-IX))   "|" 
+                FUNCTION TRIM(C-RECEIVER (C-IX)) "|" 
+                FUNCTION TRIM(C-STATUS (C-IX))
+                DELIMITED BY SIZE
+                INTO CONN-REC
+            END-STRING
+            WRITE CONN-REC
+            SET C-IX UP BY 1
+        END-PERFORM
+    END-IF
+    CLOSE CONNECTIONS
+    EXIT.
+
+*> Helper: get the other username for an ACCEPTED record (relative to CURRENT-USER)
+GET-OTHER-USER.
+    IF FUNCTION UPPER-CASE(FUNCTION TRIM(C-SENDER (C-IX))) =
+       FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
+        MOVE C-RECEIVER (C-IX) TO OTHER-USER
+    ELSE
+        MOVE C-SENDER (C-IX)   TO OTHER-USER
+    END-IF
+    EXIT.
+
+*> ===== Connections Menu & Features (Juan) =====
+CONNECTIONS-MENU.
+    MOVE 0 TO CONN-MENU-CHOICE
+    PERFORM UNTIL EOF-FLAG = "Y"
+        MOVE " " TO MSG
+        PERFORM ECHO-DISPLAY
+        MOVE "----- Connections -----" TO MSG
+        PERFORM ECHO-DISPLAY
+        MOVE "  1. View & Respond to Pending Requests" TO MSG
+        PERFORM ECHO-DISPLAY
+        MOVE "  2. View My Connections" TO MSG
+        PERFORM ECHO-DISPLAY
+        MOVE "  3. Go Back" TO MSG
+        PERFORM ECHO-DISPLAY
+        MOVE "Enter your choice:" TO MSG
+        PERFORM ECHO-DISPLAY
+
+        READ USER-IN
+            AT END MOVE "Y" TO EOF-FLAG
+        END-READ
+        IF EOF-FLAG = "Y" EXIT PERFORM END-IF
+
+        IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+            CONTINUE
+        ELSE
+            IF FUNCTION TEST-NUMVAL(USER-IN-REC) = 0
+                MOVE FUNCTION NUMVAL(USER-IN-REC) TO CONN-MENU-CHOICE
+            ELSE
+                MOVE 999 TO CONN-MENU-CHOICE
+            END-IF
+
+            EVALUATE CONN-MENU-CHOICE
+                WHEN 1
+                    PERFORM VIEW-AND-RESPOND-PENDING
+                WHEN 2
+                    PERFORM VIEW-MY-CONNECTIONS
+                WHEN 3
+                    EXIT PERFORM
+                WHEN OTHER
+                    MOVE "Invalid choice, please try again." TO MSG
+                    PERFORM ECHO-DISPLAY
+            END-EVALUATE
+        END-IF
+    END-PERFORM
+    EXIT.
+
+VIEW-AND-RESPOND-PENDING.
+    *> Load all records fresh each time
+    PERFORM LOAD-ALL-CONNECTIONS
+
+    MOVE 0 TO PENDING-COUNT
+    *> Build an index list of pending requests where CURRENT-USER is the receiver
+    IF CONN-COUNT > 0
+        SET C-IX TO 1
+        PERFORM UNTIL C-IX > CONN-COUNT
+            IF FUNCTION UPPER-CASE(FUNCTION TRIM(C-RECEIVER (C-IX))) =
+               FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
+               AND FUNCTION UPPER-CASE(FUNCTION TRIM(C-STATUS (C-IX))) = "PENDING"
+                ADD 1 TO PENDING-COUNT
+                SET P-IX TO PENDING-COUNT
+                MOVE C-IX TO P-ROW (P-IX)
+            END-IF
+            SET C-IX UP BY 1
+        END-PERFORM
+    END-IF
+
+    IF PENDING-COUNT = 0
+        MOVE "You have no pending friend requests." TO MSG
+        PERFORM ECHO-DISPLAY
+        EXIT PARAGRAPH
+    END-IF
+
+    MOVE "--- Pending Friend Requests ---" TO MSG
+    PERFORM ECHO-DISPLAY
+
+    *> List them numbered
+    SET P-IX TO 1
+    PERFORM PENDING-COUNT TIMES
+        MOVE P-ROW (P-IX) TO I
+        SET C-IX TO I
+        MOVE SPACES TO MSG
+        STRING P-IX ". From: " FUNCTION TRIM(C-SENDER (C-IX))
+               DELIMITED BY SIZE INTO MSG
+        END-STRING
+        PERFORM ECHO-DISPLAY
+        SET P-IX UP BY 1
+    END-PERFORM
+
+    *> Prompt to respond
+    MOVE "Enter the sender's username to respond (blank to go back):" TO MSG
+    PERFORM ECHO-DISPLAY
+    READ USER-IN
+        AT END MOVE "Y" TO EOF-FLAG
+    END-READ
+    IF EOF-FLAG = "Y" EXIT PARAGRAPH END-IF
+
+    MOVE FUNCTION TRIM(USER-IN-REC) TO RESP-USER
+    IF FUNCTION LENGTH(RESP-USER) = 0
+        EXIT PARAGRAPH
+    END-IF
+
+    *> Find the matching pending record
+    MOVE 0 TO I
+    MOVE 0 TO FOUND-FLAG
+    IF CONN-COUNT > 0
+        SET C-IX TO 1
+        PERFORM UNTIL C-IX > CONN-COUNT
+            IF FUNCTION UPPER-CASE(FUNCTION TRIM(C-RECEIVER (C-IX))) =
+               FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
+            AND FUNCTION UPPER-CASE(FUNCTION TRIM(C-SENDER (C-IX))) =
+               FUNCTION UPPER-CASE(FUNCTION TRIM(RESP-USER))
+            AND FUNCTION UPPER-CASE(FUNCTION TRIM(C-STATUS (C-IX))) = "PENDING"
+                MOVE "Y" TO FOUND-FLAG
+                EXIT PERFORM
+            ELSE
+                SET C-IX UP BY 1
+            END-IF
+        END-PERFORM
+    END-IF
+
+    IF FOUND-FLAG NOT = "Y"
+        MOVE "No matching pending request from that user." TO MSG
+        PERFORM ECHO-DISPLAY
+        EXIT PARAGRAPH
+    END-IF
+
+    *> Ask action
+    MOVE "Type ACCEPT or REJECT:" TO MSG
+    PERFORM ECHO-DISPLAY
+    READ USER-IN
+        AT END MOVE "Y" TO EOF-FLAG
+    END-READ
+    IF EOF-FLAG = "Y" EXIT PARAGRAPH END-IF
+
+    MOVE FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) TO RESP-ACT
+
+    IF RESP-ACT = "ACCEPT"
+        MOVE "ACCEPTED" TO C-STATUS (C-IX)
+        PERFORM SAVE-ALL-CONNECTIONS
+        MOVE "Request accepted. You are now connected." TO MSG
+        PERFORM ECHO-DISPLAY
+    ELSE
+        IF RESP-ACT = "REJECT"
+            MOVE "REJECTED" TO C-STATUS (C-IX)
+            PERFORM SAVE-ALL-CONNECTIONS
+            MOVE "Request rejected." TO MSG
+            PERFORM ECHO-DISPLAY
+        ELSE
+            MOVE "Invalid response. Please type ACCEPT or REJECT next time." TO MSG
+            PERFORM ECHO-DISPLAY
+        END-IF
+    END-IF
+    EXIT PARAGRAPH.
+
+VIEW-MY-CONNECTIONS.
+    PERFORM LOAD-ALL-CONNECTIONS
+    MOVE 0 TO I
+    MOVE 0 TO FOUND-FLAG
+
+    MOVE "--- Your Connections ---" TO MSG
+    PERFORM ECHO-DISPLAY
+
+    IF CONN-COUNT = 0
+        MOVE "You have no connections yet." TO MSG
+        PERFORM ECHO-DISPLAY
+        EXIT PARAGRAPH
+    END-IF
+
+    SET C-IX TO 1
+    PERFORM UNTIL C-IX > CONN-COUNT
+        IF FUNCTION UPPER-CASE(FUNCTION TRIM(C-STATUS (C-IX))) = "ACCEPTED"
+        AND ( FUNCTION UPPER-CASE(FUNCTION TRIM(C-SENDER (C-IX))) =
+              FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
+           OR FUNCTION UPPER-CASE(FUNCTION TRIM(C-RECEIVER (C-IX))) =
+              FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER)) )
+            MOVE "Y" TO FOUND-FLAG
+            PERFORM GET-OTHER-USER
+            MOVE SPACES TO MSG
+            STRING "- " FUNCTION TRIM(OTHER-USER)
+                   DELIMITED BY SIZE INTO MSG
+            END-STRING
+            PERFORM ECHO-DISPLAY
+        END-IF
+        SET C-IX UP BY 1
+    END-PERFORM
+
+    IF FOUND-FLAG NOT = "Y"
+        MOVE "You have no connections yet." TO MSG
+        PERFORM ECHO-DISPLAY
+    END-IF
+    EXIT PARAGRAPH.
