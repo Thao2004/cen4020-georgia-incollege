@@ -1,0 +1,43 @@
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in
+Welcome, student1!
+
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+  6. Connections
+=============================
+Enter your choice:
+--- Find Someone You Know ---
+Enter First Name to search:
+Enter Last Name to search:
+--- Profile for Bob Two ---
+Name: Bob Two
+University: USF
+Major: Computer Science
+Graduation Year: 2026
+Would you like to send a friend request? (1=Yes, 2=No)
+There is already a request or connection between you.
+--------------------
+
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+  6. Connections
+=============================
+Enter your choice:
