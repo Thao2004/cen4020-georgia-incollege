@@ -11,22 +11,29 @@ Welcome to InCollege!
 Enter your choice:
 Please enter your username:
 Please enter your password:
-Account created.
-Welcome to InCollege!
-1. Log In
-2. Create New Account
-Enter your choice:
-Please enter your username:
-Please enter your password:
-Account created.
-Welcome to InCollege!
-1. Log In
-2. Create New Account
-Enter your choice:
-Please enter your username:
-Please enter your password:
 You have successfully logged in
-Welcome, student1!
+Welcome, TestUser!
+
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+  6. Connections
+=============================
+Enter your choice:
+--- Find Someone You Know ---
+Enter First Name to search:
+Enter Last Name to search:
+--- Profile for New Student ---
+Name: New Student
+University: West Coast Uni
+Major: Business
+Graduation Year: 2027
+--------------------
 
 =============================
      InCollege Main Menu
@@ -52,37 +59,11 @@ You have no pending friend requests.
   2. View My Connections
   3. Go Back
 Enter your choice:
-Invalid choice, please try again.
-
------ Connections -----
-  1. View & Respond to Pending Requests
-  2. View My Connections
-  3. Go Back
-Enter your choice:
-Invalid choice, please try again.
-
------ Connections -----
-  1. View & Respond to Pending Requests
-  2. View My Connections
-  3. Go Back
-Enter your choice:
 --- Your Connections ---
-- student2
+You have no connections yet.
 
 ----- Connections -----
   1. View & Respond to Pending Requests
   2. View My Connections
   3. Go Back
-Enter your choice:
-
-=============================
-     InCollege Main Menu
-=============================
-  1. Create/Edit My Profile
-  2. View My Profile
-  3. Search for a job
-  4. Find someone you know
-  5. Learn a New Skill
-  6. Connections
-=============================
 Enter your choice:
