@@ -40,7 +40,7 @@ FD CONNECTIONS.
 WORKING-STORAGE SECTION.
 01 MSG             PIC X(80).      *> Reusable message buffer for display/logging
 01 CHOICE           PIC S9  VALUE 0.  *> Menu choice for login and create account only
-01 NAV-CHOICE       PIC S9  VALUE 0. *> Navigation choice
+01 NAV-CHOICE       PIC S9(3) VALUE 0. *> Navigation choice
 01 USERNAME        PIC X(15).      *> Limit username to 15 (storage size)
 01 PASSWORD        PIC X(12).      *> Password stored max 12 chars
 01 INPUT-USER      PIC X(80).      *> Sratch for username length gating
@@ -528,7 +528,6 @@ NAVIGATION-MENU.
                EXIT PERFORM
            END-IF
 
-           *> Tolerate blank lines by skipping them quietly
            IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
                CONTINUE
            ELSE
@@ -764,11 +763,10 @@ GET-ABOUT.
                MOVE "About Me must be at most 200 characters." TO MSG
                PERFORM ECHO-DISPLAY
                *> Continue the loop to re-prompt for input
-               EXIT PERFORM
            ELSE
                *> Input is valid, save it
                MOVE FUNCTION TRIM(USER-IN-REC) TO PROFILE-ABOUT
-               PERFORM ECHO-DISPLAY
+               EXIT PARAGRAPH
            END-IF
        END-PERFORM
        EXIT PARAGRAPH.
@@ -2183,18 +2181,7 @@ SEND-FRIEND-REQUEST.
 CONNECTIONS-MENU.
     MOVE 0 TO CONN-MENU-CHOICE
     PERFORM UNTIL EOF-FLAG = "Y"
-        MOVE " " TO MSG
-        PERFORM ECHO-DISPLAY
-        MOVE "----- Connections -----" TO MSG
-        PERFORM ECHO-DISPLAY
-        MOVE "  1. View & Respond to Pending Requests" TO MSG
-        PERFORM ECHO-DISPLAY
-        MOVE "  2. View My Connections" TO MSG
-        PERFORM ECHO-DISPLAY
-        MOVE "  3. Go Back" TO MSG
-        PERFORM ECHO-DISPLAY
-        MOVE "Enter your choice:" TO MSG
-        PERFORM ECHO-DISPLAY
+        PERFORM DISPLAY-CONNECTIONS-MENU
 
         READ USER-IN
             AT END MOVE "Y" TO EOF-FLAG
@@ -2223,6 +2210,21 @@ CONNECTIONS-MENU.
             END-EVALUATE
         END-IF
     END-PERFORM
+    EXIT.
+
+DISPLAY-CONNECTIONS-MENU.
+    MOVE " " TO MSG
+    PERFORM ECHO-DISPLAY
+    MOVE "----- Connections -----" TO MSG
+    PERFORM ECHO-DISPLAY
+    MOVE "  1. View & Respond to Pending Requests" TO MSG
+    PERFORM ECHO-DISPLAY
+    MOVE "  2. View My Connections" TO MSG
+    PERFORM ECHO-DISPLAY
+    MOVE "  3. Go Back" TO MSG
+    PERFORM ECHO-DISPLAY
+    MOVE "Enter your choice:" TO MSG
+    PERFORM ECHO-DISPLAY
     EXIT.
 
 VIEW-AND-RESPOND-PENDING.
