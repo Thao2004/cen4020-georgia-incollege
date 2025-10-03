@@ -764,10 +764,11 @@ GET-ABOUT.
                MOVE "About Me must be at most 200 characters." TO MSG
                PERFORM ECHO-DISPLAY
                *> Continue the loop to re-prompt for input
+               EXIT PERFORM
            ELSE
                *> Input is valid, save it
                MOVE FUNCTION TRIM(USER-IN-REC) TO PROFILE-ABOUT
-               EXIT PERFORM
+               PERFORM ECHO-DISPLAY
            END-IF
        END-PERFORM
        EXIT PARAGRAPH.
