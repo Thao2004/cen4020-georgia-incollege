@@ -162,7 +162,7 @@ WORKING-STORAGE SECTION.
 01 SRCH-FIRSTNAME      PIC X(20).
 01 SRCH-LASTNAME       PIC X(20).
 
-*> ===== Established Connections connections.dat (Epic #4) =====
+*> ===== Established connections.dat (Epic #4) =====
 01 MAX-CONNECTIONS         PIC 99  VALUE 50.
 01 CONN-COUNT              PIC 99  VALUE 0.
 01 CONN-TABLE.
