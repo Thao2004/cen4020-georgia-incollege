@@ -2078,11 +2078,7 @@ LOAD-ALL-CONNECTIONS.
 
 *> Rewrite entire file from memory
 SAVE-ALL-CONNECTIONS.
-    *> Safety check - don't create file if no connections exist
-    IF CONN-COUNT = 0
-        EXIT PARAGRAPH
-    END-IF
-
+    *> Safety check removed - always create/truncate file
     OPEN OUTPUT CONNECTIONS
     IF CONN-COUNT > 0
         SET C-IX TO 1
