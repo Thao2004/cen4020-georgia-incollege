@@ -19,8 +19,11 @@ FILE-CONTROL.
     *> Persistent storage for user profiles
     SELECT OPTIONAL PROFILES ASSIGN TO 'profiles.dat'
        ORGANIZATION IS LINE SEQUENTIAL.
-    *> Persistent storage for friend requests/connections
+    *> Persistent storage for connections
     SELECT OPTIONAL CONNECTIONS ASSIGN TO 'connections.dat'
+       ORGANIZATION IS LINE SEQUENTIAL.
+    *> Persistent storage for friend requests
+    SELECT OPTIONAL REQUESTS ASSIGN TO 'requests.dat'
        ORGANIZATION IS LINE SEQUENTIAL.
 
 
@@ -35,12 +38,14 @@ FD ACCOUNTS.
 FD PROFILES.
 01 PROFILE-REC     PIC X(800).     *> Profile data storage
 FD CONNECTIONS.
-01 CONN-REC        PIC X(80).      *> One line: "sender|receiver|status"
+01 CONN-REC        PIC X(80).      *> One line: "user1,user2 (established connections only)"
+FD REQUESTS.
+01 REQ-REC         PIC X(80).      *> One line: "sender|receiver|status"
 
 WORKING-STORAGE SECTION.
 01 MSG             PIC X(80).      *> Reusable message buffer for display/logging
 01 CHOICE           PIC S9  VALUE 0.  *> Menu choice for login and create account only
-01 NAV-CHOICE       PIC S9  VALUE 0. *> Navigation choice
+01 NAV-CHOICE       PIC S9(3) VALUE 0. *> Navigation choice
 01 USERNAME        PIC X(15).      *> Limit username to 15 (storage size)
 01 PASSWORD        PIC X(12).      *> Password stored max 12 chars
 01 INPUT-USER      PIC X(80).      *> Sratch for username length gating
@@ -157,19 +162,30 @@ WORKING-STORAGE SECTION.
 01 SRCH-FIRSTNAME      PIC X(20).
 01 SRCH-LASTNAME       PIC X(20).
 
-*> ===== Connections (Epic #4) =====
+*> ===== Established connections.dat (Epic #4) =====
 01 MAX-CONNECTIONS         PIC 99  VALUE 50.
 01 CONN-COUNT              PIC 99  VALUE 0.
 01 CONN-TABLE.
    05 CONN-ENTRY OCCURS 50 INDEXED BY C-IX.
-      10 C-SENDER         PIC X(15).
-      10 C-RECEIVER       PIC X(15).
-      10 C-STATUS         PIC X(9).     *> PENDING | ACCEPTED | REJECTED
+      10 C-USER1         PIC X(15).
+      10 C-USER2         PIC X(15).
+
+*> ===== Connection Requests (requests.dat) ====
+01 MAX-REQUESTS        PIC 99 VALUE 50.
+01 REQUESTS-COUNT      PIC 99 VALUE 0.
+01 REQUESTS-TABLE.
+   05 REQUESTS-ENTRY OCCURS 50 INDEXED BY R-IX.
+   10 R-SENDER         PIC X(15).
+   10 R-RECEIVER       PIC X(15).
+   10 R-STATUS         PIC X(9). *> PENDING|ACCEPTED|REJECTED (max 8 chars + null)
+
 
 *> Scratch for parsing connections
 01 CT-TMP1                 PIC X(15).
 01 CT-TMP2                 PIC X(15).
-01 CT-TMP3                 PIC X(9).
+01 RT-TMP1                 PIC X(15).
+01 RT-TMP2                 PIC X(15).
+01 RT-TMP3                 PIC X(9).
 
 *> Connections menu helpers
 01 CONN-MENU-CHOICE        PIC S9 VALUE 0.
@@ -188,6 +204,8 @@ WORKING-STORAGE SECTION.
 
 01 USER-A               PIC X(15).
 01 USER-B               PIC X(15).
+
+01 FOUND-INDEX          PIC 99 VALUE 0.
 
 
 PROCEDURE DIVISION.
@@ -528,7 +546,6 @@ NAVIGATION-MENU.
                EXIT PERFORM
            END-IF
 
-           *> Tolerate blank lines by skipping them quietly
            IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
                CONTINUE
            ELSE
@@ -566,7 +583,9 @@ DISPLAY-MENU.
        PERFORM ECHO-DISPLAY
        MOVE "  5. Learn a New Skill" TO MSG
        PERFORM ECHO-DISPLAY
-       MOVE "  6. Connections" TO MSG
+       MOVE "  6. View My Pending Connection Requests" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "  7. View My Network" TO MSG
        PERFORM ECHO-DISPLAY
        MOVE "=============================" TO MSG
        PERFORM ECHO-DISPLAY
@@ -589,7 +608,9 @@ NAV-MENU-CHOICE.
            WHEN 5
                PERFORM SKILLS-MENU
            WHEN 6
-               PERFORM CONNECTIONS-MENU
+               PERFORM VIEW-AND-RESPOND-PENDING
+           WHEN 7
+               PERFORM VIEW-MY-CONNECTIONS
            WHEN OTHER
                *> 0, 999, or any other number is invalid
                MOVE "Invalid choice, please try again." TO MSG
@@ -767,7 +788,7 @@ GET-ABOUT.
            ELSE
                *> Input is valid, save it
                MOVE FUNCTION TRIM(USER-IN-REC) TO PROFILE-ABOUT
-               EXIT PERFORM
+               EXIT PARAGRAPH
            END-IF
        END-PERFORM
        EXIT PARAGRAPH.
@@ -2044,13 +2065,12 @@ LOAD-ALL-CONNECTIONS.
         IF CONN-COUNT < MAX-CONNECTIONS
            ADD 1 TO CONN-COUNT
            SET C-IX TO CONN-COUNT
-           UNSTRING CONN-REC DELIMITED BY "|"
-               INTO C-SENDER (C-IX) C-RECEIVER (C-IX) C-STATUS (C-IX)
+           UNSTRING CONN-REC DELIMITED BY ","
+               INTO C-USER1 (C-IX) C-USER2 (C-IX)
            END-UNSTRING
            *> Trim
-           MOVE FUNCTION TRIM(C-SENDER (C-IX))   TO C-SENDER (C-IX)
-           MOVE FUNCTION TRIM(C-RECEIVER (C-IX)) TO C-RECEIVER (C-IX)
-           MOVE FUNCTION TRIM(C-STATUS (C-IX))   TO C-STATUS (C-IX)
+           MOVE FUNCTION TRIM(C-USER1 (C-IX)) TO C-USER1 (C-IX)
+           MOVE FUNCTION TRIM(C-USER2 (C-IX)) TO C-USER2 (C-IX)
         END-IF
     END-PERFORM
     CLOSE CONNECTIONS
@@ -2058,18 +2078,19 @@ LOAD-ALL-CONNECTIONS.
 
 *> Rewrite entire file from memory
 SAVE-ALL-CONNECTIONS.
+    *> Safety check removed - always create/truncate file
     OPEN OUTPUT CONNECTIONS
     IF CONN-COUNT > 0
         SET C-IX TO 1
         PERFORM UNTIL C-IX > CONN-COUNT
             MOVE SPACES TO CONN-REC
             STRING
-                FUNCTION TRIM(C-SENDER (C-IX))   "|"
-                FUNCTION TRIM(C-RECEIVER (C-IX)) "|"
-                FUNCTION TRIM(C-STATUS (C-IX))
+                FUNCTION TRIM(C-USER1 (C-IX))   ","
+                FUNCTION TRIM(C-USER2 (C-IX))
                 DELIMITED BY SIZE
                 INTO CONN-REC
             END-STRING
+
             WRITE CONN-REC
             SET C-IX UP BY 1
         END-PERFORM
@@ -2077,13 +2098,55 @@ SAVE-ALL-CONNECTIONS.
     CLOSE CONNECTIONS
     EXIT.
 
+LOAD-ALL-REQUESTS.
+      MOVE 0 TO REQUESTS-COUNT
+      OPEN INPUT REQUESTS
+      PERFORM UNTIL 1 = 0
+           READ REQUESTS
+               AT END EXIT PERFORM
+           END-READ
+           IF REQUESTS-COUNT < MAX-REQUESTS
+                  ADD 1 TO REQUESTS-COUNT
+                  SET R-IX TO REQUESTS-COUNT
+                  UNSTRING REQ-REC DELIMITED BY "|"
+                      INTO R-SENDER (R-IX) R-RECEIVER (R-IX) R-STATUS (R-IX)
+                  END-UNSTRING
+                  MOVE FUNCTION TRIM(R-SENDER (R-IX))   TO R-SENDER (R-IX)
+                  MOVE FUNCTION TRIM(R-RECEIVER (R-IX)) TO R-RECEIVER (R-IX)
+                  MOVE FUNCTION TRIM(R-STATUS (R-IX))   TO R-STATUS (R-IX)
+           END-IF
+           END-PERFORM
+           CLOSE REQUESTS
+           EXIT.
+
+SAVE-ALL-REQUESTS.
+      OPEN OUTPUT REQUESTS
+      IF REQUESTS-COUNT > 0
+           SET R-IX TO 1
+           PERFORM UNTIL R-IX > REQUESTS-COUNT
+           MOVE SPACES TO REQ-REC
+           STRING
+               FUNCTION TRIM(R-SENDER (R-IX)) "|"
+               FUNCTION TRIM(R-RECEIVER (R-IX)) "|"
+               FUNCTION TRIM(R-STATUS (R-IX))
+               DELIMITED BY SIZE
+               INTO REQ-REC
+               END-STRING
+               WRITE REQ-REC
+               SET R-IX UP BY 1
+           END-PERFORM
+       END-IF
+       CLOSE REQUESTS
+       EXIT.
+
+
 *> Helper: get the other username for an ACCEPTED record (relative to CURRENT-USER)
 GET-OTHER-USER.
-    IF FUNCTION UPPER-CASE(FUNCTION TRIM(C-SENDER (C-IX))) =
+    IF FUNCTION UPPER-CASE(FUNCTION TRIM(C-USER1 (C-IX))) =
        FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
-        MOVE C-RECEIVER (C-IX) TO OTHER-USER
+        MOVE C-USER2 (C-IX) TO OTHER-USER
     ELSE
-        MOVE C-SENDER (C-IX)   TO OTHER-USER
+        MOVE C-USER1 (C-IX) TO OTHER-USER
     END-IF
     EXIT.
 
@@ -2111,13 +2174,13 @@ FIND-ANY-CONNECTION.
     IF CONN-COUNT > 0
         SET C-IX TO 1
         PERFORM UNTIL C-IX > CONN-COUNT
-            IF ( FUNCTION UPPER-CASE(FUNCTION TRIM(C-SENDER (C-IX))) =
+            IF ( FUNCTION UPPER-CASE(FUNCTION TRIM(C-USER1 (C-IX))) =
                  FUNCTION UPPER-CASE(FUNCTION TRIM(USER-A))
-             AND FUNCTION UPPER-CASE(FUNCTION TRIM(C-RECEIVER (C-IX))) =
+             AND FUNCTION UPPER-CASE(FUNCTION TRIM(C-USER2 (C-IX))) =
                  FUNCTION UPPER-CASE(FUNCTION TRIM(USER-B)) )
-             OR ( FUNCTION UPPER-CASE(FUNCTION TRIM(C-SENDER (C-IX))) =
+             OR ( FUNCTION UPPER-CASE(FUNCTION TRIM(C-USER1 (C-IX))) =
                  FUNCTION UPPER-CASE(FUNCTION TRIM(USER-B))
-             AND FUNCTION UPPER-CASE(FUNCTION TRIM(C-RECEIVER (C-IX))) =
+             AND FUNCTION UPPER-CASE(FUNCTION TRIM(C-USER2 (C-IX))) =
                  FUNCTION UPPER-CASE(FUNCTION TRIM(USER-A)) )
                 MOVE "Y" TO ANY-FOUND
                 EXIT PERFORM
@@ -2131,8 +2194,9 @@ FIND-ANY-CONNECTION.
 
 *> Create a pending request CURRENT-USER -> TARGET-USER
 SEND-FRIEND-REQUEST.
-    *> Ensure connections are current
+    *> Load both tables
     PERFORM LOAD-ALL-CONNECTIONS
+    PERFORM LOAD-ALL-REQUESTS
 
     *> 1) No self-add
     IF FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER)) =
@@ -2151,28 +2215,65 @@ SEND-FRIEND-REQUEST.
         EXIT PARAGRAPH
     END-IF
 
-    *> 3) No existing request/connection either direction
-    MOVE FUNCTION TRIM(CURRENT-USER) TO USER-A
-    MOVE FUNCTION TRIM(TARGET-USER)  TO USER-B
-    PERFORM FIND-ANY-CONNECTION
+    *> 3) Check for existing requests in REQUESTS-TABLE
+    MOVE "N" TO ANY-FOUND
+    IF REQUESTS-COUNT > 0
+        SET R-IX TO 1
+        PERFORM UNTIL R-IX > REQUESTS-COUNT
+            IF ( FUNCTION UPPER-CASE(FUNCTION TRIM(R-SENDER (R-IX))) =
+                 FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
+             AND FUNCTION UPPER-CASE(FUNCTION TRIM(R-RECEIVER (R-IX))) =
+                 FUNCTION UPPER-CASE(FUNCTION TRIM(TARGET-USER)) )
+             OR ( FUNCTION UPPER-CASE(FUNCTION TRIM(R-SENDER (R-IX))) =
+                 FUNCTION UPPER-CASE(FUNCTION TRIM(TARGET-USER))
+             AND FUNCTION UPPER-CASE(FUNCTION TRIM(R-RECEIVER (R-IX))) =
+                 FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER)) )
+                MOVE "Y" TO ANY-FOUND
+                EXIT PERFORM
+            ELSE
+                SET R-IX UP BY 1
+            END-IF
+        END-PERFORM
+    END-IF
+
+    *> 4) Check for existing connections in CONN-TABLE
+    IF ANY-FOUND = "N" AND CONN-COUNT > 0
+        SET C-IX TO 1
+        PERFORM UNTIL C-IX > CONN-COUNT
+            IF ( FUNCTION UPPER-CASE(FUNCTION TRIM(C-USER1 (C-IX))) =
+                 FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
+             AND FUNCTION UPPER-CASE(FUNCTION TRIM(C-USER2 (C-IX))) =
+                 FUNCTION UPPER-CASE(FUNCTION TRIM(TARGET-USER)) )
+             OR ( FUNCTION UPPER-CASE(FUNCTION TRIM(C-USER1 (C-IX))) =
+                 FUNCTION UPPER-CASE(FUNCTION TRIM(TARGET-USER))
+             AND FUNCTION UPPER-CASE(FUNCTION TRIM(C-USER2 (C-IX))) =
+                 FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER)) )
+                MOVE "Y" TO ANY-FOUND
+                EXIT PERFORM
+            ELSE
+                SET C-IX UP BY 1
+            END-IF
+        END-PERFORM
+    END-IF
+
     IF ANY-FOUND = "Y"
         MOVE "There is already a request or connection between you." TO MSG
         PERFORM ECHO-DISPLAY
         EXIT PARAGRAPH
     END-IF
 
-    *> 4) Append new PENDING record (sender=current, receiver=target)
-    IF CONN-COUNT < MAX-CONNECTIONS
-        ADD 1 TO CONN-COUNT
-        SET C-IX TO CONN-COUNT
-        MOVE FUNCTION TRIM(CURRENT-USER) TO C-SENDER   (C-IX)
-        MOVE FUNCTION TRIM(TARGET-USER)  TO C-RECEIVER (C-IX)
-        MOVE "PENDING"                   TO C-STATUS   (C-IX)
-        PERFORM SAVE-ALL-CONNECTIONS
+    *> 5) Add new PENDING request to REQUESTS-TABLE
+    IF REQUESTS-COUNT < MAX-REQUESTS
+        ADD 1 TO REQUESTS-COUNT
+        SET R-IX TO REQUESTS-COUNT
+        MOVE FUNCTION TRIM(CURRENT-USER) TO R-SENDER   (R-IX)
+        MOVE FUNCTION TRIM(TARGET-USER)  TO R-RECEIVER (R-IX)
+        MOVE "PENDING"                   TO R-STATUS   (R-IX)
+        PERFORM SAVE-ALL-REQUESTS
         MOVE "Friend request sent."      TO MSG
         PERFORM ECHO-DISPLAY
     ELSE
-        MOVE "Cannot send request: connections storage is full." TO MSG
+        MOVE "Cannot send request: requests storage is full." TO MSG
         PERFORM ECHO-DISPLAY
     END-IF
     EXIT PARAGRAPH.
@@ -2182,18 +2283,7 @@ SEND-FRIEND-REQUEST.
 CONNECTIONS-MENU.
     MOVE 0 TO CONN-MENU-CHOICE
     PERFORM UNTIL EOF-FLAG = "Y"
-        MOVE " " TO MSG
-        PERFORM ECHO-DISPLAY
-        MOVE "----- Connections -----" TO MSG
-        PERFORM ECHO-DISPLAY
-        MOVE "  1. View & Respond to Pending Requests" TO MSG
-        PERFORM ECHO-DISPLAY
-        MOVE "  2. View My Connections" TO MSG
-        PERFORM ECHO-DISPLAY
-        MOVE "  3. Go Back" TO MSG
-        PERFORM ECHO-DISPLAY
-        MOVE "Enter your choice:" TO MSG
-        PERFORM ECHO-DISPLAY
+        PERFORM DISPLAY-CONNECTIONS-MENU
 
         READ USER-IN
             AT END MOVE "Y" TO EOF-FLAG
@@ -2224,23 +2314,37 @@ CONNECTIONS-MENU.
     END-PERFORM
     EXIT.
 
+DISPLAY-CONNECTIONS-MENU.
+    MOVE " " TO MSG
+    PERFORM ECHO-DISPLAY
+    MOVE "----- Connections -----" TO MSG
+    PERFORM ECHO-DISPLAY
+    MOVE "  1. View & Respond to Pending Requests" TO MSG
+    PERFORM ECHO-DISPLAY
+    MOVE "  2. View My Connections" TO MSG
+    PERFORM ECHO-DISPLAY
+    MOVE "  3. Go Back" TO MSG
+    PERFORM ECHO-DISPLAY
+    MOVE "Enter your choice:" TO MSG
+    PERFORM ECHO-DISPLAY
+    EXIT.
+
 VIEW-AND-RESPOND-PENDING.
-    *> Load all records fresh each time
-    PERFORM LOAD-ALL-CONNECTIONS
+    PERFORM LOAD-ALL-REQUESTS
 
     MOVE 0 TO PENDING-COUNT
-    *> Build an index list of pending requests where CURRENT-USER is the receiver
-    IF CONN-COUNT > 0
-        SET C-IX TO 1
-        PERFORM UNTIL C-IX > CONN-COUNT
-            IF FUNCTION UPPER-CASE(FUNCTION TRIM(C-RECEIVER (C-IX))) =
+    *> Build index list of pending requests where CURRENT-USER is receiver
+    IF REQUESTS-COUNT > 0
+        SET R-IX TO 1
+        PERFORM UNTIL R-IX > REQUESTS-COUNT
+            IF FUNCTION UPPER-CASE(FUNCTION TRIM(R-RECEIVER (R-IX))) =
                FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
-               AND FUNCTION UPPER-CASE(FUNCTION TRIM(C-STATUS (C-IX))) = "PENDING"
+               AND FUNCTION UPPER-CASE(FUNCTION TRIM(R-STATUS (R-IX))) = "PENDING"
                 ADD 1 TO PENDING-COUNT
                 SET P-IX TO PENDING-COUNT
-                MOVE C-IX TO P-ROW (P-IX)
+                MOVE R-IX TO P-ROW (P-IX)
             END-IF
-            SET C-IX UP BY 1
+            SET R-IX UP BY 1
         END-PERFORM
     END-IF
 
@@ -2257,9 +2361,9 @@ VIEW-AND-RESPOND-PENDING.
     SET P-IX TO 1
     PERFORM PENDING-COUNT TIMES
         MOVE P-ROW (P-IX) TO I
-        SET C-IX TO I
+        SET R-IX TO I
         MOVE SPACES TO MSG
-        STRING P-IX ". From: " FUNCTION TRIM(C-SENDER (C-IX))
+        STRING P-IX ". From: " FUNCTION TRIM(R-SENDER (R-IX))
                DELIMITED BY SIZE INTO MSG
         END-STRING
         PERFORM ECHO-DISPLAY
@@ -2279,26 +2383,25 @@ VIEW-AND-RESPOND-PENDING.
         EXIT PARAGRAPH
     END-IF
 
-    *> Find the matching pending record
+    *> Find the exact request again - store the index immediately
     MOVE 0 TO I
-    MOVE 0 TO FOUND-FLAG
-    IF CONN-COUNT > 0
-        SET C-IX TO 1
-        PERFORM UNTIL C-IX > CONN-COUNT
-            IF FUNCTION UPPER-CASE(FUNCTION TRIM(C-RECEIVER (C-IX))) =
+    IF REQUESTS-COUNT > 0
+        SET R-IX TO 1
+        PERFORM UNTIL R-IX > REQUESTS-COUNT
+            IF FUNCTION UPPER-CASE(FUNCTION TRIM(R-RECEIVER (R-IX))) =
                FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
-            AND FUNCTION UPPER-CASE(FUNCTION TRIM(C-SENDER (C-IX))) =
+            AND FUNCTION UPPER-CASE(FUNCTION TRIM(R-SENDER (R-IX))) =
                FUNCTION UPPER-CASE(FUNCTION TRIM(RESP-USER))
-            AND FUNCTION UPPER-CASE(FUNCTION TRIM(C-STATUS (C-IX))) = "PENDING"
-                MOVE "Y" TO FOUND-FLAG
+            AND FUNCTION UPPER-CASE(FUNCTION TRIM(R-STATUS (R-IX))) = "PENDING"
+                MOVE R-IX TO I
                 EXIT PERFORM
             ELSE
-                SET C-IX UP BY 1
+                SET R-IX UP BY 1
             END-IF
         END-PERFORM
     END-IF
 
-    IF FOUND-FLAG NOT = "Y"
+    IF I = 0
         MOVE "No matching pending request from that user." TO MSG
         PERFORM ECHO-DISPLAY
         EXIT PARAGRAPH
@@ -2314,15 +2417,34 @@ VIEW-AND-RESPOND-PENDING.
 
     MOVE FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) TO RESP-ACT
 
+    *> Use the stored index I directly
+    SET R-IX TO I
+
     IF RESP-ACT = "ACCEPT"
-        MOVE "ACCEPTED" TO C-STATUS (C-IX)
-        PERFORM SAVE-ALL-CONNECTIONS
+        *> Update request status to ACCEPTED
+        SET R-IX TO I
+        MOVE "ACCEPTED" TO R-STATUS (R-IX)
+        PERFORM SAVE-ALL-REQUESTS
+
+        *> Add to established connections
+        PERFORM LOAD-ALL-CONNECTIONS
+        IF CONN-COUNT < MAX-CONNECTIONS
+            ADD 1 TO CONN-COUNT
+            SET C-IX TO CONN-COUNT
+
+            *> Get the usernames from the original input
+            MOVE FUNCTION TRIM(RESP-USER) TO C-USER1 (C-IX)
+            MOVE FUNCTION TRIM(CURRENT-USER) TO C-USER2 (C-IX)
+
+            PERFORM SAVE-ALL-CONNECTIONS
+        END-IF
+
         MOVE "Request accepted. You are now connected." TO MSG
         PERFORM ECHO-DISPLAY
     ELSE
         IF RESP-ACT = "REJECT"
-            MOVE "REJECTED" TO C-STATUS (C-IX)
-            PERFORM SAVE-ALL-CONNECTIONS
+            MOVE "REJECTED" TO R-STATUS (R-IX)
+            PERFORM SAVE-ALL-REQUESTS
             MOVE "Request rejected." TO MSG
             PERFORM ECHO-DISPLAY
         ELSE
@@ -2334,10 +2456,10 @@ VIEW-AND-RESPOND-PENDING.
 
 VIEW-MY-CONNECTIONS.
     PERFORM LOAD-ALL-CONNECTIONS
-    MOVE 0 TO I
-    MOVE 0 TO FOUND-FLAG
+    PERFORM LOAD-ALL-PROFILES
+    MOVE "N" TO FOUND-FLAG
 
-    MOVE "--- Your Connections ---" TO MSG
+    MOVE "--- Your Network ---" TO MSG
     PERFORM ECHO-DISPLAY
 
     IF CONN-COUNT = 0
@@ -2348,18 +2470,39 @@ VIEW-MY-CONNECTIONS.
 
     SET C-IX TO 1
     PERFORM UNTIL C-IX > CONN-COUNT
-        IF FUNCTION UPPER-CASE(FUNCTION TRIM(C-STATUS (C-IX))) = "ACCEPTED"
-        AND ( FUNCTION UPPER-CASE(FUNCTION TRIM(C-SENDER (C-IX))) =
-              FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
-           OR FUNCTION UPPER-CASE(FUNCTION TRIM(C-RECEIVER (C-IX))) =
-              FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER)) )
+        IF ( FUNCTION UPPER-CASE(FUNCTION TRIM(C-USER1 (C-IX))) =
+             FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
+          OR FUNCTION UPPER-CASE(FUNCTION TRIM(C-USER2 (C-IX))) =
+             FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER)) )
             MOVE "Y" TO FOUND-FLAG
-            PERFORM GET-OTHER-USER
-            MOVE SPACES TO MSG
-            STRING "- " FUNCTION TRIM(OTHER-USER)
-                   DELIMITED BY SIZE INTO MSG
-            END-STRING
-            PERFORM ECHO-DISPLAY
+
+            *> Get the other user's name
+            IF FUNCTION UPPER-CASE(FUNCTION TRIM(C-USER1 (C-IX))) =
+               FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
+                MOVE C-USER2 (C-IX) TO OTHER-USER
+            ELSE
+                MOVE C-USER1 (C-IX) TO OTHER-USER
+            END-IF
+
+            *> Find profile data for OTHER-USER
+            PERFORM FIND-USER-PROFILE
+
+            IF FOUND-FLAG = "Y"
+                MOVE SPACES TO MSG
+                STRING "Connected with: " FUNCTION TRIM(OTHER-USER)
+                       " (University: " FUNCTION TRIM(SP-UNIVERSITY (SP-IX))
+                       ", Major: " FUNCTION TRIM(SP-MAJOR (SP-IX)) ")"
+                       DELIMITED BY SIZE INTO MSG
+                END-STRING
+                PERFORM ECHO-DISPLAY
+            ELSE
+                MOVE SPACES TO MSG
+                STRING "Connected with: " FUNCTION TRIM(OTHER-USER)
+                       " (Profile not found)"
+                       DELIMITED BY SIZE INTO MSG
+                END-STRING
+                PERFORM ECHO-DISPLAY
+            END-IF
         END-IF
         SET C-IX UP BY 1
     END-PERFORM
@@ -2369,3 +2512,21 @@ VIEW-MY-CONNECTIONS.
         PERFORM ECHO-DISPLAY
     END-IF
     EXIT PARAGRAPH.
+
+*> Helper function to find profile for OTHER-USER
+FIND-USER-PROFILE.
+    MOVE "N" TO FOUND-FLAG
+    IF STORED-PROFILE-COUNT > 0
+        SET SP-IX TO 1
+        PERFORM UNTIL SP-IX > STORED-PROFILE-COUNT
+            IF FUNCTION UPPER-CASE(FUNCTION TRIM(SP-USERNAME (SP-IX))) =
+               FUNCTION UPPER-CASE(FUNCTION TRIM(OTHER-USER))
+                MOVE "Y" TO FOUND-FLAG
+                EXIT PERFORM
+            ELSE
+                SET SP-IX UP BY 1
+            END-IF
+        END-PERFORM
+    END-IF
+    EXIT.
+

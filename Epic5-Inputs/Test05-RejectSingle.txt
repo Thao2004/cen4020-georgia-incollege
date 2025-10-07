@@ -2,3 +2,5 @@
 testuser1
 Password1!
 6
+user2
+REJECT
