@@ -2363,10 +2363,10 @@ VIEW-AND-RESPOND-PENDING.
         MOVE 1 TO LIST-NUM
         SET P-IX TO 1
         PERFORM PENDING-COUNT TIMES
-            SET R-IX TO P-ROW (P-IX)
+            SET R-IX TO P-ROW (P-IX)                 *> 1) use the correct request row
 
-            MOVE LIST-NUM TO LIST-NUM-TXT
-            MOVE SPACES TO MSG
+            MOVE LIST-NUM TO LIST-NUM-TXT            *> 2) numeric -> text
+            MOVE SPACES TO MSG                       *> 3) clear output buffer
             STRING FUNCTION TRIM(LIST-NUM-TXT) ". From: "
                    FUNCTION TRIM(R-SENDER (R-IX))
                    DELIMITED BY SIZE INTO MSG
@@ -2376,17 +2376,22 @@ VIEW-AND-RESPOND-PENDING.
             ADD 1 TO LIST-NUM
             SET P-IX UP BY 1
         END-PERFORM
+
     END-IF
 
     *> Prompt to respond
     MOVE "Enter the sender's username to respond (blank to go back):" TO MSG
     PERFORM ECHO-DISPLAY
+
     READ USER-IN INTO USER-IN-REC
         AT END MOVE "Y" TO EOF-FLAG
     END-READ
-    IF EOF-FLAG = "Y" EXIT PARAGRAPH END-IF
+    IF EOF-FLAG = "Y"
+        EXIT PARAGRAPH
+    END-IF
 
-    IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+    *> Quietly return if blank (no error message)
+    IF USER-IN-REC = SPACES OR FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
         EXIT PARAGRAPH
     END-IF
 
