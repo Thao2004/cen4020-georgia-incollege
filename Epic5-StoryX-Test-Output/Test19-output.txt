@@ -12,7 +12,7 @@ Enter your choice:
 Please enter your username:
 Please enter your password:
 You have successfully logged in
-Welcome, tester1!
+Welcome, solo!
 
 =============================
      InCollege Main Menu
@@ -22,19 +22,9 @@ Welcome, tester1!
   3. Search for a job
   4. Find someone you know
   5. Learn a New Skill
-  6. Connections
+  6. View My Pending Connection Requests
+  7. View My Network
 =============================
-Enter your choice:
-
------ Connections -----
-  1. View & Respond to Pending Requests
-  2. View My Connections
-  3. Go Back
-Enter your choice:
-You have no pending friend requests.
-
------ Connections -----
-  1. View & Respond to Pending Requests
-  2. View My Connections
-  3. Go Back
-Enter your choice:
+Enter your choice: 
+--- Your Network ---
+You have no connections yet.

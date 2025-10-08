@@ -32,7 +32,7 @@ Welcome, u2!
   6. View My Pending Connection Requests
   7. View My Network
 =============================
-Enter your choice:
+Enter your choice: 
 --- Create/Edit Profile ---
 Enter First Name:
 Enter Last Name:
@@ -55,7 +55,7 @@ Profile saved successfully!
   6. View My Pending Connection Requests
   7. View My Network
 =============================
-Enter your choice:
+Enter your choice: 
 --- Find Someone You Know ---
 Enter First Name to search:
 Enter Last Name to search:
@@ -65,18 +65,5 @@ University: X University
 Major: CS
 Graduation Year: 2026
 Would you like to send a friend request? (1=Yes, 2=No)
-You cannot add yourself.
+Friend request sent.
 --------------------
-
-=============================
-     InCollege Main Menu
-=============================
-  1. Create/Edit My Profile
-  2. View My Profile
-  3. Search for a job
-  4. Find someone you know
-  5. Learn a New Skill
-  6. View My Pending Connection Requests
-  7. View My Network
-=============================
-Enter your choice:
