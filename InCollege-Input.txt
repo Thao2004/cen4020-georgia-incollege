@@ -2,3 +2,13 @@
 testuser1
 Password1!
 6
+notapendinguser
+6
+user2
+ACCEPT
+6
+user3
+REJECT
+6
+
+7
