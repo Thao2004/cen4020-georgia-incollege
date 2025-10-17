@@ -210,6 +210,8 @@ WORKING-STORAGE SECTION.
 
 01 FOUND-INDEX          PIC 99 VALUE 0.
 
+*> Job search functionality
+01 JOB-SEARCH-CHOICE PIC S9 VALUE 0.  *> Job search navigation menu
 
 PROCEDURE DIVISION.
 MAIN-PARA.
@@ -604,8 +606,7 @@ NAV-MENU-CHOICE.
            WHEN 2
                PERFORM VIEW-PROFILE
            WHEN 3
-               MOVE "Search for a job is under construction." TO MSG
-               PERFORM ECHO-DISPLAY
+               PERFORM JOB-SEARCH
            WHEN 4
                PERFORM FIND-SOMEONE-YOU-KNOW
            WHEN 5
@@ -620,6 +621,84 @@ NAV-MENU-CHOICE.
                PERFORM ECHO-DISPLAY
        END-EVALUATE
        EXIT.
+
+
+*> Job search menu integration
+JOB-SEARCH-MENU.
+       MOVE " " TO MSG          *> Add blank line
+       PERFORM ECHO-DISPLAY
+
+       MOVE "--- Post a New Job/Intership ---" TO MSG
+       PERFORM ECHO-DISPLAY
+
+       MOVE "1. Post a Job/Internship" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "2. Browse Jobs/Internships" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "3. Back to Main Menu" TO MSG
+       PERFORM ECHO-DISPLAY
+       EXIT.
+
+
+*> Job search selection
+JOB-SEARCH.
+       *> Reset choice each time this menu is shown
+       MOVE 0 TO JOB-SEARCH-CHOICE
+
+       *> Loop: repeat until user chooses Back (3) or EOF
+       PERFORM UNTIL JOB-SEARCH-CHOICE = 3 OR EOF-FLAG = "Y"
+           *> Show menu + prompt
+           PERFORM JOB-SEARCH-MENU
+           MOVE "Enter your choice:" TO MSG
+           PERFORM ECHO-DISPLAY
+
+
+           *> Read next line of input
+           READ USER-IN INTO USER-IN-REC
+               AT END MOVE "Y" TO EOF-FLAG
+           END-READ
+
+           IF EOF-FLAG = "Y"
+               EXIT PERFORM
+           END-IF
+
+           *> Skip blank lines quietly
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               CONTINUE
+           ELSE
+               *> Validate numeric input
+               IF FUNCTION TEST-NUMVAL(USER-IN-REC) = 0
+                   MOVE FUNCTION NUMVAL(USER-IN-REC) TO JOB-SEARCH-CHOICE
+               ELSE
+                   MOVE 999 TO JOB-SEARCH-CHOICE
+               END-IF
+
+               *> Handle choice
+               EVALUATE JOB-SEARCH-CHOICE
+                   WHEN 1
+                       PERFORM POST-JOB
+                   WHEN 2
+                       MOVE "Browse Jobs/Internships is under construction." TO MSG
+                       PERFORM ECHO-DISPLAY
+                   WHEN 3
+                       MOVE "Returning to main menu..." TO MSG
+                       PERFORM ECHO-DISPLAY
+                       EXIT PERFORM
+                   WHEN OTHER
+                       MOVE "Invalid choice, please try again." TO MSG
+                       PERFORM ECHO-DISPLAY
+               END-EVALUATE
+           END-IF
+       END-PERFORM
+       EXIT.
+
+
+POST-JOB.
+       MOVE "POST JOB is under construction." TO MSG
+       PERFORM ECHO-DISPLAY
+
+       EXIT.
+
 
 CREATE-PROFILE.
        MOVE "--- Create/Edit Profile ---" TO MSG
@@ -2554,4 +2633,5 @@ FIND-USER-PROFILE.
         END-PERFORM
     END-IF
     EXIT.
+
 
