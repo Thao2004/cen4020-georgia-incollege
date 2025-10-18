@@ -1,0 +1,12 @@
+1
+u1
+Passw0rd!
+3
+1
+Dev Intern
+This is an extremely long description intended to exceed the two-hundred character limit imposed by the system. It keeps going with more filler content to ensure the length constraint is violated decisively for testing purposes, demonstrating the correct error message and re-prompt behavior.
+Short valid description.
+ACME Corp
+Tampa
+120000
+3
