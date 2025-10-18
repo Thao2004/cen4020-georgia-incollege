@@ -210,6 +210,14 @@ WORKING-STORAGE SECTION.
 
 01 FOUND-INDEX          PIC 99 VALUE 0.
 
+*> Job search functionality
+01 JOB-SEARCH-CHOICE PIC S9 VALUE 0.  *> Job search navigation menu
+01 JOB-TITLE         PIC X(80).           *> Job title
+01 JOB-DESC          PIC X(200).          *> Job description (max 200 characters)
+01 JOB-EMPLOYER      PIC X(80).           *> Employer name
+01 JOB-LOCATION      PIC X(80).           *> Job location
+01 JOB-SALARY        PIC X(40).           *> Job salary (optional)
+01 JOB-DESC-TEMP     PIC X(512).
 
 PROCEDURE DIVISION.
 MAIN-PARA.
@@ -604,8 +612,7 @@ NAV-MENU-CHOICE.
            WHEN 2
                PERFORM VIEW-PROFILE
            WHEN 3
-               MOVE "Search for a job is under construction." TO MSG
-               PERFORM ECHO-DISPLAY
+               PERFORM JOB-SEARCH
            WHEN 4
                PERFORM FIND-SOMEONE-YOU-KNOW
            WHEN 5
@@ -620,6 +627,186 @@ NAV-MENU-CHOICE.
                PERFORM ECHO-DISPLAY
        END-EVALUATE
        EXIT.
+
+
+*> Job search menu integration
+JOB-SEARCH-MENU.
+       MOVE " " TO MSG          *> Add blank line
+       PERFORM ECHO-DISPLAY
+
+       MOVE "--- Job Search/Intership Menu ---" TO MSG
+       PERFORM ECHO-DISPLAY
+
+       MOVE "1. Post a Job/Internship" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "2. Browse Jobs/Internships" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "3. Back to Main Menu" TO MSG
+       PERFORM ECHO-DISPLAY
+       EXIT.
+
+
+*> Job search selection
+JOB-SEARCH.
+       *> Reset choice each time this menu is shown
+       MOVE 0 TO JOB-SEARCH-CHOICE
+
+       *> Loop: repeat until user chooses Back (3) or EOF
+       PERFORM UNTIL JOB-SEARCH-CHOICE = 3 OR EOF-FLAG = "Y"
+           *> Show menu + prompt
+           PERFORM JOB-SEARCH-MENU
+           MOVE "Enter your choice:" TO MSG
+           PERFORM ECHO-DISPLAY
+
+
+           *> Read next line of input
+           READ USER-IN INTO USER-IN-REC
+               AT END MOVE "Y" TO EOF-FLAG
+           END-READ
+
+           IF EOF-FLAG = "Y"
+               EXIT PERFORM
+           END-IF
+
+           *> Skip blank lines quietly
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               CONTINUE
+           ELSE
+               *> Validate numeric input
+               IF FUNCTION TEST-NUMVAL(USER-IN-REC) = 0
+                   MOVE FUNCTION NUMVAL(USER-IN-REC) TO JOB-SEARCH-CHOICE
+               ELSE
+                   MOVE 999 TO JOB-SEARCH-CHOICE
+               END-IF
+
+               *> Handle choice
+               EVALUATE JOB-SEARCH-CHOICE
+                   WHEN 1
+                       PERFORM POST-JOB
+                   WHEN 2
+                       MOVE "Browse Jobs/Internships is under construction." TO MSG
+                       PERFORM ECHO-DISPLAY
+                   WHEN 3
+                       MOVE "Returning to main menu..." TO MSG
+                       PERFORM ECHO-DISPLAY
+                       EXIT PERFORM
+                   WHEN OTHER
+                       MOVE "Invalid choice, please try again." TO MSG
+                       PERFORM ECHO-DISPLAY
+               END-EVALUATE
+           END-IF
+       END-PERFORM
+       EXIT.
+
+
+POST-JOB.
+       MOVE "--- Post a New Job/Internship ---" TO MSG
+       PERFORM ECHO-DISPLAY
+
+       *> Prompt for Job Title
+       PERFORM UNTIL 1 = 0
+           MOVE "Enter Job Title: " TO MSG
+           PERFORM ECHO-DISPLAY
+           READ USER-IN
+               AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
+           END-READ
+
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               MOVE "Job Title is required." TO MSG
+               PERFORM ECHO-DISPLAY
+               CONTINUE
+           ELSE
+               MOVE FUNCTION TRIM(USER-IN-REC) TO JOB-TITLE
+               EXIT PERFORM
+           END-IF
+       END-PERFORM
+       IF EOF-FLAG = "Y" EXIT PARAGRAPH END-IF
+
+       *> Prompt for Job Description (maximum 200 characters)
+       PERFORM UNTIL 1 = 0
+           MOVE "Enter Description (max 200 chars):" TO MSG
+           PERFORM ECHO-DISPLAY
+
+           READ USER-IN
+               AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
+           END-READ
+
+           MOVE FUNCTION TRIM(USER-IN-REC) TO JOB-DESC-TEMP
+           MOVE FUNCTION LENGTH(FUNCTION TRIM(JOB-DESC-TEMP)) TO INPUT-LEN
+
+           IF INPUT-LEN = 0
+               MOVE "Description is required." TO MSG
+               PERFORM ECHO-DISPLAY
+           ELSE
+               IF INPUT-LEN > 200
+                   MOVE "Description must be 200 characters or less." TO MSG
+                   PERFORM ECHO-DISPLAY
+               ELSE
+                   MOVE JOB-DESC-TEMP TO JOB-DESC
+                   EXIT PERFORM
+               END-IF
+           END-IF
+       END-PERFORM
+       IF EOF-FLAG = "Y" EXIT PARAGRAPH END-IF
+
+       *> Prompt for Employer
+       PERFORM UNTIL 1 = 0
+           MOVE "Enter Employer Name: " TO MSG
+           PERFORM ECHO-DISPLAY
+
+           READ USER-IN
+               AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
+           END-READ
+
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               MOVE "Employer Name is required." TO MSG
+               PERFORM ECHO-DISPLAY
+               CONTINUE
+           ELSE
+               MOVE FUNCTION TRIM(USER-IN-REC) TO JOB-EMPLOYER
+               EXIT PERFORM
+           END-IF
+       END-PERFORM
+       IF EOF-FLAG = "Y" EXIT PARAGRAPH END-IF
+
+       *> Prompt for Location
+       PERFORM UNTIL 1 = 0
+           MOVE "Enter Location:" TO MSG
+           PERFORM ECHO-DISPLAY
+           READ USER-IN
+               AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
+           END-READ
+
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               MOVE "Location is required." TO MSG
+               PERFORM ECHO-DISPLAY
+               CONTINUE
+           ELSE
+               MOVE FUNCTION TRIM(USER-IN-REC) TO JOB-LOCATION
+               EXIT PERFORM
+           END-IF
+       END-PERFORM
+       IF EOF-FLAG = "Y" EXIT PARAGRAPH END-IF
+
+       *> Prompt for Salary (Optional)
+       MOVE "Enter Salary (optional, enter 'NONE' to skip):" TO MSG
+       PERFORM ECHO-DISPLAY
+       READ USER-IN
+           AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
+       END-READ
+
+       IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "NONE"
+           MOVE SPACES TO JOB-SALARY
+       ELSE
+           MOVE FUNCTION TRIM(USER-IN-REC) TO JOB-SALARY
+       END-IF
+       IF EOF-FLAG = "Y" EXIT PARAGRAPH END-IF
+
+       *> Confirmation message
+       MOVE "Job posted successfully!" TO MSG
+       PERFORM ECHO-DISPLAY
+       EXIT PARAGRAPH.
+
 
 CREATE-PROFILE.
        MOVE "--- Create/Edit Profile ---" TO MSG
@@ -2554,4 +2741,5 @@ FIND-USER-PROFILE.
         END-PERFORM
     END-IF
     EXIT.
+
 

@@ -5,7 +5,7 @@ Enter your choice:
 Please enter your username:
 Please enter your password:
 You have successfully logged in
-Welcome, testuser1!
+Welcome, u1!
 
 =============================
      InCollege Main Menu
@@ -19,8 +19,28 @@ Welcome, testuser1!
   7. View My Network
 =============================
 Enter your choice:
---- Your Network ---
-Connected with: user2 (University: Another University, Major: Marketing)
+
+--- Job Search/Intership Menu ---
+1. Post a Job/Internship
+2. Browse Jobs/Internships
+3. Back to Main Menu
+Enter your choice:
+--- Post a New Job/Internship ---
+Enter Job Title:
+Enter Description (max 200 chars):
+Description must be 200 characters or less.
+Enter Description (max 200 chars):
+Enter Employer Name:
+Enter Location:
+Enter Salary (optional, enter 'NONE' to skip):
+Job posted successfully!
+
+--- Job Search/Intership Menu ---
+1. Post a Job/Internship
+2. Browse Jobs/Internships
+3. Back to Main Menu
+Enter your choice:
+Returning to main menu...
 
 =============================
      InCollege Main Menu

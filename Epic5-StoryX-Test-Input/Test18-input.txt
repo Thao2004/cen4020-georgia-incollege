@@ -1,8 +1,0 @@
-1
-u2
-Passw0rd!
-6
-u1
-ACCEPT
-6
-7

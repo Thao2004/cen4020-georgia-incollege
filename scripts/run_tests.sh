@@ -68,8 +68,8 @@ parse_common_flags() {
 
 init_cmd() {
     parse_common_flags "$@"
-    local INPUT_DIR="Epic${EPIC}-${STORY}-Input"
-    local OUTPUT_DIR="Epic${EPIC}-${STORY}-Output"
+    local INPUT_DIR="Epic${EPIC}-${STORY}-Test-Input"
+    local OUTPUT_DIR="Epic${EPIC}-${STORY}-Test-Output"
 
     if [[ "$REPLACE_ALL" == "1" ]]; then
         rm -rf "$INPUT_DIR" "$OUTPUT_DIR"
@@ -86,8 +86,8 @@ init_cmd() {
 
 run_cmd() {
     parse_common_flags "$@"
-    local INPUT_DIR="Epic${EPIC}-${STORY}-Input"
-    local OUTPUT_DIR="Epic${EPIC}-${STORY}-Output"
+    local INPUT_DIR="Epic${EPIC}-${STORY}-Test-Input"
+    local OUTPUT_DIR="Epic${EPIC}-${STORY}-Test-Output"
     local RESET_STATE=$([[ "$NO_RESET" == "1" ]] && echo "0" || echo "1")
     local VERIFY=$([[ "$NO_VERIFY" == "1" ]] && echo "0" || echo "1")
 
@@ -193,8 +193,8 @@ run_cmd() {
 
 clean_cmd() {
     parse_common_flags "$@"
-    local INPUT_DIR="Epic${EPIC}-${STORY}-Input"
-    local OUTPUT_DIR="Epic${EPIC}-${STORY}-Output"
+    local INPUT_DIR="Epic${EPIC}-${STORY}-Test-Input"
+    local OUTPUT_DIR="Epic${EPIC}-${STORY}-Test-Output"
 
     if [[ "$YES" != "1" ]]; then
         read -r -p "Delete '$INPUT_DIR' and '$OUTPUT_DIR'? [y/N] " ans
