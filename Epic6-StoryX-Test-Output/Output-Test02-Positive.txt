@@ -27,16 +27,8 @@ Enter your choice:
 Enter your choice:
 --- Post a New Job/Internship ---
 Enter Job Title:
-Job Title is required.
-Enter Job Title:
-Enter Description (max 200 chars):
-Description is required.
 Enter Description (max 200 chars):
 Enter Employer Name:
-Employer Name is required.
-Enter Employer Name:
-Enter Location:
-Location is required.
 Enter Location:
 Enter Salary (optional, enter 'NONE' to skip):
 Job posted successfully!
