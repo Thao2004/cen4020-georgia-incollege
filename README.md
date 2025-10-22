@@ -1,14 +1,15 @@
 # InCollege Project
 
-This project is an implementation of the InCollege system in COBOL, developed incrementally through Epics 1–5.  
+This project is an implementation of the InCollege system in COBOL, developed incrementally through Epics 1–6.
 
-## Current features include  
+## Current features include
 
 **Epic 1:** Create up to 5 accounts (unique username + validated password), unlimited login attempts.
 **Epic 2:** Create, edit, and view user profiles (About Me, Experience, Education).
 **Epic 3:** Search for users by full name and view their profiles.
 **Epic 4:** Send, view, accept, and reject connection requests.
 **Epic 5:** Finalized connection system. Users can manage pending requests (accept/reject), view their established network, and all inputs/outputs are file-based and persisted.
+**Epic 6:** Job/Internship posting functionality. Users can post job listings with title, description, employer, location, and optional salary. All postings are persistently stored with unique auto-incrementing IDs.
 
 ## Persistence
 
@@ -156,21 +157,26 @@ make run
 
 ### Example 3: Create/Edit Profile
 
-After logging in, choose option `1` from the main menu.  
-Required fields: first name, last name, university, major, graduation year.  
-Optional fields: About Me (200 chars max), up to 3 experiences, up to 3 education entries.  
+After logging in, choose option `1` from the main menu.
+Required fields: first name, last name, university, major, graduation year.
+Optional fields: About Me (200 chars max), up to 3 experiences, up to 3 education entries.
 
 ### Example 4: Search for User and Send Connection Request
 
-After logging in, choose option `4` (Find someone you know).  
-Enter first and last name exactly. If found, the profile is displayed.  
-You may then choose to send a connection request.  
-Requests are saved in `connections.dat` with status `PENDING`.  
+After logging in, choose option `4` (Find someone you know).
+Enter first and last name exactly. If found, the profile is displayed.
+You may then choose to send a connection request.
+Requests are saved in `connections.dat` with status `PENDING`.
 
 ### Example 5: View and Respond to Pending Requests
 
-From the main menu, choose `5` (View My Pending Connection Requests).  
-You can accept or reject requests. Accepted connections move to your list; rejected ones disappear.  
+From the main menu, choose `5` (View My Pending Connection Requests).
+You can accept or reject requests. Accepted connections move to your list; rejected ones disappear.
+
+### Example 6: Post a Job/Internship
+After logging in, choose option 3 (Search for a job) from the main menu.
+Select option 1 (Post a Job/Internship) from the Job Search menu.
+Enter the following required information: Job Title, Description, Employer Name, Location, Salary (optional - enter "NONE" to skip).
 
 ## Data Files
 
@@ -178,8 +184,9 @@ You can accept or reject requests. Accepted connections move to your list; rejec
 **InCollege-Output.txt**: Contains a copy of all prompts and messages shown in the terminal.
 **accounts.dat**: Stores created accounts in the format `username, password`
 **connections.dat**: Stores connection requests and accepted connections.
-**profiles.dat**: Stores user profiles (basic info, About Me, experiences, education).  
+**profiles.dat**: Stores user profiles (basic info, About Me, experiences, education).
 **requests.dat**: Stores pending and processed connection requests
+**job-postings.dat**: Stores job and internship postings in format: Job-ID|Title|Description|Employer|Location|Salary
 
 ## Cleaning Up
 
@@ -203,13 +210,19 @@ make clean
 ├── accounts.dat                # Account storage (generated)
 ├── profiles.dat                # Profile storage (generated)
 ├── connections.dat             # Connection requests & connections (generated)
+├── requests.dat                # Pending connection requests (generated)
+├── job-postings.dat            # Job/internship postings (generated)
 ├── InCollege-Input.txt         # Input file (edit this to test)
 ├── InCollege-Output.txt        # Output log (generated)
 ├── Epic5-StoryX-Test-Input     # Test input folder
-│   └──Test01-....txt           # Test output folder
-├── Epic5-StoryX-Test-Output    # Test output files
 │   └──Test01-....txt           # Test input files
+├── Epic5-StoryX-Test-Output    # Test output folder
+│   └──Test01-....txt           # Test output files
+├── Epic6-StoryX-Test-Input     # Epic 6 test input folder
+│   └──Test01-....txt           # Job posting test input files
+├── Epic6-StoryX-Test-Output    # Epic 6 test output folder
+│   └──Test01-....txt           # Job posting test output files
 ├── InCollege-Test.txt          # Test file
-├── Makefile                    
+├── Makefile
 └── README.md
 ```

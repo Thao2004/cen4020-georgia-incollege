@@ -1,15 +1,15 @@
 2
-eric
-Great!2025
+testuser
+SecurePass1!
 1
-eric
-Great!2025
+testuser
+SecurePass1!
 3
 1
-Mobile App Intern
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-A valid description under the 200 character limit.
-AppCo
-Denver, CO
-NONE
+Software Engineering Intern
+Develop and test software applications for cloud-based systems. Work with senior engineers on real-world projects.
+Tech Innovations Inc
+San Francisco, CA
+$35/hour
+2
 3
