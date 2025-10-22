@@ -1,0 +1,16 @@
+Run order for tests 5-9:
+
+1. Run Test 5 (Input-Test5-EndToEnd-FirstJob.txt)
+2. Run Test 6A (Input-Test6-MultiUser-RunA-bob.txt)
+3. Run Test 6B (Input-Test6-MultiUser-RunB-charlie.txt)
+- These three tests share data. Do NOT clear .dat files between them.
+
+4. Clear all .dat files.
+
+5. Run Test 7 (Input-Test7-Persistence-RunA-diana.txt)
+6. Run Test 8 (Input-Test8-Persistence-RunB-diana.txt)
+- These two tests share data. Do NOT clear .dat files between them.
+
+7. Clear all .dat files.
+
+8. Run Test 9 (Input-Test9-Validation-OverlongDescription.txt)
