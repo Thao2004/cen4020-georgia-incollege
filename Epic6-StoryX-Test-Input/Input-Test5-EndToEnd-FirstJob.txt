@@ -1,0 +1,14 @@
+2
+alice
+Abcd!234
+1
+alice
+Abcd!234
+3
+1
+Junior Developer
+Build student features for the InCollege platform.
+InCollege Inc
+Tampa, FL
+$60k
+3

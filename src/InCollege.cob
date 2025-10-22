@@ -25,6 +25,9 @@ FILE-CONTROL.
     *> Persistent storage for friend requests
     SELECT OPTIONAL REQUESTS ASSIGN TO 'requests.dat'
        ORGANIZATION IS LINE SEQUENTIAL.
+    *> Persistent storage for job/internship postings
+    SELECT OPTIONAL JOB-POSTINGS ASSIGN TO 'job-postings.dat'
+       ORGANIZATION IS LINE SEQUENTIAL.
 
 
 DATA DIVISION.
@@ -41,6 +44,8 @@ FD CONNECTIONS.
 01 CONN-REC        PIC X(80).      *> One line: "user1,user2 (established connections only)"
 FD REQUESTS.
 01 REQ-REC         PIC X(80).      *> One line: "sender|receiver|status"
+FD JOB-POSTINGS.
+01 JOB-POST-REC    PIC X(512).     *> One line: job posting data (Job-ID|Title|Description|Employer|Location|Salary)
 
 WORKING-STORAGE SECTION.
 01 MSG             PIC X(80).      *> Reusable message buffer for display/logging
@@ -218,6 +223,19 @@ WORKING-STORAGE SECTION.
 01 JOB-LOCATION      PIC X(80).           *> Job location
 01 JOB-SALARY        PIC X(40).           *> Job salary (optional)
 01 JOB-DESC-TEMP     PIC X(512).
+
+*> [Epic 6][Story 4] Job Posting Data Structure
+*> Structure for persisting job/internship postings to job-postings.dat
+*> Format: Job-ID|Title|Description|Employer|Location|Salary
+*> - Job-ID: Unique auto-incrementing identifier (starts at 1)
+*> - Title: Job title (up to 80 chars)
+*> - Description: Job description (up to 200 chars)
+*> - Employer: Employer name (up to 80 chars)
+*> - Location: Job location (up to 80 chars)
+*> - Salary: Optional salary info (up to 40 chars, empty if not provided)
+01 NEXT-JOB-ID       PIC 9(5) VALUE 1.    *> Auto-incrementing Job-ID (max 99999 jobs)
+01 JOB-ID-TEXT       PIC X(5).            *> Job-ID converted to text for file I/O
+01 JOB-POSTING-COUNT PIC 9(5) VALUE 0.    *> Total number of job postings
 
 PROCEDURE DIVISION.
 MAIN-PARA.
@@ -792,7 +810,9 @@ POST-JOB.
        MOVE "Enter Salary (optional, enter 'NONE' to skip):" TO MSG
        PERFORM ECHO-DISPLAY
        READ USER-IN
-           AT END MOVE "Y" TO EOF-FLAG EXIT PARAGRAPH
+           AT END
+               MOVE "Y" TO EOF-FLAG
+               MOVE "NONE" TO USER-IN-REC
        END-READ
 
        IF FUNCTION UPPER-CASE(FUNCTION TRIM(USER-IN-REC)) = "NONE"
@@ -800,7 +820,9 @@ POST-JOB.
        ELSE
            MOVE FUNCTION TRIM(USER-IN-REC) TO JOB-SALARY
        END-IF
-       IF EOF-FLAG = "Y" EXIT PARAGRAPH END-IF
+
+       *> [Epic 6][Story 5] Call persistence module to save the job posting
+       PERFORM WRITE-JOB-POSTING
 
        *> Confirmation message
        MOVE "Job posted successfully!" TO MSG
@@ -930,7 +952,7 @@ GET-YEAR.
            END-IF
 
            *> Check for decimal point first - reject if found
-           IF FUNCTION SUBSTITUTE(USER-IN-REC, ".", "") NOT = USER-IN-REC
+           IF FUNCTION SUBSTITUTE(USER-IN-REC, ".", " ") NOT = USER-IN-REC
                *> Input contains decimal point - reject it
                CONTINUE
            ELSE
@@ -1922,6 +1944,79 @@ SAVE-ALL-PROFILES.
        END-IF
 
        CLOSE PROFILES
+       EXIT.
+
+
+*> =========================
+*> [Epic 6][Story 4 & 5] Job Posting Persistence
+*> =========================
+
+*> Load existing job postings and determine the next Job-ID
+*> This module reads job-postings.dat to find the highest Job-ID
+*> and sets NEXT-JOB-ID to be one greater for the next posting.
+LOAD-JOB-POSTINGS.
+       MOVE 0 TO JOB-POSTING-COUNT
+       MOVE 1 TO NEXT-JOB-ID
+
+       *> Open the job postings file for reading
+       OPEN INPUT JOB-POSTINGS
+
+       *> Read through all existing postings to count them and find max ID
+       PERFORM UNTIL 1 = 0
+           READ JOB-POSTINGS
+               AT END EXIT PERFORM
+           END-READ
+
+           *> Extract Job-ID from the record (first field before |)
+           UNSTRING JOB-POST-REC DELIMITED BY "|"
+               INTO JOB-ID-TEXT
+           END-UNSTRING
+
+           *> Increment count and track the highest Job-ID
+           ADD 1 TO JOB-POSTING-COUNT
+           IF FUNCTION NUMVAL(JOB-ID-TEXT) >= NEXT-JOB-ID
+               COMPUTE NEXT-JOB-ID = FUNCTION NUMVAL(JOB-ID-TEXT) + 1
+           END-IF
+       END-PERFORM
+
+       CLOSE JOB-POSTINGS
+       EXIT.
+
+
+*> [Epic 6][Story 5] Write a job posting to persistent storage
+*> This module accepts job data from JOB-TITLE, JOB-DESC, JOB-EMPLOYER,
+*> JOB-LOCATION, and JOB-SALARY, generates a unique Job-ID, and appends
+*> the posting to job-postings.dat.
+*> File format: Job-ID|Title|Description|Employer|Location|Salary
+WRITE-JOB-POSTING.
+       *> First, load existing postings to determine the next Job-ID
+       PERFORM LOAD-JOB-POSTINGS
+
+       *> Convert NEXT-JOB-ID to text for file writing
+       MOVE NEXT-JOB-ID TO JOB-ID-TEXT
+
+       *> Open file in EXTEND mode to append new posting
+       OPEN EXTEND JOB-POSTINGS
+
+       *> Build the job posting record
+       MOVE SPACES TO JOB-POST-REC
+       STRING FUNCTION TRIM(JOB-ID-TEXT) "|"
+              FUNCTION TRIM(JOB-TITLE) "|"
+              FUNCTION TRIM(JOB-DESC) "|"
+              FUNCTION TRIM(JOB-EMPLOYER) "|"
+              FUNCTION TRIM(JOB-LOCATION) "|"
+              FUNCTION TRIM(JOB-SALARY)
+              DELIMITED BY SIZE INTO JOB-POST-REC
+       END-STRING
+
+       *> Write the job posting to file
+       WRITE JOB-POST-REC
+
+       *> Close the file
+       CLOSE JOB-POSTINGS
+
+       *> Increment the job ID for the next posting
+       ADD 1 TO NEXT-JOB-ID
        EXIT.
 
 
