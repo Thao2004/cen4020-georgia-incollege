@@ -3,12 +3,8 @@ Welcome to InCollege!
 2. Create New Account
 Enter your choice:
 Please enter your username:
-Username already exists.
-Welcome to InCollege!
-1. Log In
-2. Create New Account
-Enter your choice:
-Invalid choice.
+Please enter your password:
+Account created.
 Welcome to InCollege!
 1. Log In
 2. Create New Account
@@ -16,8 +12,7 @@ Enter your choice:
 Please enter your username:
 Please enter your password:
 You have successfully logged in
-Welcome, testuser!
-
+Welcome, AmyGeorgia!
 =============================
      InCollege Main Menu
 =============================
@@ -30,7 +25,6 @@ Welcome, testuser!
   7. View My Network
 =============================
 Enter your choice:
-
 --- Job Search/Intership Menu ---
 1. Post a Job/Internship
 2. Browse Jobs/Internships
@@ -44,11 +38,18 @@ Enter your choice:
 -----------------------------
 Enter job number to view details, or 0 to go back:
 --- Job Details ---
-Title: Software Intern
-Description: Develop tools for internal testing and automation.
-Employer: TechCorp
-Location: New York, NY
-Salary: $25/hour
+Title: Software Engineering Intern
+Description: Develop and test software applications for cloud-based systems.
+Work with senior engineers on real-world projects.
+Employer: Tech Innovations Inc
+Location: San Francisco, CA
+Salary: $35/hour
+-----------------------------
+1. Apply for this Job
+2. Back to Job List
+Enter your choice:
+Your application for Software Engineering Intern at Tech Innovations Inc has
+been submitted.
 --- Available Job Listings ---
 1. Software Engineering Intern at Tech Innovations Inc (San Francisco, CA)
 2. Software Intern at TechCorp (New York, NY)
@@ -56,3 +57,8 @@ Salary: $25/hour
 4. Marketing Specialist at BrandInc (Chicago, IL)
 -----------------------------
 Enter job number to view details, or 0 to go back:
+--- Job Search/Intership Menu ---
+1. Post a Job/Internship
+2. Browse Jobs/Internships
+3. Back to Main Menu
+Enter your choice:
