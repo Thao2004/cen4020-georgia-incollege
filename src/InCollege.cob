@@ -237,6 +237,12 @@ WORKING-STORAGE SECTION.
 01 JOB-ID-TEXT       PIC X(5).            *> Job-ID converted to text for file I/O
 01 JOB-POSTING-COUNT PIC 9(5) VALUE 0.    *> Total number of job postings
 
+*> Browse jobs functionality
+01 JOB-LIST-COUNT   PIC 9 VALUE 0.
+01 JOB-SELECT       PIC 9(5) VALUE 0.
+01 JOB-NTH          PIC 9(5) VALUE 0.
+
+
 PROCEDURE DIVISION.
 MAIN-PARA.
         *> Open input/output streams
@@ -702,8 +708,7 @@ JOB-SEARCH.
                    WHEN 1
                        PERFORM POST-JOB
                    WHEN 2
-                       MOVE "Browse Jobs/Internships is under construction." TO MSG
-                       PERFORM ECHO-DISPLAY
+                       PERFORM BROWSE-JOBS
                    WHEN 3
                        MOVE "Returning to main menu..." TO MSG
                        PERFORM ECHO-DISPLAY
@@ -827,6 +832,152 @@ POST-JOB.
        *> Confirmation message
        MOVE "Job posted successfully!" TO MSG
        PERFORM ECHO-DISPLAY
+       EXIT PARAGRAPH.
+
+
+BROWSE-JOBS.
+       PERFORM UNTIL 1 = 0
+           MOVE "--- Available Job Listings ---" TO MSG
+           PERFORM ECHO-DISPLAY
+
+           MOVE 0 TO JOB-LIST-COUNT
+
+           OPEN INPUT JOB-POSTINGS
+           PERFORM UNTIL 1 = 0
+               READ JOB-POSTINGS
+                   AT END EXIT PERFORM
+               END-READ
+
+               *> Parse: Job-ID|Title|Description|Employer|Location|Salary
+               UNSTRING JOB-POST-REC DELIMITED BY "|"
+                   INTO JOB-ID-TEXT
+                        JOB-TITLE
+                        JOB-DESC
+                        JOB-EMPLOYER
+                        JOB-LOCATION
+                        JOB-SALARY
+               END-UNSTRING
+
+               *> Show only well-formed rows (require Title)
+               IF FUNCTION LENGTH(FUNCTION TRIM(JOB-TITLE)) > 0
+                   ADD 1 TO JOB-LIST-COUNT
+                   MOVE SPACES TO MSG
+                   STRING FUNCTION TRIM(JOB-LIST-COUNT) ". "
+                          FUNCTION TRIM(JOB-TITLE) " at "
+                          FUNCTION TRIM(JOB-EMPLOYER) " ("
+                          FUNCTION TRIM(JOB-LOCATION) ")"
+                          DELIMITED BY SIZE
+                     INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+               END-IF
+           END-PERFORM
+           CLOSE JOB-POSTINGS
+
+           IF JOB-LIST-COUNT = 0
+               MOVE "No job listings are available yet." TO MSG
+               PERFORM ECHO-DISPLAY
+               EXIT PARAGRAPH
+           END-IF
+
+           MOVE "-----------------------------" TO MSG
+           PERFORM ECHO-DISPLAY
+           MOVE "Enter job number to view details, or 0 to go back:" TO MSG
+           PERFORM ECHO-DISPLAY
+
+           READ USER-IN INTO USER-IN-REC
+               AT END MOVE "Y" TO EOF-FLAG
+           END-READ
+           IF EOF-FLAG = "Y" EXIT PARAGRAPH END-IF
+
+           *> Blank => re-show list
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               CONTINUE
+           END-IF
+
+           *> Validate numeric input
+           IF FUNCTION TEST-NUMVAL(USER-IN-REC) = 0
+               MOVE FUNCTION NUMVAL(USER-IN-REC) TO JOB-SELECT
+           ELSE
+               MOVE 99999 TO JOB-SELECT
+           END-IF
+
+           *> 0 => back to previous menu
+           IF JOB-SELECT = 0
+               EXIT PARAGRAPH
+           END-IF
+
+           *> Range check
+           IF JOB-SELECT < 1 OR JOB-SELECT > JOB-LIST-COUNT
+               MOVE "Invalid choice. Please enter a number from the list or 0 to go back." TO MSG
+               PERFORM ECHO-DISPLAY
+               CONTINUE
+           END-IF
+
+           *> Re-scan file to fetch the Nth valid row and show details
+           MOVE 0 TO JOB-NTH
+           OPEN INPUT JOB-POSTINGS
+           PERFORM UNTIL 1 = 0
+               READ JOB-POSTINGS
+                   AT END EXIT PERFORM
+               END-READ
+
+               UNSTRING JOB-POST-REC DELIMITED BY "|"
+                   INTO JOB-ID-TEXT
+                        JOB-TITLE
+                        JOB-DESC
+                        JOB-EMPLOYER
+                        JOB-LOCATION
+                        JOB-SALARY
+               END-UNSTRING
+
+               IF FUNCTION LENGTH(FUNCTION TRIM(JOB-TITLE)) > 0
+                   ADD 1 TO JOB-NTH
+                   IF JOB-NTH = JOB-SELECT
+                       MOVE "--- Job Details ---" TO MSG
+                       PERFORM ECHO-DISPLAY
+
+                       MOVE SPACES TO MSG
+                       STRING "Title: " FUNCTION TRIM(JOB-TITLE)
+                              DELIMITED BY SIZE INTO MSG
+                       END-STRING
+                       PERFORM ECHO-DISPLAY
+
+                       MOVE SPACES TO MSG
+                       STRING "Description: " FUNCTION TRIM(JOB-DESC)
+                              DELIMITED BY SIZE INTO MSG
+                       END-STRING
+                       PERFORM ECHO-DISPLAY
+
+                       MOVE SPACES TO MSG
+                       STRING "Employer: " FUNCTION TRIM(JOB-EMPLOYER)
+                              DELIMITED BY SIZE INTO MSG
+                       END-STRING
+                       PERFORM ECHO-DISPLAY
+
+                       MOVE SPACES TO MSG
+                       STRING "Location: " FUNCTION TRIM(JOB-LOCATION)
+                              DELIMITED BY SIZE INTO MSG
+                       END-STRING
+                       PERFORM ECHO-DISPLAY
+
+                       IF FUNCTION LENGTH(FUNCTION TRIM(JOB-SALARY)) > 0
+                           MOVE SPACES TO MSG
+                           STRING "Salary: " FUNCTION TRIM(JOB-SALARY)
+                                  DELIMITED BY SIZE INTO MSG
+                           END-STRING
+                           PERFORM ECHO-DISPLAY
+                       END-IF
+
+                       EXIT PERFORM
+                   END-IF
+               END-IF
+           END-PERFORM
+           CLOSE JOB-POSTINGS
+
+           *> After showing details, loop continues so user can pick another,
+           *> or enter 0 to go back.
+       END-PERFORM
        EXIT PARAGRAPH.
 
 
