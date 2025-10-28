@@ -28,6 +28,9 @@ FILE-CONTROL.
     *> Persistent storage for job/internship postings
     SELECT OPTIONAL JOB-POSTINGS ASSIGN TO 'job-postings.dat'
        ORGANIZATION IS LINE SEQUENTIAL.
+    *> Persistent storage for job applications
+    SELECT OPTIONAL APPLICATIONS ASSIGN TO 'applications.dat'
+       ORGANIZATION IS LINE SEQUENTIAL.
 
 
 DATA DIVISION.
@@ -46,6 +49,9 @@ FD REQUESTS.
 01 REQ-REC         PIC X(80).      *> One line: "sender|receiver|status"
 FD JOB-POSTINGS.
 01 JOB-POST-REC    PIC X(512).     *> One line: job posting data (Job-ID|Title|Description|Employer|Location|Salary)
+
+FD APPLICATIONS.
+01 APP-REC         PIC X(80).      *> One line: username|jobId
 
 WORKING-STORAGE SECTION.
 01 MSG             PIC X(80).      *> Reusable message buffer for display/logging
@@ -237,6 +243,21 @@ WORKING-STORAGE SECTION.
 01 JOB-ID-TEXT       PIC X(5).            *> Job-ID converted to text for file I/O
 01 JOB-POSTING-COUNT PIC 9(5) VALUE 0.    *> Total number of job postings
 
+*> Browse jobs functionality
+01 JOB-LIST-COUNT   PIC 9 VALUE 0.
+01 JOB-SELECT       PIC 9(5) VALUE 0.
+01 JOB-NTH          PIC 9(5) VALUE 0.
+
+*> Applications helpers
+01 APP-FOUND        PIC X     VALUE "N".
+01 APP-JOBID        PIC 9(5)  VALUE 0.
+01 APP-JOBID-TEXT   PIC X(5).
+01 APP-USER-TMP     PIC X(15).
+01 APP-JOBID-TMP    PIC X(5).
+01 SEL-JOB-ID-TEXT  PIC X(5).              *> Filled when you parse the chosen posting
+01 GEN-TEXT        PIC X(300).
+
+
 PROCEDURE DIVISION.
 MAIN-PARA.
         *> Open input/output streams
@@ -383,9 +404,13 @@ CREATE-ACCOUNT.
 *> Centralized print: every MSG goes to screen AND the output file
 *> to satisfy the requirement that outputs match exactly.
 ECHO-DISPLAY.
-       DISPLAY MSG
-       MOVE MSG TO USER-OUT-REC
-       WRITE USER-OUT-REC.
+    IF FUNCTION LENGTH(FUNCTION TRIM(MSG)) = 0
+        EXIT PARAGRAPH
+    END-IF
+    DISPLAY MSG
+    MOVE MSG TO USER-OUT-REC
+    WRITE USER-OUT-REC.
+
 
 
 *> Return an existing username (case-insensitive match) or spaces if not found
@@ -702,8 +727,7 @@ JOB-SEARCH.
                    WHEN 1
                        PERFORM POST-JOB
                    WHEN 2
-                       MOVE "Browse Jobs/Internships is under construction." TO MSG
-                       PERFORM ECHO-DISPLAY
+                       PERFORM BROWSE-JOBS
                    WHEN 3
                        MOVE "Returning to main menu..." TO MSG
                        PERFORM ECHO-DISPLAY
@@ -827,6 +851,298 @@ POST-JOB.
        *> Confirmation message
        MOVE "Job posted successfully!" TO MSG
        PERFORM ECHO-DISPLAY
+       EXIT PARAGRAPH.
+
+
+BROWSE-JOBS.
+       PERFORM UNTIL 1 = 0
+           MOVE "--- Available Job Listings ---" TO MSG
+           PERFORM ECHO-DISPLAY
+
+           MOVE 0 TO JOB-LIST-COUNT
+
+           OPEN INPUT JOB-POSTINGS
+           PERFORM UNTIL 1 = 0
+               READ JOB-POSTINGS
+                   AT END EXIT PERFORM
+               END-READ
+
+               *> Parse: Job-ID|Title|Description|Employer|Location|Salary
+               UNSTRING JOB-POST-REC DELIMITED BY "|"
+                   INTO JOB-ID-TEXT
+                        JOB-TITLE
+                        JOB-DESC
+                        JOB-EMPLOYER
+                        JOB-LOCATION
+                        JOB-SALARY
+               END-UNSTRING
+
+               *> Show only well-formed rows (require Title)
+               IF FUNCTION LENGTH(FUNCTION TRIM(JOB-TITLE)) > 0
+                   ADD 1 TO JOB-LIST-COUNT
+                   MOVE SPACES TO MSG
+                   STRING FUNCTION TRIM(JOB-LIST-COUNT) ". "
+                          FUNCTION TRIM(JOB-TITLE) " at "
+                          FUNCTION TRIM(JOB-EMPLOYER) " ("
+                          FUNCTION TRIM(JOB-LOCATION) ")"
+                          DELIMITED BY SIZE
+                     INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+               END-IF
+           END-PERFORM
+           CLOSE JOB-POSTINGS
+
+           IF JOB-LIST-COUNT = 0
+               MOVE "No job listings are available yet." TO MSG
+               PERFORM ECHO-DISPLAY
+               EXIT PARAGRAPH
+           END-IF
+
+           MOVE "-----------------------------" TO MSG
+           PERFORM ECHO-DISPLAY
+           MOVE "Enter job number to view details, or 0 to go back:" TO MSG
+           PERFORM ECHO-DISPLAY
+
+           READ USER-IN INTO USER-IN-REC
+               AT END MOVE "Y" TO EOF-FLAG
+           END-READ
+           IF EOF-FLAG = "Y" EXIT PARAGRAPH END-IF
+
+           *> Blank => re-show list
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               CONTINUE
+           END-IF
+
+           *> Validate numeric input
+           IF FUNCTION TEST-NUMVAL(USER-IN-REC) = 0
+               MOVE FUNCTION NUMVAL(USER-IN-REC) TO JOB-SELECT
+           ELSE
+               MOVE 99999 TO JOB-SELECT
+           END-IF
+
+           *> 0 => back to previous menu
+           IF JOB-SELECT = 0
+               EXIT PARAGRAPH
+           END-IF
+
+           *> Range check
+           IF JOB-SELECT < 1 OR JOB-SELECT > JOB-LIST-COUNT
+               MOVE "Invalid choice. Please enter a number from the list or 0 to go back." TO MSG
+               PERFORM ECHO-DISPLAY
+               CONTINUE
+           END-IF
+
+           *> Re-scan file to fetch the Nth valid row and show details + inline menu
+           MOVE 0 TO JOB-NTH
+           OPEN INPUT JOB-POSTINGS
+           PERFORM UNTIL 1 = 0
+               READ JOB-POSTINGS
+                   AT END EXIT PERFORM
+               END-READ
+
+               UNSTRING JOB-POST-REC DELIMITED BY "|"
+                   INTO JOB-ID-TEXT
+                        JOB-TITLE
+                        JOB-DESC
+                        JOB-EMPLOYER
+                        JOB-LOCATION
+                        JOB-SALARY
+               END-UNSTRING
+
+               IF FUNCTION LENGTH(FUNCTION TRIM(JOB-TITLE)) > 0
+                   ADD 1 TO JOB-NTH
+                   IF JOB-NTH = JOB-SELECT
+                       MOVE "--- Job Details ---" TO MSG
+                       PERFORM ECHO-DISPLAY
+
+                       MOVE SPACES TO MSG
+                       STRING "Title: " FUNCTION TRIM(JOB-TITLE)
+                              DELIMITED BY SIZE INTO MSG
+                       END-STRING
+                       PERFORM ECHO-DISPLAY
+
+                       MOVE SPACES TO GEN-TEXT
+                       STRING "Description: " FUNCTION TRIM(JOB-DESC)
+                              DELIMITED BY SIZE
+                         INTO GEN-TEXT
+                       END-STRING
+                       PERFORM DISPLAY-LONG-GENERIC
+
+                       MOVE SPACES TO MSG
+                       STRING "Employer: " FUNCTION TRIM(JOB-EMPLOYER)
+                              DELIMITED BY SIZE INTO MSG
+                       END-STRING
+                       PERFORM ECHO-DISPLAY
+
+                       MOVE SPACES TO MSG
+                       STRING "Location: " FUNCTION TRIM(JOB-LOCATION)
+                              DELIMITED BY SIZE INTO MSG
+                       END-STRING
+                       PERFORM ECHO-DISPLAY
+
+                       IF FUNCTION LENGTH(FUNCTION TRIM(JOB-SALARY)) > 0
+                           MOVE SPACES TO MSG
+                           STRING "Salary: " FUNCTION TRIM(JOB-SALARY)
+                                  DELIMITED BY SIZE INTO MSG
+                           END-STRING
+                           PERFORM ECHO-DISPLAY
+                       END-IF
+
+                       *> Capture the selected job id for Apply
+                       MOVE JOB-ID-TEXT TO SEL-JOB-ID-TEXT
+
+                       *> Inline Apply/Back menu for THIS job
+                       MOVE "-----------------------------" TO MSG
+                       PERFORM ECHO-DISPLAY
+                       MOVE "1. Apply for this Job" TO MSG
+                       PERFORM ECHO-DISPLAY
+                       MOVE "2. Back to Job List" TO MSG
+                       PERFORM ECHO-DISPLAY
+                       MOVE "Enter your choice:" TO MSG
+                       PERFORM ECHO-DISPLAY
+
+                       MOVE 0 TO NAV-CHOICE
+                       READ USER-IN INTO USER-IN-REC
+                           AT END
+                               MOVE "Y" TO EOF-FLAG
+                               EXIT PERFORM
+                       END-READ
+                       IF EOF-FLAG = "Y"
+                           EXIT PERFORM
+                       END-IF
+
+                       IF FUNCTION TEST-NUMVAL(USER-IN-REC) = 0
+                           MOVE FUNCTION NUMVAL(USER-IN-REC) TO NAV-CHOICE
+                       ELSE
+                           MOVE 999 TO NAV-CHOICE
+                       END-IF
+
+                       EVALUATE NAV-CHOICE
+                           WHEN 1
+                               *> Convert selected job id to numeric for checks
+                               IF FUNCTION LENGTH(FUNCTION TRIM(SEL-JOB-ID-TEXT)) = 0
+                                   MOVE 0 TO APP-JOBID
+                               ELSE
+                                   IF FUNCTION TEST-NUMVAL(SEL-JOB-ID-TEXT) = 0
+                                       MOVE FUNCTION NUMVAL(SEL-JOB-ID-TEXT) TO APP-JOBID
+                                   ELSE
+                                       MOVE 0 TO APP-JOBID
+                                   END-IF
+                               END-IF
+                               PERFORM APPLY-TO-JOB
+                           WHEN 2
+                               CONTINUE
+                           WHEN OTHER
+                               MOVE "Invalid choice." TO MSG
+                               PERFORM ECHO-DISPLAY
+                       END-EVALUATE
+
+                       *> Done handling this selection; go back to list
+                       EXIT PERFORM
+                   END-IF
+               END-IF
+           END-PERFORM
+           CLOSE JOB-POSTINGS
+
+           *> After showing details, loop continues so user can pick another,
+           *> or enter 0 to go back.
+       END-PERFORM
+       EXIT PARAGRAPH.
+
+
+DISPLAY-LONG-GENERIC.
+    MOVE FUNCTION TRIM(GEN-TEXT) TO GEN-TEXT
+    MOVE FUNCTION LENGTH(GEN-TEXT) TO LONG-TEXT-LEN
+    MOVE 1 TO LONG-TEXT-POS
+    PERFORM UNTIL LONG-TEXT-POS > LONG-TEXT-LEN
+        COMPUTE REMAINING-LEN = LONG-TEXT-LEN - LONG-TEXT-POS + 1
+        IF REMAINING-LEN > CHUNK-SIZE
+            MOVE CHUNK-SIZE TO CHUNK-LEN
+            PERFORM ADJUST-FOR-WORD-WRAP-GEN
+        ELSE
+            MOVE REMAINING-LEN TO CHUNK-LEN
+        END-IF
+        MOVE SPACES TO MSG
+        MOVE GEN-TEXT (LONG-TEXT-POS:CHUNK-LEN) TO MSG
+        PERFORM ECHO-DISPLAY
+        ADD CHUNK-LEN TO LONG-TEXT-POS
+    END-PERFORM
+    EXIT.
+
+ADJUST-FOR-WORD-WRAP-GEN.
+    IF GEN-TEXT (LONG-TEXT-POS + CHUNK-LEN - 1:1) = SPACE
+        EXIT PARAGRAPH
+    END-IF
+    IF LONG-TEXT-POS + CHUNK-LEN <= LONG-TEXT-LEN
+        IF GEN-TEXT (LONG-TEXT-POS + CHUNK-LEN:1) = SPACE
+            EXIT PARAGRAPH
+        END-IF
+    END-IF
+    PERFORM VARYING I FROM CHUNK-LEN BY -1 UNTIL I < 1
+        IF GEN-TEXT (LONG-TEXT-POS + I - 1:1) = SPACE
+            MOVE I TO CHUNK-LEN
+            EXIT PERFORM
+        END-IF
+    END-PERFORM
+    IF I < 1
+        MOVE CHUNK-SIZE TO CHUNK-LEN
+    END-IF
+    EXIT.
+
+
+*> Checks applications.dat for CURRENT-USER + APP-JOBID
+HAS-ALREADY-APPLIED.
+       MOVE "N" TO APP-FOUND
+       OPEN INPUT APPLICATIONS
+       PERFORM UNTIL 1 = 0
+           READ APPLICATIONS
+               AT END EXIT PERFORM
+           END-READ
+
+           UNSTRING APP-REC DELIMITED BY "|"
+               INTO APP-USER-TMP APP-JOBID-TMP
+           END-UNSTRING
+
+           IF FUNCTION UPPER-CASE(FUNCTION TRIM(APP-USER-TMP)) =
+              FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
+              AND FUNCTION TEST-NUMVAL(APP-JOBID-TMP) = 0
+              AND FUNCTION NUMVAL(APP-JOBID-TMP) = APP-JOBID
+               MOVE "Y" TO APP-FOUND
+               EXIT PERFORM
+           END-IF
+       END-PERFORM
+       CLOSE APPLICATIONS
+       EXIT PARAGRAPH.
+
+*> Records an application if not already applied
+APPLY-TO-JOB.
+       PERFORM HAS-ALREADY-APPLIED
+       IF APP-FOUND = "Y"
+           MOVE "You have already applied to this job." TO MSG
+           PERFORM ECHO-DISPLAY
+           EXIT PARAGRAPH
+       END-IF
+
+       OPEN EXTEND APPLICATIONS
+       MOVE APP-JOBID TO APP-JOBID-TEXT
+       MOVE SPACES TO APP-REC
+       STRING FUNCTION TRIM(CURRENT-USER) "|"
+              FUNCTION TRIM(APP-JOBID-TEXT)
+              DELIMITED BY SIZE INTO APP-REC
+       END-STRING
+       WRITE APP-REC
+       CLOSE APPLICATIONS
+
+       MOVE SPACES TO GEN-TEXT
+       STRING "Your application for "
+              FUNCTION TRIM(JOB-TITLE) " at "
+              FUNCTION TRIM(JOB-EMPLOYER)
+              " has been submitted."
+              DELIMITED BY SIZE
+         INTO GEN-TEXT
+       END-STRING
+       PERFORM DISPLAY-LONG-GENERIC
        EXIT PARAGRAPH.
 
 

@@ -12,8 +12,7 @@ Enter your choice:
 Please enter your username:
 Please enter your password:
 You have successfully logged in
-Welcome, testuser!
-
+Welcome, AmyGeorgia!
 =============================
      InCollege Main Menu
 =============================
@@ -26,43 +25,40 @@ Welcome, testuser!
   7. View My Network
 =============================
 Enter your choice:
-
 --- Job Search/Intership Menu ---
 1. Post a Job/Internship
 2. Browse Jobs/Internships
 3. Back to Main Menu
 Enter your choice:
---- Post a New Job/Internship ---
-Enter Job Title:
-Enter Description (max 200 chars):
-Enter Employer Name:
-Enter Location:
-Enter Salary (optional, enter 'NONE' to skip):
-Job posted successfully!
-
+--- Available Job Listings ---
+1. Software Engineering Intern at Tech Innovations Inc (San Francisco, CA)
+2. Software Intern at TechCorp (New York, NY)
+3. Data Analyst at DataSolutions (Remote)
+4. Marketing Specialist at BrandInc (Chicago, IL)
+-----------------------------
+Enter job number to view details, or 0 to go back:
+--- Job Details ---
+Title: Software Engineering Intern
+Description: Develop and test software applications for cloud-based systems.
+Work with senior engineers on real-world projects.
+Employer: Tech Innovations Inc
+Location: San Francisco, CA
+Salary: $35/hour
+-----------------------------
+1. Apply for this Job
+2. Back to Job List
+Enter your choice:
+Your application for Software Engineering Intern at Tech Innovations Inc has
+been submitted.
+--- Available Job Listings ---
+1. Software Engineering Intern at Tech Innovations Inc (San Francisco, CA)
+2. Software Intern at TechCorp (New York, NY)
+3. Data Analyst at DataSolutions (Remote)
+4. Marketing Specialist at BrandInc (Chicago, IL)
+-----------------------------
+Enter job number to view details, or 0 to go back:
 --- Job Search/Intership Menu ---
 1. Post a Job/Internship
 2. Browse Jobs/Internships
 3. Back to Main Menu
-Enter your choice:
-Browse Jobs/Internships is under construction.
-
---- Job Search/Intership Menu ---
-1. Post a Job/Internship
-2. Browse Jobs/Internships
-3. Back to Main Menu
-Enter your choice:
-Returning to main menu...
-
-=============================
-     InCollege Main Menu
-=============================
-  1. Create/Edit My Profile
-  2. View My Profile
-  3. Search for a job
-  4. Find someone you know
-  5. Learn a New Skill
-  6. View My Pending Connection Requests
-  7. View My Network
-=============================
 Enter your choice:

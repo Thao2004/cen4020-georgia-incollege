@@ -1,15 +1,11 @@
 2
-testuser
-SecurePass1!
+AmyGeorgia
+Passwords!21
 1
-testuser
-SecurePass1!
+AmyGeorgia
+Passwords!21
 3
-1
-Software Engineering Intern
-Develop and test software applications for cloud-based systems. Work with senior engineers on real-world projects.
-Tech Innovations Inc
-San Francisco, CA
-$35/hour
 2
-3
+1
+1
+0
