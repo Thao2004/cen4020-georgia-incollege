@@ -1,11 +1,6 @@
-2
-AmyGeorgia
-Passwords!21
 1
-AmyGeorgia
-Passwords!21
+testuser
+SecurePass1!
 3
-2
-1
-1
-0
+3
+4
