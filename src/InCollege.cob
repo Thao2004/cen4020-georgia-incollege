@@ -684,7 +684,9 @@ JOB-SEARCH-MENU.
        PERFORM ECHO-DISPLAY
        MOVE "2. Browse Jobs/Internships" TO MSG
        PERFORM ECHO-DISPLAY
-       MOVE "3. Back to Main Menu" TO MSG
+       MOVE "3. View My Applications" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "4. Back to Main Menu" TO MSG
        PERFORM ECHO-DISPLAY
        EXIT.
 
@@ -695,7 +697,7 @@ JOB-SEARCH.
        MOVE 0 TO JOB-SEARCH-CHOICE
 
        *> Loop: repeat until user chooses Back (3) or EOF
-       PERFORM UNTIL JOB-SEARCH-CHOICE = 3 OR EOF-FLAG = "Y"
+       PERFORM UNTIL JOB-SEARCH-CHOICE = 4 OR EOF-FLAG = "Y"
            *> Show menu + prompt
            PERFORM JOB-SEARCH-MENU
            MOVE "Enter your choice:" TO MSG
@@ -729,6 +731,8 @@ JOB-SEARCH.
                    WHEN 2
                        PERFORM BROWSE-JOBS
                    WHEN 3
+                       PERFORM VIEW-MY-APPLICATIONS
+                   WHEN 4
                        MOVE "Returning to main menu..." TO MSG
                        PERFORM ECHO-DISPLAY
                        EXIT PERFORM
@@ -1145,6 +1149,147 @@ APPLY-TO-JOB.
        PERFORM DISPLAY-LONG-GENERIC
        EXIT PARAGRAPH.
 
+*> View My Applications Report
+VIEW-MY-APPLICATIONS.
+       MOVE " " TO MSG
+       PERFORM ECHO-DISPLAY
+
+       MOVE SPACES TO MSG
+       STRING "Application Summary for " FUNCTION TRIM(CURRENT-USER)
+              DELIMITED BY SIZE INTO MSG
+       END-STRING
+       PERFORM ECHO-DISPLAY
+
+       MOVE "=============================" TO MSG
+       PERFORM ECHO-DISPLAY
+
+       *> Count applications for this user
+       MOVE 0 TO JOB-LIST-COUNT
+
+       OPEN INPUT APPLICATIONS
+       PERFORM UNTIL 1 = 0
+           READ APPLICATIONS
+               AT END EXIT PERFORM
+           END-READ
+
+           UNSTRING APP-REC DELIMITED BY "|"
+               INTO APP-USER-TMP APP-JOBID-TMP
+           END-UNSTRING
+
+           IF FUNCTION UPPER-CASE(FUNCTION TRIM(APP-USER-TMP)) =
+              FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
+               ADD 1 TO JOB-LIST-COUNT
+           END-IF
+       END-PERFORM
+       CLOSE APPLICATIONS
+
+       IF JOB-LIST-COUNT = 0
+           MOVE "You have not applied to any jobs yet." TO MSG
+           PERFORM ECHO-DISPLAY
+           MOVE "=============================" TO MSG
+           PERFORM ECHO-DISPLAY
+           EXIT PARAGRAPH
+       END-IF
+
+       *> Display each application
+       MOVE 0 TO JOB-NTH
+       OPEN INPUT APPLICATIONS
+       PERFORM UNTIL 1 = 0
+           READ APPLICATIONS
+               AT END EXIT PERFORM
+           END-READ
+
+           UNSTRING APP-REC DELIMITED BY "|"
+               INTO APP-USER-TMP APP-JOBID-TMP
+           END-UNSTRING
+
+           IF FUNCTION UPPER-CASE(FUNCTION TRIM(APP-USER-TMP)) =
+              FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
+               ADD 1 TO JOB-NTH
+
+               *> Convert job ID to numeric for searching
+               IF FUNCTION LENGTH(FUNCTION TRIM(APP-JOBID-TMP)) = 0
+                   MOVE 0 TO APP-JOBID
+               ELSE
+                   IF FUNCTION TEST-NUMVAL(APP-JOBID-TMP) = 0
+                       MOVE FUNCTION NUMVAL(APP-JOBID-TMP) TO APP-JOBID
+                   ELSE
+                       MOVE 0 TO APP-JOBID
+                   END-IF
+               END-IF
+
+               *> Find the corresponding job posting
+               PERFORM FIND-JOB-BY-ID
+
+               IF FOUND-FLAG = "Y"
+                   MOVE SPACES TO MSG
+                   STRING "Job Title: " FUNCTION TRIM(JOB-TITLE)
+                          DELIMITED BY SIZE INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+
+                   MOVE SPACES TO MSG
+                   STRING "Employer: " FUNCTION TRIM(JOB-EMPLOYER)
+                          DELIMITED BY SIZE INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+
+                   MOVE SPACES TO MSG
+                   STRING "Location: " FUNCTION TRIM(JOB-LOCATION)
+                          DELIMITED BY SIZE INTO MSG
+                   END-STRING
+                   PERFORM ECHO-DISPLAY
+
+                   MOVE "-----------------------------" TO MSG
+                   PERFORM ECHO-DISPLAY
+               END-IF
+           END-IF
+       END-PERFORM
+       CLOSE APPLICATIONS
+
+       *> Display summary count
+       MOVE SPACES TO MSG
+       STRING "Total Applications: " JOB-LIST-COUNT
+              DELIMITED BY SIZE INTO MSG
+       END-STRING
+       PERFORM ECHO-DISPLAY
+
+       MOVE "=============================" TO MSG
+       PERFORM ECHO-DISPLAY
+
+       EXIT PARAGRAPH.
+
+
+*> Helper to find job posting by ID
+FIND-JOB-BY-ID.
+       MOVE "N" TO FOUND-FLAG
+       OPEN INPUT JOB-POSTINGS
+       PERFORM UNTIL 1 = 0
+           READ JOB-POSTINGS
+               AT END EXIT PERFORM
+           END-READ
+
+           UNSTRING JOB-POST-REC DELIMITED BY "|"
+               INTO JOB-ID-TEXT
+                    JOB-TITLE
+                    JOB-DESC
+                    JOB-EMPLOYER
+                    JOB-LOCATION
+                    JOB-SALARY
+           END-UNSTRING
+
+           *> Check if this is the job we're looking for
+           IF FUNCTION LENGTH(FUNCTION TRIM(JOB-ID-TEXT)) > 0
+               IF FUNCTION TEST-NUMVAL(JOB-ID-TEXT) = 0
+                   IF FUNCTION NUMVAL(JOB-ID-TEXT) = APP-JOBID
+                       MOVE "Y" TO FOUND-FLAG
+                       EXIT PERFORM
+                   END-IF
+               END-IF
+           END-IF
+       END-PERFORM
+       CLOSE JOB-POSTINGS
+       EXIT PARAGRAPH.
 
 CREATE-PROFILE.
        MOVE "--- Create/Edit Profile ---" TO MSG
