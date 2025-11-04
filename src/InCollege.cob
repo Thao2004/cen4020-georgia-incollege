@@ -221,6 +221,12 @@ WORKING-STORAGE SECTION.
 
 01 FOUND-INDEX          PIC 99 VALUE 0.
 
+*> Messages functionality
+01 MSG-MENU-CHOICE     PIC S9 VALUE 0.     *> Messages menu navigation
+01 MSG-RECIPIENT       PIC X(15).          *> Recipient username for message
+01 MSG-CONTENT         PIC X(200).         *> Message content (max 200 chars)
+01 MSG-LEN             PIC 999 VALUE 0.    *> Length of message content
+
 *> Job search functionality
 01 JOB-SEARCH-CHOICE PIC S9 VALUE 0.  *> Job search navigation menu
 01 JOB-TITLE         PIC X(80).           *> Job title
@@ -641,6 +647,8 @@ DISPLAY-MENU.
        PERFORM ECHO-DISPLAY
        MOVE "  7. View My Network" TO MSG
        PERFORM ECHO-DISPLAY
+       MOVE "  8. Messages" TO MSG
+       PERFORM ECHO-DISPLAY
        MOVE "=============================" TO MSG
        PERFORM ECHO-DISPLAY
        MOVE "Enter your choice: " TO MSG
@@ -664,6 +672,8 @@ NAV-MENU-CHOICE.
                PERFORM VIEW-AND-RESPOND-PENDING
            WHEN 7
                PERFORM VIEW-MY-CONNECTIONS
+           WHEN 8
+               PERFORM MESSAGES-MENU-HANDLER
            WHEN OTHER
                *> 0, 999, or any other number is invalid
                MOVE "Invalid choice, please try again." TO MSG
@@ -3298,4 +3308,210 @@ FIND-USER-PROFILE.
     END-IF
     EXIT.
 
+*> =========================
+*> Messages Feature
+*> =========================
+
+*> Messages menu handler - main loop for messages submenu
+MESSAGES-MENU-HANDLER.
+       *> Reset choice each time this menu is shown
+       MOVE 0 TO MSG-MENU-CHOICE
+
+       *> Loop: repeat until user chooses Back (3) or EOF
+       PERFORM UNTIL MSG-MENU-CHOICE = 3 OR EOF-FLAG = "Y"
+           *> Show menu + prompt
+           PERFORM DISPLAY-MESSAGES-MENU
+           MOVE "Enter your choice:" TO MSG
+           PERFORM ECHO-DISPLAY
+
+           *> Read next line of input
+           READ USER-IN INTO USER-IN-REC
+               AT END MOVE "Y" TO EOF-FLAG
+           END-READ
+
+           IF EOF-FLAG = "Y"
+               EXIT PERFORM
+           END-IF
+
+           *> Skip blank lines quietly
+           IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
+               CONTINUE
+           ELSE
+               *> Validate numeric input
+               IF FUNCTION TEST-NUMVAL(USER-IN-REC) = 0
+                   MOVE FUNCTION NUMVAL(USER-IN-REC) TO MSG-MENU-CHOICE
+               ELSE
+                   MOVE 999 TO MSG-MENU-CHOICE
+               END-IF
+
+               *> Handle choice
+               EVALUATE MSG-MENU-CHOICE
+                   WHEN 1
+                       PERFORM SEND-NEW-MESSAGE
+                   WHEN 2
+                       PERFORM VIEW-MY-MESSAGES
+                   WHEN 3
+                       MOVE "Returning to main menu..." TO MSG
+                       PERFORM ECHO-DISPLAY
+                       EXIT PERFORM
+                   WHEN OTHER
+                       MOVE "Invalid choice, please try again." TO MSG
+                       PERFORM ECHO-DISPLAY
+               END-EVALUATE
+           END-IF
+       END-PERFORM
+       EXIT.
+
+
+*> Display the Messages submenu
+DISPLAY-MESSAGES-MENU.
+       MOVE " " TO MSG          *> Add blank line
+       PERFORM ECHO-DISPLAY
+
+       MOVE "--- Messages Menu ---" TO MSG
+       PERFORM ECHO-DISPLAY
+
+       MOVE "1. Send a New Message" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "2. View My Messages" TO MSG
+       PERFORM ECHO-DISPLAY
+       MOVE "3. Back to Main Menu" TO MSG
+       PERFORM ECHO-DISPLAY
+       EXIT.
+
+
+*> View My Messages - under construction
+VIEW-MY-MESSAGES.
+       MOVE "View My Messages is under construction." TO MSG
+       PERFORM ECHO-DISPLAY
+       EXIT.
+
+
+*> Send a new message to a connection
+SEND-NEW-MESSAGE.
+       *> Prompt for recipient username
+       MOVE "Enter recipient's username (must be a connection):" TO MSG
+       PERFORM ECHO-DISPLAY
+
+       READ USER-IN INTO USER-IN-REC
+           AT END
+               MOVE "Y" TO EOF-FLAG
+               EXIT PARAGRAPH
+       END-READ
+
+       IF EOF-FLAG = "Y"
+           EXIT PARAGRAPH
+       END-IF
+
+       *> Store recipient username
+       MOVE FUNCTION TRIM(USER-IN-REC) TO MSG-RECIPIENT
+
+       *> Validate recipient is a connection
+       PERFORM VALIDATE-MESSAGE-RECIPIENT
+
+       *> If validation failed, return to menu
+       IF FOUND-FLAG NOT = "Y"
+           EXIT PARAGRAPH
+       END-IF
+
+       *> Prompt for message content
+       MOVE "Enter your message (max 200 chars):" TO MSG
+       PERFORM ECHO-DISPLAY
+
+       READ USER-IN INTO USER-IN-REC
+           AT END
+               MOVE "Y" TO EOF-FLAG
+               EXIT PARAGRAPH
+       END-READ
+
+       IF EOF-FLAG = "Y"
+           EXIT PARAGRAPH
+       END-IF
+
+       *> Validate message content length BEFORE storing in MSG-CONTENT
+       MOVE FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) TO MSG-LEN
+
+       IF MSG-LEN = 0
+           MOVE "Message cannot be empty." TO MSG
+           PERFORM ECHO-DISPLAY
+           EXIT PARAGRAPH
+       END-IF
+
+       IF MSG-LEN > 200
+           MOVE "Message must be 200 characters or less." TO MSG
+           PERFORM ECHO-DISPLAY
+           EXIT PARAGRAPH
+       END-IF
+
+       *> Store message content (only after validation passes)
+       MOVE FUNCTION TRIM(USER-IN-REC) TO MSG-CONTENT
+
+       *> Success message (actual sending will be implemented in future stories)
+       MOVE "Message sent successfully!" TO MSG
+       PERFORM ECHO-DISPLAY
+       EXIT PARAGRAPH.
+
+
+*> Validate that recipient is an established connection
+VALIDATE-MESSAGE-RECIPIENT.
+       MOVE "N" TO FOUND-FLAG
+
+       *> Check if recipient username is empty
+       IF FUNCTION LENGTH(FUNCTION TRIM(MSG-RECIPIENT)) = 0
+           MOVE "Recipient username cannot be empty." TO MSG
+           PERFORM ECHO-DISPLAY
+           EXIT PARAGRAPH
+       END-IF
+
+       *> Check if trying to message yourself
+       IF FUNCTION UPPER-CASE(FUNCTION TRIM(MSG-RECIPIENT)) =
+          FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
+           MOVE "You cannot send a message to yourself." TO MSG
+           PERFORM ECHO-DISPLAY
+           EXIT PARAGRAPH
+       END-IF
+
+       *> Load all connections to check
+       PERFORM LOAD-ALL-CONNECTIONS
+
+       *> Search for established connection with recipient
+       IF CONN-COUNT > 0
+           SET C-IX TO 1
+           PERFORM UNTIL C-IX > CONN-COUNT
+               *> Check if this connection involves both users
+               IF ( FUNCTION UPPER-CASE(FUNCTION TRIM(C-USER1 (C-IX))) =
+                    FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
+                AND FUNCTION UPPER-CASE(FUNCTION TRIM(C-USER2 (C-IX))) =
+                    FUNCTION UPPER-CASE(FUNCTION TRIM(MSG-RECIPIENT)) )
+                OR
+                  ( FUNCTION UPPER-CASE(FUNCTION TRIM(C-USER2 (C-IX))) =
+                    FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
+                AND FUNCTION UPPER-CASE(FUNCTION TRIM(C-USER1 (C-IX))) =
+                    FUNCTION UPPER-CASE(FUNCTION TRIM(MSG-RECIPIENT)) )
+                   MOVE "Y" TO FOUND-FLAG
+                   EXIT PERFORM
+               ELSE
+                   SET C-IX UP BY 1
+               END-IF
+           END-PERFORM
+       END-IF
+
+       *> Display appropriate error message if not found
+       IF FOUND-FLAG NOT = "Y"
+           *> Check if user exists at all
+           MOVE FUNCTION TRIM(MSG-RECIPIENT) TO CHECK-USER
+           PERFORM EXISTS-USER-BY-NAME
+
+           IF FOUND-FLAG = "Y"
+               *> User exists but is not a connection
+               MOVE "You can only message users you are connected with." TO MSG
+               PERFORM ECHO-DISPLAY
+               MOVE "N" TO FOUND-FLAG
+           ELSE
+               *> User does not exist
+               MOVE "User not found in your network." TO MSG
+               PERFORM ECHO-DISPLAY
+           END-IF
+       END-IF
+       EXIT PARAGRAPH.
 

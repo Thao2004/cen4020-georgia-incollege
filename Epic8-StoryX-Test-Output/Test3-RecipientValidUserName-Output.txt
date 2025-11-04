@@ -4,8 +4,15 @@ Welcome to InCollege!
 Enter your choice:
 Please enter your username:
 Please enter your password:
+Account created.
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
 You have successfully logged in
-Welcome, AmyGeorgia!
+Welcome, Jennifer!
 =============================
      InCollege Main Menu
 =============================
@@ -16,23 +23,21 @@ Welcome, AmyGeorgia!
   5. Learn a New Skill
   6. View My Pending Connection Requests
   7. View My Network
+  8. Messages
 =============================
 Enter your choice:
---- Job Search/Intership Menu ---
-1. Post a Job/Internship
-2. Browse Jobs/Internships
-3. View My Applications
-4. Back to Main Menu
+--- Messages Menu ---
+1. Send a New Message
+2. View My Messages
+3. Back to Main Menu
 Enter your choice:
-Application Summary for AmyGeorgia
-=============================
-You have not applied to any jobs yet.
-=============================
---- Job Search/Intership Menu ---
-1. Post a Job/Internship
-2. Browse Jobs/Internships
-3. View My Applications
-4. Back to Main Menu
+Enter recipient's username (must be a connection):
+Enter your message (max 200 chars):
+Message sent successfully!
+--- Messages Menu ---
+1. Send a New Message
+2. View My Messages
+3. Back to Main Menu
 Enter your choice:
 Returning to main menu...
 =============================
@@ -45,5 +50,6 @@ Returning to main menu...
   5. Learn a New Skill
   6. View My Pending Connection Requests
   7. View My Network
+  8. Messages
 =============================
 Enter your choice:

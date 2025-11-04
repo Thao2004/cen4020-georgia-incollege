@@ -5,7 +5,7 @@ Enter your choice:
 Please enter your username:
 Please enter your password:
 You have successfully logged in
-Welcome, tiennguyen03!
+Welcome, Jennifer!
 =============================
      InCollege Main Menu
 =============================
@@ -16,14 +16,19 @@ Welcome, tiennguyen03!
   5. Learn a New Skill
   6. View My Pending Connection Requests
   7. View My Network
+  8. Messages
 =============================
 Enter your choice:
---- Job Search/Intership Menu ---
-1. Post a Job/Internship
-2. Browse Jobs/Internships
+--- Messages Menu ---
+1. Send a New Message
+2. View My Messages
 3. Back to Main Menu
 Enter your choice:
---- Available Job Listings ---
-1. Software Engineer at Self-Unemployed (Unemployed-town)
------------------------------
-Enter job number to view details, or 0 to go back:
+Enter recipient's username (must be a connection):
+Enter your message (max 200 chars):
+Message must be 200 characters or less.
+--- Messages Menu ---
+1. Send a New Message
+2. View My Messages
+3. Back to Main Menu
+Enter your choice:
