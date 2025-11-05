@@ -31,6 +31,9 @@ FILE-CONTROL.
     *> Persistent storage for job applications
     SELECT OPTIONAL APPLICATIONS ASSIGN TO 'applications.dat'
        ORGANIZATION IS LINE SEQUENTIAL.
+       *> Persistent storage for private messages
+    SELECT OPTIONAL MESSAGES ASSIGN TO 'messages.dat'
+       ORGANIZATION IS LINE SEQUENTIAL.
 
 
 DATA DIVISION.
@@ -53,7 +56,23 @@ FD JOB-POSTINGS.
 FD APPLICATIONS.
 01 APP-REC         PIC X(80).      *> One line: username|jobId
 
+FD MESSAGES.
+01 MSG-FILE-REC.
+   05 MF-SENDER       PIC X(20).
+   05 FILLER          PIC X    VALUE '|'.
+   05 MF-RECIPIENT    PIC X(20).
+   05 FILLER          PIC X    VALUE '|'.
+   05 MF-TIMESTAMP    PIC X(19).
+   05 FILLER          PIC X    VALUE '|'.
+   05 MF-CONTENT      PIC X(200).
+
 WORKING-STORAGE SECTION.
+01 WS-DATE-YYYYMMDD   PIC 9(8) VALUE 0.
+01 WS-TIME-HHMMSS     PIC 9(6) VALUE 0.
+01 WS-TS              PIC X(19).
+01 WS-HH              PIC 99 VALUE 0.
+01 WS-MM              PIC 99 VALUE 0.
+01 WS-SS              PIC 99 VALUE 0.
 01 MSG             PIC X(80).      *> Reusable message buffer for display/logging
 01 CHOICE           PIC S9  VALUE 0.  *> Menu choice for login and create account only
 01 NAV-CHOICE       PIC S9(3) VALUE 0. *> Navigation choice
@@ -63,6 +82,7 @@ WORKING-STORAGE SECTION.
 01 USER-LEN        PIC 99 VALUE 0. *> Length of INPUT-USER
 01 SKILLS-SELECTION PIC S99 VALUE 0.     *> skills menu choice (numeric)
 01 EOF-FLAG          PIC X VALUE "N".    *> "Y" at end of input
+
 
 *> Temporary variable for safe year validation
 01 TEMP-YEAR       PIC S9(8) VALUE 0.   *> Temporary year holder for validation
@@ -3314,17 +3334,13 @@ FIND-USER-PROFILE.
 
 *> Messages menu handler - main loop for messages submenu
 MESSAGES-MENU-HANDLER.
-       *> Reset choice each time this menu is shown
        MOVE 0 TO MSG-MENU-CHOICE
 
-       *> Loop: repeat until user chooses Back (3) or EOF
        PERFORM UNTIL MSG-MENU-CHOICE = 3 OR EOF-FLAG = "Y"
-           *> Show menu + prompt
            PERFORM DISPLAY-MESSAGES-MENU
            MOVE "Enter your choice:" TO MSG
            PERFORM ECHO-DISPLAY
 
-           *> Read next line of input
            READ USER-IN INTO USER-IN-REC
                AT END MOVE "Y" TO EOF-FLAG
            END-READ
@@ -3333,18 +3349,15 @@ MESSAGES-MENU-HANDLER.
                EXIT PERFORM
            END-IF
 
-           *> Skip blank lines quietly
            IF FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) = 0
                CONTINUE
            ELSE
-               *> Validate numeric input
                IF FUNCTION TEST-NUMVAL(USER-IN-REC) = 0
                    MOVE FUNCTION NUMVAL(USER-IN-REC) TO MSG-MENU-CHOICE
                ELSE
                    MOVE 999 TO MSG-MENU-CHOICE
                END-IF
 
-               *> Handle choice
                EVALUATE MSG-MENU-CHOICE
                    WHEN 1
                        PERFORM SEND-NEW-MESSAGE
@@ -3365,12 +3378,10 @@ MESSAGES-MENU-HANDLER.
 
 *> Display the Messages submenu
 DISPLAY-MESSAGES-MENU.
-       MOVE " " TO MSG          *> Add blank line
+       MOVE " " TO MSG
        PERFORM ECHO-DISPLAY
-
        MOVE "--- Messages Menu ---" TO MSG
        PERFORM ECHO-DISPLAY
-
        MOVE "1. Send a New Message" TO MSG
        PERFORM ECHO-DISPLAY
        MOVE "2. View My Messages" TO MSG
@@ -3380,7 +3391,7 @@ DISPLAY-MESSAGES-MENU.
        EXIT.
 
 
-*> View My Messages - under construction
+*> View My Messages - placeholder
 VIEW-MY-MESSAGES.
        MOVE "View My Messages is under construction." TO MSG
        PERFORM ECHO-DISPLAY
@@ -3389,46 +3400,33 @@ VIEW-MY-MESSAGES.
 
 *> Send a new message to a connection
 SEND-NEW-MESSAGE.
-       *> Prompt for recipient username
        MOVE "Enter recipient's username (must be a connection):" TO MSG
        PERFORM ECHO-DISPLAY
 
        READ USER-IN INTO USER-IN-REC
-           AT END
-               MOVE "Y" TO EOF-FLAG
-               EXIT PARAGRAPH
+           AT END MOVE "Y" TO EOF-FLAG
        END-READ
-
        IF EOF-FLAG = "Y"
            EXIT PARAGRAPH
        END-IF
 
-       *> Store recipient username
        MOVE FUNCTION TRIM(USER-IN-REC) TO MSG-RECIPIENT
 
-       *> Validate recipient is a connection
        PERFORM VALIDATE-MESSAGE-RECIPIENT
-
-       *> If validation failed, return to menu
        IF FOUND-FLAG NOT = "Y"
            EXIT PARAGRAPH
        END-IF
 
-       *> Prompt for message content
        MOVE "Enter your message (max 200 chars):" TO MSG
        PERFORM ECHO-DISPLAY
 
        READ USER-IN INTO USER-IN-REC
-           AT END
-               MOVE "Y" TO EOF-FLAG
-               EXIT PARAGRAPH
+           AT END MOVE "Y" TO EOF-FLAG
        END-READ
-
        IF EOF-FLAG = "Y"
            EXIT PARAGRAPH
        END-IF
 
-       *> Validate message content length BEFORE storing in MSG-CONTENT
        MOVE FUNCTION LENGTH(FUNCTION TRIM(USER-IN-REC)) TO MSG-LEN
 
        IF MSG-LEN = 0
@@ -3443,10 +3441,11 @@ SEND-NEW-MESSAGE.
            EXIT PARAGRAPH
        END-IF
 
-       *> Store message content (only after validation passes)
        MOVE FUNCTION TRIM(USER-IN-REC) TO MSG-CONTENT
 
-       *> Success message (actual sending will be implemented in future stories)
+       *> Write message persistently
+       PERFORM WRITE-MESSAGE
+
        MOVE "Message sent successfully!" TO MSG
        PERFORM ECHO-DISPLAY
        EXIT PARAGRAPH.
@@ -3456,14 +3455,12 @@ SEND-NEW-MESSAGE.
 VALIDATE-MESSAGE-RECIPIENT.
        MOVE "N" TO FOUND-FLAG
 
-       *> Check if recipient username is empty
        IF FUNCTION LENGTH(FUNCTION TRIM(MSG-RECIPIENT)) = 0
            MOVE "Recipient username cannot be empty." TO MSG
            PERFORM ECHO-DISPLAY
            EXIT PARAGRAPH
        END-IF
 
-       *> Check if trying to message yourself
        IF FUNCTION UPPER-CASE(FUNCTION TRIM(MSG-RECIPIENT)) =
           FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
            MOVE "You cannot send a message to yourself." TO MSG
@@ -3471,14 +3468,11 @@ VALIDATE-MESSAGE-RECIPIENT.
            EXIT PARAGRAPH
        END-IF
 
-       *> Load all connections to check
        PERFORM LOAD-ALL-CONNECTIONS
 
-       *> Search for established connection with recipient
        IF CONN-COUNT > 0
            SET C-IX TO 1
            PERFORM UNTIL C-IX > CONN-COUNT
-               *> Check if this connection involves both users
                IF ( FUNCTION UPPER-CASE(FUNCTION TRIM(C-USER1 (C-IX))) =
                     FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
                 AND FUNCTION UPPER-CASE(FUNCTION TRIM(C-USER2 (C-IX))) =
@@ -3496,22 +3490,48 @@ VALIDATE-MESSAGE-RECIPIENT.
            END-PERFORM
        END-IF
 
-       *> Display appropriate error message if not found
        IF FOUND-FLAG NOT = "Y"
-           *> Check if user exists at all
            MOVE FUNCTION TRIM(MSG-RECIPIENT) TO CHECK-USER
            PERFORM EXISTS-USER-BY-NAME
 
            IF FOUND-FLAG = "Y"
-               *> User exists but is not a connection
                MOVE "You can only message users you are connected with." TO MSG
                PERFORM ECHO-DISPLAY
                MOVE "N" TO FOUND-FLAG
            ELSE
-               *> User does not exist
                MOVE "User not found in your network." TO MSG
                PERFORM ECHO-DISPLAY
            END-IF
        END-IF
        EXIT PARAGRAPH.
 
+
+*> Persist a message to messages.dat with proper timestamp
+WRITE-MESSAGE.
+       ACCEPT WS-DATE-YYYYMMDD FROM DATE YYYYMMDD
+       ACCEPT WS-TIME-HHMMSS   FROM TIME
+       MOVE SPACES TO WS-TS
+
+       *> Normalize padding and extract time parts
+       IF FUNCTION LENGTH(WS-TIME-HHMMSS) < 6
+           MOVE FUNCTION NUMVAL(WS-TIME-HHMMSS) TO WS-TIME-HHMMSS
+       END-IF
+       MOVE WS-TIME-HHMMSS(1:2) TO WS-HH
+       MOVE WS-TIME-HHMMSS(3:2) TO WS-MM
+       MOVE WS-TIME-HHMMSS(5:2) TO WS-SS
+
+       STRING
+           WS-DATE-YYYYMMDD(1:4) "-" WS-DATE-YYYYMMDD(5:2) "-" WS-DATE-YYYYMMDD(7:2)
+           " " WS-HH ":" WS-MM ":" WS-SS
+           DELIMITED BY SIZE INTO WS-TS
+       END-STRING
+
+       OPEN EXTEND MESSAGES
+       MOVE SPACES TO MSG-FILE-REC
+       MOVE FUNCTION TRIM(CURRENT-USER)    TO MF-SENDER
+       MOVE FUNCTION TRIM(MSG-RECIPIENT)   TO MF-RECIPIENT
+       MOVE WS-TS                          TO MF-TIMESTAMP
+       MOVE FUNCTION TRIM(MSG-CONTENT)     TO MF-CONTENT
+       WRITE MSG-FILE-REC
+       CLOSE MESSAGES
+       EXIT PARAGRAPH.
