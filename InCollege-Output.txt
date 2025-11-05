@@ -4,31 +4,12 @@ Welcome to InCollege!
 Enter your choice:
 Please enter your username:
 Please enter your password:
-You have successfully logged in
-Welcome, Jennifer!
-=============================
-     InCollege Main Menu
-=============================
-  1. Create/Edit My Profile
-  2. View My Profile
-  3. Search for a job
-  4. Find someone you know
-  5. Learn a New Skill
-  6. View My Pending Connection Requests
-  7. View My Network
-  8. Messages
-=============================
-Enter your choice:
---- Messages Menu ---
-1. Send a New Message
-2. View My Messages
-3. Back to Main Menu
-Enter your choice:
-Enter recipient's username (must be a connection):
-Enter your message (max 200 chars):
-Message must be 200 characters or less.
---- Messages Menu ---
-1. Send a New Message
-2. View My Messages
-3. Back to Main Menu
-Enter your choice:
+Incorrect username/password, please try again
+Please enter your username:
+Please enter your password:
+Incorrect username/password, please try again
+Please enter your username:
+Please enter your password:
+Incorrect username/password, please try again
+Please enter your username:
+Please enter your password:
