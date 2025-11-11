@@ -283,6 +283,19 @@ WORKING-STORAGE SECTION.
 01 SEL-JOB-ID-TEXT  PIC X(5).              *> Filled when you parse the chosen posting
 01 GEN-TEXT        PIC X(300).
 
+*> --- Inbox table for the logged-in user ---
+01 MSG-EOF-FLAG           PIC X     VALUE "N".
+01 UMT-MAX                PIC 9(4)  VALUE 300.
+01 UMT-COUNT              PIC 9(4)  VALUE 0.
+01 UMT-ID                 PIC 9(4)  VALUE 0.
+
+01 USER-MESSAGE-TABLE.
+   05 UMT-ENTRY OCCURS 300.
+      10 UMT-SENDER        PIC X(20).
+      10 UMT-RECIPIENT     PIC X(20).
+      10 UMT-TIMESTAMP     PIC X(19).
+      10 UMT-CONTENT       PIC X(200).
+
 
 PROCEDURE DIVISION.
 MAIN-PARA.
@@ -3391,11 +3404,47 @@ DISPLAY-MESSAGES-MENU.
        EXIT.
 
 
-*> View My Messages - placeholder
+*> View My Messages
 VIEW-MY-MESSAGES.
-       MOVE "View My Messages is under construction." TO MSG
+       PERFORM LOAD-USER-MESSAGES
+
+       IF UMT-COUNT = 0
+           MOVE "Your inbox is empty." TO MSG
+           PERFORM ECHO-DISPLAY
+           EXIT PARAGRAPH
+       END-IF
+
+       MOVE " " TO MSG
        PERFORM ECHO-DISPLAY
-       EXIT.
+
+       MOVE SPACES TO MSG
+       STRING "Inbox for " FUNCTION TRIM(CURRENT-USER)
+              " (" DELIMITED BY SIZE
+              UMT-COUNT DELIMITED BY SIZE
+              " messages)" DELIMITED BY SIZE
+           INTO MSG
+       END-STRING
+       PERFORM ECHO-DISPLAY
+
+       PERFORM VARYING UMT-ID FROM 1 BY 1 UNTIL UMT-ID > UMT-COUNT
+           MOVE SPACES TO MSG
+           STRING UMT-ID DELIMITED BY SIZE
+                  ". From " DELIMITED BY SIZE
+                  FUNCTION TRIM(UMT-SENDER(UMT-ID)) DELIMITED BY SIZE
+                  " at " DELIMITED BY SIZE
+                  UMT-TIMESTAMP(UMT-ID) DELIMITED BY SIZE
+             INTO MSG
+           END-STRING
+           PERFORM ECHO-DISPLAY
+
+           *> Wrap and print content via existing long-text helper
+           MOVE UMT-CONTENT(UMT-ID) TO GEN-TEXT
+           PERFORM DISPLAY-LONG-GENERIC
+
+           MOVE " " TO MSG
+           PERFORM ECHO-DISPLAY
+       END-PERFORM
+       EXIT PARAGRAPH.
 
 
 *> Send a new message to a connection
@@ -3533,5 +3582,31 @@ WRITE-MESSAGE.
        MOVE WS-TS                          TO MF-TIMESTAMP
        MOVE FUNCTION TRIM(MSG-CONTENT)     TO MF-CONTENT
        WRITE MSG-FILE-REC
+       CLOSE MESSAGES
+       EXIT PARAGRAPH.
+
+LOAD-USER-MESSAGES.
+       MOVE "N" TO MSG-EOF-FLAG
+       MOVE 0  TO UMT-COUNT
+
+       OPEN INPUT MESSAGES
+       PERFORM UNTIL MSG-EOF-FLAG = "Y"
+           READ MESSAGES
+               AT END
+                   MOVE "Y" TO MSG-EOF-FLAG
+               NOT AT END
+                   *> Keep only messages sent to CURRENT-USER and that look valid
+                   IF FUNCTION TRIM(MF-RECIPIENT) = FUNCTION TRIM(CURRENT-USER)
+                      AND FUNCTION LENGTH(FUNCTION TRIM(MF-SENDER))   > 0
+                      AND FUNCTION LENGTH(FUNCTION TRIM(MF-CONTENT))  > 0
+                      AND UMT-COUNT < UMT-MAX
+                       ADD 1 TO UMT-COUNT
+                       MOVE MF-SENDER       TO UMT-SENDER    (UMT-COUNT)
+                       MOVE MF-RECIPIENT    TO UMT-RECIPIENT (UMT-COUNT)
+                       MOVE MF-TIMESTAMP    TO UMT-TIMESTAMP (UMT-COUNT)
+                       MOVE MF-CONTENT      TO UMT-CONTENT   (UMT-COUNT)
+                   END-IF
+           END-READ
+       END-PERFORM
        CLOSE MESSAGES
        EXIT PARAGRAPH.

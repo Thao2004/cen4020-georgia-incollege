@@ -4,12 +4,47 @@ Welcome to InCollege!
 Enter your choice:
 Please enter your username:
 Please enter your password:
-Incorrect username/password, please try again
-Please enter your username:
-Please enter your password:
-Incorrect username/password, please try again
-Please enter your username:
-Please enter your password:
-Incorrect username/password, please try again
-Please enter your username:
-Please enter your password:
+You have successfully logged in
+Welcome, testuser!
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+  6. View My Pending Connection Requests
+  7. View My Network
+  8. Messages
+=============================
+Enter your choice:
+--- Messages Menu ---
+1. Send a New Message
+2. View My Messages
+3. Back to Main Menu
+Enter your choice:
+Inbox for testuser (0002 messages)
+0001. From AmyGeorgia at 2025-11-11 29:05:62
+Hi testuser, welcome to InCollege!
+0002. From AmyGeorgia at 2025-11-11 29:05:62
+Please review the QA checklist attached.
+--- Messages Menu ---
+1. Send a New Message
+2. View My Messages
+3. Back to Main Menu
+Enter your choice:
+Returning to main menu...
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+  6. View My Pending Connection Requests
+  7. View My Network
+  8. Messages
+=============================
+Enter your choice:

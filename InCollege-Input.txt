@@ -1,8 +1,6 @@
 1
-alice
-AlicePass1!
+testuser
+SecurePass1!
 8
-1
-bob
-test message2
+2
 3
