@@ -16,13 +16,22 @@ This project is an implementation of the InCollege system in COBOL, developed in
 
 **Epic 6:** Job/Internship posting functionality. Users can post job listings with title, description, employer, location, and optional salary. All postings are persistently stored with unique auto-incrementing IDs.
 
+**Epic 7:** Browsw & Applying to Job/Internships (with Report Enhancement). Users can browse all available job and internship listings, simulate the application process, and generate a summary report of their own applications.
+
+**Epic 8:** Basic messaging system allows users to send private messages to each other within InCollege application.
+
+**Epic 9:** Enhance the messaging system to allow logged-in users to retrieve and display the messages they have received.
+
 ## Persistence
 
 All data is stored across runs in:
+
 - **accounts.dat** - account credentials
 - **profiles.dat** - user profiles
 - **requests.dat** -  pending/processed connection requests
 - **connections.dat** - established (accepted) connections
+- **messages.dat** - messages information
+
 ---
 
 ## Getting Started
@@ -182,24 +191,31 @@ Enter the following required information: Job Title, Description, Employer Name,
 ## Data Files
 
 **InCollege-Input.txt**: User input file, sequence of actions entered as text.
+
 **InCollege-Output.txt**: Contains a copy of all prompts and messages shown in the terminal.
+
 **accounts.dat**: Stores created accounts in the format `username, password`
+
 **connections.dat**: Stores connection requests and accepted connections.
+
 **profiles.dat**: Stores user profiles (basic info, About Me, experiences, education).
 **requests.dat**: Stores pending and processed connection requests
+
 **job-postings.dat**: Stores job and internship postings in format: Job-ID|Title|Description|Employer|Location|Salary
 
 ## Cleaning Up
 
 To remove compiled binary and generated files:
+
 ```bash
 make clean
 ```
+
 ---
 
 ## File Structure
 
-```
+```text
 .
 ├── .devcontainer
 │   └── devcontainer.json
