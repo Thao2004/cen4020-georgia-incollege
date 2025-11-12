@@ -3408,42 +3408,52 @@ DISPLAY-MESSAGES-MENU.
 VIEW-MY-MESSAGES.
        PERFORM LOAD-USER-MESSAGES
 
+       *> If no messages, print friendly notice and return
        IF UMT-COUNT = 0
-           MOVE "Your inbox is empty." TO MSG
+           MOVE "No new messages." TO MSG
            PERFORM ECHO-DISPLAY
            EXIT PARAGRAPH
        END-IF
 
+       *> Blank line before listing messages
        MOVE " " TO MSG
        PERFORM ECHO-DISPLAY
 
-       MOVE SPACES TO MSG
-       STRING "Inbox for " FUNCTION TRIM(CURRENT-USER)
-              " (" DELIMITED BY SIZE
-              UMT-COUNT DELIMITED BY SIZE
-              " messages)" DELIMITED BY SIZE
-           INTO MSG
-       END-STRING
-       PERFORM ECHO-DISPLAY
-
+       *> Loop through each message in the user's message table
        PERFORM VARYING UMT-ID FROM 1 BY 1 UNTIL UMT-ID > UMT-COUNT
+           *> Print sender line
            MOVE SPACES TO MSG
-           STRING UMT-ID DELIMITED BY SIZE
-                  ". From " DELIMITED BY SIZE
+           STRING "From: " DELIMITED BY SIZE
                   FUNCTION TRIM(UMT-SENDER(UMT-ID)) DELIMITED BY SIZE
-                  " at " DELIMITED BY SIZE
-                  UMT-TIMESTAMP(UMT-ID) DELIMITED BY SIZE
-             INTO MSG
+               INTO MSG
            END-STRING
            PERFORM ECHO-DISPLAY
 
-           *> Wrap and print content via existing long-text helper
+           *> Print timestamp line
+           MOVE SPACES TO MSG
+           STRING "Sent: " DELIMITED BY SIZE
+                  UMT-TIMESTAMP(UMT-ID) DELIMITED BY SIZE
+               INTO MSG
+           END-STRING
+           PERFORM ECHO-DISPLAY
+
+           *> Print label for message content
+           MOVE "Message:" TO MSG
+           PERFORM ECHO-DISPLAY
+
+           *> Wrap and display the actual content via helper routine
            MOVE UMT-CONTENT(UMT-ID) TO GEN-TEXT
            PERFORM DISPLAY-LONG-GENERIC
 
+           *> Separator line between messages
+           MOVE "-----------------------------" TO MSG
+           PERFORM ECHO-DISPLAY
+
+           *> Extra blank line for readability
            MOVE " " TO MSG
            PERFORM ECHO-DISPLAY
        END-PERFORM
+
        EXIT PARAGRAPH.
 
 
