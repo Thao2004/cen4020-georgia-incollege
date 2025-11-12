@@ -1,7 +1,5 @@
 1
-testuser
-SecurePass1!
+JohnDoe
+TestPass1!
 8
 2
-2
-3

@@ -5,7 +5,7 @@ Enter your choice:
 Please enter your username:
 Please enter your password:
 You have successfully logged in
-Welcome, testuser!
+Welcome, ReceivingUser!
 =============================
      InCollege Main Menu
 =============================
@@ -24,8 +24,23 @@ Enter your choice:
 2. View My Messages
 3. Back to Main Menu
 Enter your choice:
-Enter recipient's username (must be a connection):
-You can only message users you are connected with.
+From: SendingUser
+Sent: 2025-11-12 12:22:00
+Message:
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAA
+-----------------------------
+From: AmyGeorgia
+Sent: 2025-11-12 12:22:00
+Message:
+First message.
+-----------------------------
+From: JohnDoe
+Sent: 2025-11-12 12:22:00
+Message:
+Second message, same time.
+-----------------------------
 --- Messages Menu ---
 1. Send a New Message
 2. View My Messages

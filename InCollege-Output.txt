@@ -5,7 +5,7 @@ Enter your choice:
 Please enter your username:
 Please enter your password:
 You have successfully logged in
-Welcome, testuser!
+Welcome, JohnDoe!
 =============================
      InCollege Main Menu
 =============================
@@ -25,36 +25,17 @@ Enter your choice:
 3. Back to Main Menu
 Enter your choice:
 From: AmyGeorgia
-Sent: 2025-11-11 10:30:45
+Sent: 2025-11-12 12:22:00
 Message:
-Testing message persistence.
+Hi there! Glad we connected on InCollege.
+-----------------------------
+From: testuseer
+Sent: 2025-11-12 12:22:00
+Message:
+Check out this interesting job posting I found!
 -----------------------------
 --- Messages Menu ---
 1. Send a New Message
 2. View My Messages
 3. Back to Main Menu
-Enter your choice:
-From: AmyGeorgia
-Sent: 2025-11-11 10:30:45
-Message:
-Testing message persistence.
------------------------------
---- Messages Menu ---
-1. Send a New Message
-2. View My Messages
-3. Back to Main Menu
-Enter your choice:
-Returning to main menu...
-=============================
-     InCollege Main Menu
-=============================
-  1. Create/Edit My Profile
-  2. View My Profile
-  3. Search for a job
-  4. Find someone you know
-  5. Learn a New Skill
-  6. View My Pending Connection Requests
-  7. View My Network
-  8. Messages
-=============================
 Enter your choice:

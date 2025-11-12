@@ -1,6 +1,0 @@
-1
-testuser
-SecurePass1!
-3
-3
-4

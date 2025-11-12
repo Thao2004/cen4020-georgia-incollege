@@ -4,15 +4,8 @@ Welcome to InCollege!
 Enter your choice:
 Please enter your username:
 Please enter your password:
-Account created.
-Welcome to InCollege!
-1. Log In
-2. Create New Account
-Enter your choice:
-Please enter your username:
-Please enter your password:
 You have successfully logged in
-Welcome, testUser!
+Welcome, ReceivingUser!
 =============================
      InCollege Main Menu
 =============================
@@ -26,19 +19,6 @@ Welcome, testUser!
   8. Messages
 =============================
 Enter your choice:
---- Messages Menu ---
-1. Send a New Message
-2. View My Messages
-3. Back to Main Menu
-Enter your choice:
-Enter recipient's username (must be a connection):
-User not found in your network.
---- Messages Menu ---
-1. Send a New Message
-2. View My Messages
-3. Back to Main Menu
-Enter your choice:
-View My Messages is under construction.
 --- Messages Menu ---
 1. Send a New Message
 2. View My Messages
