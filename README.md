@@ -1,27 +1,28 @@
 # InCollege Project
 
-This project is an implementation of the InCollege system in COBOL, developed incrementally through Epics 1–6.
+This project is an implementation of the InCollege system in COBOL, developed incrementally through Epics 1-9.
 
 ## Current features include
 
 **Epic 1:** Create up to 5 accounts (unique username + validated password), unlimited login attempts.
+
 **Epic 2:** Create, edit, and view user profiles (About Me, Experience, Education).
+
 **Epic 3:** Search for users by full name and view their profiles.
+
 **Epic 4:** Send, view, accept, and reject connection requests.
+
 **Epic 5:** Finalized connection system. Users can manage pending requests (accept/reject), view their established network, and all inputs/outputs are file-based and persisted.
+
 **Epic 6:** Job/Internship posting functionality. Users can post job listings with title, description, employer, location, and optional salary. All postings are persistently stored with unique auto-incrementing IDs.
 
 ## Persistence
 
 All data is stored across runs in:
-
-    - **accounts.dat** - account credentials
-
-    - **profiles.dat** - user profiles
-
-    - **requests.dat** -  pending/processed connection requests
-
-    - **connections.dat** - established (accepted) connections
+- **accounts.dat** - account credentials
+- **profiles.dat** - user profiles
+- **requests.dat** -  pending/processed connection requests
+- **connections.dat** - established (accepted) connections
 ---
 
 ## Getting Started
