@@ -1,1 +1,6 @@
 AmyGeorgia          |testuser            |2025-11-11 10:30:45|Testing message persistence.
+SendingUser         |ReceivingUser       |2025-11-12 12:22:00|AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+RECEIVINGUSER       |SendingUser         |2025-11-11 12:22:00|   Hello with spaces before and after.
+AmyGeorgia          |ReceivingUser       |2025-11-12 12:22:00|First message.
+JohnDoe             |ReceivingUser       |2025-11-12 12:22:00|Second message, same time.
+

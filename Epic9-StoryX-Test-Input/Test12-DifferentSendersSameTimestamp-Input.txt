@@ -1,5 +1,5 @@
 1
-SendingUser
+ReceivingUser
 Passw0rd!
 8
 2

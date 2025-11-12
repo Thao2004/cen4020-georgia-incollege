@@ -24,7 +24,7 @@ Enter your choice:
 2. View My Messages
 3. Back to Main Menu
 Enter your choice:
-From: RECEIVINGUSER
+From: ReceivingUser
 Sent: 2025-11-11 12:22:00
 Message:
 Hello with spaces before and after.

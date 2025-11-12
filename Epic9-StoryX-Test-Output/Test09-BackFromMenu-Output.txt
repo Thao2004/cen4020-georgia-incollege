@@ -5,7 +5,7 @@ Enter your choice:
 Please enter your username:
 Please enter your password:
 You have successfully logged in
-Welcome, SendingUser!
+Welcome, ReceivingUser!
 =============================
      InCollege Main Menu
 =============================
@@ -19,16 +19,6 @@ Welcome, SendingUser!
   8. Messages
 =============================
 Enter your choice:
---- Messages Menu ---
-1. Send a New Message
-2. View My Messages
-3. Back to Main Menu
-Enter your choice:
-From: RECEIVINGUSER
-Sent: 2025-11-11 12:22:00
-Message:
-Hello with spaces before and after.
------------------------------
 --- Messages Menu ---
 1. Send a New Message
 2. View My Messages
