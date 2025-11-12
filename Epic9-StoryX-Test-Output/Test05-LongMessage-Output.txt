@@ -25,19 +25,11 @@ Enter your choice:
 3. Back to Main Menu
 Enter your choice:
 From: AmyGeorgia
-Sent: 2025-11-11 10:30:45
+Sent: 2025-11-11 12:00:00
 Message:
-Testing message persistence.
------------------------------
---- Messages Menu ---
-1. Send a New Message
-2. View My Messages
-3. Back to Main Menu
-Enter your choice:
-From: AmyGeorgia
-Sent: 2025-11-11 10:30:45
-Message:
-Testing message persistence.
+This is a very long message that is designed to test the word wrapping
+functionality of the message display system. It should wrap properly across
+multiple lines without breaking in the middle of word
 -----------------------------
 --- Messages Menu ---
 1. Send a New Message

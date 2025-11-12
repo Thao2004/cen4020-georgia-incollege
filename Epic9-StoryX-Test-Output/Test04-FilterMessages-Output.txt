@@ -25,19 +25,14 @@ Enter your choice:
 3. Back to Main Menu
 Enter your choice:
 From: AmyGeorgia
-Sent: 2025-11-11 10:30:45
+Sent: 2025-11-11 10:00:00
 Message:
-Testing message persistence.
+Message for testuser from Amy.
 -----------------------------
---- Messages Menu ---
-1. Send a New Message
-2. View My Messages
-3. Back to Main Menu
-Enter your choice:
-From: AmyGeorgia
-Sent: 2025-11-11 10:30:45
+From: JohnDoe
+Sent: 2025-11-11 10:15:00
 Message:
-Testing message persistence.
+Message for testuser from John.
 -----------------------------
 --- Messages Menu ---
 1. Send a New Message
