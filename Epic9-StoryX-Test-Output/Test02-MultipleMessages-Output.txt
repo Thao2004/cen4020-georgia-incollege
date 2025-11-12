@@ -25,19 +25,19 @@ Enter your choice:
 3. Back to Main Menu
 Enter your choice:
 From: AmyGeorgia
-Sent: 2025-11-11 10:30:45
+Sent: 2025-11-11 09:15:30
 Message:
-Testing message persistence.
+Hi! Great to connect with you.
 -----------------------------
---- Messages Menu ---
-1. Send a New Message
-2. View My Messages
-3. Back to Main Menu
-Enter your choice:
-From: AmyGeorgia
-Sent: 2025-11-11 10:30:45
+From: JohnDoe
+Sent: 2025-11-11 14:22:10
 Message:
-Testing message persistence.
+Check out this job posting I found.
+-----------------------------
+From: AmyGeorgia
+Sent: 2025-11-11 16:45:00
+Message:
+Did you complete the assignment?
 -----------------------------
 --- Messages Menu ---
 1. Send a New Message
