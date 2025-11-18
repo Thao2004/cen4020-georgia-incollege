@@ -353,7 +353,7 @@ MAIN-LOOP.
                         EXIT PERFORM
                     END-IF
                 WHEN OTHER
-                    MOVE "Invalid choice." TO MSG
+                    MOVE "Invalid choice, please try again." TO MSG
                     PERFORM ECHO-DISPLAY
                     CONTINUE
             END-EVALUATE
@@ -975,7 +975,7 @@ BROWSE-JOBS.
 
            *> Range check
            IF JOB-SELECT < 1 OR JOB-SELECT > JOB-LIST-COUNT
-               MOVE "Invalid choice. Please enter a number from the list or 0 to go back." TO MSG
+               MOVE "Invalid choice, please try again." TO MSG
                PERFORM ECHO-DISPLAY
                CONTINUE
            END-IF
@@ -1081,7 +1081,7 @@ BROWSE-JOBS.
                            WHEN 2
                                CONTINUE
                            WHEN OTHER
-                               MOVE "Invalid choice." TO MSG
+                               MOVE "Invalid choice, please try again." TO MSG
                                PERFORM ECHO-DISPLAY
                        END-EVALUATE
 
@@ -3241,7 +3241,7 @@ VIEW-AND-RESPOND-PENDING.
             MOVE "Request rejected." TO MSG
             PERFORM ECHO-DISPLAY
         ELSE
-            MOVE "Invalid choice. Type ACCEPT or REJECT." TO MSG
+            MOVE "Invalid choice, please try again." TO MSG
             PERFORM ECHO-DISPLAY
         END-IF
     END-IF
