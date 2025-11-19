@@ -1,0 +1,23 @@
+2
+Brian
+Qazwsx2@
+
+1
+Brian
+Qazwsx2@
+
+1
+John
+Doe
+Example University
+Computer Science
+2025
+
+DONE
+Bachelor of Science
+Example University
+2021-2025
+DONE
+
+2
+

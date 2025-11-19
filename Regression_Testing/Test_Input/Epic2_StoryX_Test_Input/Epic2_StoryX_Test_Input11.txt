@@ -1,0 +1,24 @@
+2
+TestUser4
+Password1!
+1
+TestUser4
+Password1!
+1
+Bob
+Lee
+USF
+Engineering
+2026
+About text
+DONE
+Bachelors
+USF
+2018-2022
+Masters
+UF
+2022-2024
+PhD
+MIT
+2024-2028
+DONE

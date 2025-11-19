@@ -1,0 +1,44 @@
+2
+jenny9
+Abcdef@1!
+1
+jenny9
+Abcdef@1!
+1
+Jenny
+Tran
+USF
+Accounting
+2031
+Eager to learn and grow
+Exp1
+Company1
+2025
+Did something
+Exp2
+Company2
+2026
+Did something
+Exp3
+Company3
+2027
+Did something
+Exp4
+Company4
+2028
+Tried to add extra
+DONE
+Edu1
+School1
+2020-2024
+Edu2
+School2
+2024-2026
+Edu3
+School3
+2026-2028
+Edu4
+School4
+2028-2030
+DONE
+2

@@ -6,4 +6,7 @@ user2
 ACCEPT
 6
 user3
+REJECT
+6
+user4
 ACCEPT
