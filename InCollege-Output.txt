@@ -5,7 +5,7 @@ Enter your choice:
 Please enter your username:
 Please enter your password:
 You have successfully logged in
-Welcome, JohnDoe!
+Welcome, testuser1!
 =============================
      InCollege Main Menu
 =============================
@@ -20,8 +20,9 @@ Welcome, JohnDoe!
 =============================
 Enter your choice:
 --- Pending Connection Requests ---
-1. From: SendingUser
+You have no pending requests.
 Enter the sender's username to respond (blank to go back):
+No matching pending request from that user.
 =============================
      InCollege Main Menu
 =============================
@@ -36,36 +37,6 @@ Enter the sender's username to respond (blank to go back):
 =============================
 Enter your choice:
 Invalid choice, please try again.
-=============================
-     InCollege Main Menu
-=============================
-  1. Create/Edit My Profile
-  2. View My Profile
-  3. Search for a job
-  4. Find someone you know
-  5. Learn a New Skill
-  6. View My Pending Connection Requests
-  7. View My Network
-  8. Messages
-=============================
-Enter your choice:
-Invalid choice, please try again.
-=============================
-     InCollege Main Menu
-=============================
-  1. Create/Edit My Profile
-  2. View My Profile
-  3. Search for a job
-  4. Find someone you know
-  5. Learn a New Skill
-  6. View My Pending Connection Requests
-  7. View My Network
-  8. Messages
-=============================
-Enter your choice:
---- Your Network ---
-Connected with: Amy Georgia
-Connected with: test user
 =============================
      InCollege Main Menu
 =============================
