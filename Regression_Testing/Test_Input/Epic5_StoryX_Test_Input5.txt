@@ -3,7 +3,4 @@ testuser1
 Password1!
 6
 user2
-ACCEPT
-6
-user3
-ACCEPT
+REJECT
