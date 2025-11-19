@@ -1,0 +1,34 @@
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in
+Welcome, Alex!
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+  6. View My Pending Connection Requests
+  7. View My Network
+  8. Messages
+=============================
+Enter your choice:
+--- Create/Edit Profile ---
+Enter First Name:
+First Name is required.
+Enter First Name:
+Enter Last Name:
+Enter University/College Attended:
+Enter Major:
+Enter Graduation Year (YYYY):
+Please enter a valid 4-digit year (e.g., 2025).
+Enter Graduation Year (YYYY):
+Please enter a valid 4-digit year (e.g., 2025).
+Enter Graduation Year (YYYY):
+Enter About Me (optional, max 200 chars, enter blank line to skip):
