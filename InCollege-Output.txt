@@ -19,23 +19,63 @@ Welcome, JohnDoe!
   8. Messages
 =============================
 Enter your choice:
---- Messages Menu ---
-1. Send a New Message
-2. View My Messages
-3. Back to Main Menu
+--- Pending Connection Requests ---
+1. From: SendingUser
+Enter the sender's username to respond (blank to go back):
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+  6. View My Pending Connection Requests
+  7. View My Network
+  8. Messages
+=============================
 Enter your choice:
-From: AmyGeorgia
-Sent: 2025-11-12 12:22:00
-Message:
-Hi there! Glad we connected on InCollege.
------------------------------
-From: testuseer
-Sent: 2025-11-12 12:22:00
-Message:
-Check out this interesting job posting I found!
------------------------------
---- Messages Menu ---
-1. Send a New Message
-2. View My Messages
-3. Back to Main Menu
+Invalid choice, please try again.
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+  6. View My Pending Connection Requests
+  7. View My Network
+  8. Messages
+=============================
+Enter your choice:
+Invalid choice, please try again.
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+  6. View My Pending Connection Requests
+  7. View My Network
+  8. Messages
+=============================
+Enter your choice:
+--- Your Network ---
+Connected with: Amy Georgia
+Connected with: test user
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+  6. View My Pending Connection Requests
+  7. View My Network
+  8. Messages
+=============================
 Enter your choice:

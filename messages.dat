@@ -3,5 +3,5 @@ SendingUser         |ReceivingUser       |2025-11-12 12:22:00|AAAAAAAAAAAAAAAAAA
 RECEIVINGUSER       |SendingUser         |2025-11-11 12:22:00|   Hello with spaces before and after.
 AmyGeorgia          |ReceivingUser       |2025-11-12 12:22:00|First message.
 JohnDoe             |ReceivingUser       |2025-11-12 12:22:00|Second message, same time.
-AmyGeorgia          |JohnDoe             |2025-11-12 12:22:00|Hi there! Glad we connected on InCollege.
-testuseer           |JohnDoe             |2025-11-12 12:22:00|Check out this interesting job posting I found!
+Amy                 |JohnDoe             |2025-11-12 12:22:00|Hi there! Glad we connected on InCollege.
+Mathew              |JohnDoe             |2025-11-12 12:22:00|Check out this interesting job posting I found!JohnDoe              AmyGeorgia           2025-11-16 12:59:94 Hello Amy

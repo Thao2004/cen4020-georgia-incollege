@@ -1,0 +1,8 @@
+1
+testuser
+Password1@
+8
+1
+  Bob
+Hey Bob, testing case-insensitive + trim.
+3

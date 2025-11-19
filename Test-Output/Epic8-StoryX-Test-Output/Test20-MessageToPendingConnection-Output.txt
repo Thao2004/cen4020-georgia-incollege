@@ -1,0 +1,332 @@
+root@5b49689b60c7:/workspace# make run
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in
+Welcome, gina!
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+  6. View My Pending Connection Requests
+  7. View My Network
+  8. Messages
+=============================
+Enter your choice:
+root@5b49689b60c7:/workspace# make run
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in
+Welcome, gina!
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+  6. View My Pending Connection Requests
+  7. View My Network
+  8. Messages
+=============================
+Enter your choice:
+--- Find Someone You Know ---
+Enter First Name to search:
+root@5b49689b60c7:/workspace# make run
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in
+Welcome, gina!
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+  6. View My Pending Connection Requests
+  7. View My Network
+  8. Messages
+=============================
+Enter your choice:
+--- Find Someone You Know ---
+Enter First Name to search:
+Enter Last Name to search:
+root@5b49689b60c7:/workspace# make run
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in
+Welcome, gina!
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+  6. View My Pending Connection Requests
+  7. View My Network
+  8. Messages
+=============================
+Enter your choice:
+--- Find Someone You Know ---
+Enter First Name to search:
+Enter Last Name to search:
+--- Profile for John John ---
+Name: John John
+University: University of South Florida
+Major: Computer Science
+Graduation Year: 2026
+About Me: About Me
+Would you like to send a friend request? (1=Yes, 2=No)
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+  6. View My Pending Connection Requests
+  7. View My Network
+  8. Messages
+=============================
+Enter your choice:
+libcob: error: READ after unsuccessful READ/START (status = 46) for file USER-IN ('InCollege-Input_txt' => InCollege-Input.txt)
+libcob: warning: implicit CLOSE of USER-OUT ('InCollege-Output.txt')
+libcob: warning: implicit CLOSE of USER-IN ('InCollege-Input.txt')
+make: *** [Makefile:18: run] Error 1
+root@5b49689b60c7:/workspace# make run
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in
+Welcome, gina!
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+  6. View My Pending Connection Requests
+  7. View My Network
+  8. Messages
+=============================
+Enter your choice:
+--- Find Someone You Know ---
+Enter First Name to search:
+Enter Last Name to search:
+--- Profile for John John ---
+Name: John John
+University: University of South Florida
+Major: Computer Science
+Graduation Year: 2026
+About Me: About Me
+Would you like to send a friend request? (1=Yes, 2=No)
+Friend request sent.
+--------------------
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+  6. View My Pending Connection Requests
+  7. View My Network
+  8. Messages
+=============================
+Enter your choice:
+root@5b49689b60c7:/workspace# make run
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in
+Welcome, gina!
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+  6. View My Pending Connection Requests
+  7. View My Network
+  8. Messages
+=============================
+Enter your choice:
+--- Find Someone You Know ---
+Enter First Name to search:
+Enter Last Name to search:
+--- Profile for John John ---
+Name: John John
+University: University of South Florida
+Major: Computer Science
+Graduation Year: 2026
+About Me: About Me
+Would you like to send a friend request? (1=Yes, 2=No)
+There is already a request or connection between you.
+--------------------
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+  6. View My Pending Connection Requests
+  7. View My Network
+  8. Messages
+=============================
+Enter your choice:
+--- Messages Menu ---
+1. Send a New Message
+2. View My Messages
+3. Back to Main Menu
+Enter your choice:
+root@5b49689b60c7:/workspace# make run
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in
+Welcome, gina!
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+  6. View My Pending Connection Requests
+  7. View My Network
+  8. Messages
+=============================
+Enter your choice:
+--- Find Someone You Know ---
+Enter First Name to search:
+Enter Last Name to search:
+--- Profile for John John ---
+Name: John John
+University: University of South Florida
+Major: Computer Science
+Graduation Year: 2026
+About Me: About Me
+Would you like to send a friend request? (1=Yes, 2=No)
+There is already a request or connection between you.
+--------------------
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+  6. View My Pending Connection Requests
+  7. View My Network
+  8. Messages
+=============================
+Enter your choice:
+--- Messages Menu ---
+1. Send a New Message
+2. View My Messages
+3. Back to Main Menu
+Enter your choice:
+Enter recipient's username (must be a connection):
+root@5b49689b60c7:/workspace# make run
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in
+Welcome, gina!
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+  6. View My Pending Connection Requests
+  7. View My Network
+  8. Messages
+=============================
+Enter your choice:
+--- Find Someone You Know ---
+Enter First Name to search:
+Enter Last Name to search:
+--- Profile for John John ---
+Name: John John
+University: University of South Florida
+Major: Computer Science
+Graduation Year: 2026
+About Me: About Me
+Would you like to send a friend request? (1=Yes, 2=No)
+There is already a request or connection between you.
+--------------------
+=============================
+     InCollege Main Menu
+=============================
+  1. Create/Edit My Profile
+  2. View My Profile
+  3. Search for a job
+  4. Find someone you know
+  5. Learn a New Skill
+  6. View My Pending Connection Requests
+  7. View My Network
+  8. Messages
+=============================
+Enter your choice:
+--- Messages Menu ---
+1. Send a New Message
+2. View My Messages
+3. Back to Main Menu
+Enter your choice:
+Enter recipient's username (must be a connection):
+You can only message users you are connected with.
+--- Messages Menu ---
+1. Send a New Message
+2. View My Messages
+3. Back to Main Menu
+Enter your choice:
+root@5b49689b60c7:/workspace#

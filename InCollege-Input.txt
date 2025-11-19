@@ -1,5 +1,8 @@
 1
 JohnDoe
 TestPass1!
-8
-2
+6
+
+testuser
+ACCEPT
+7
